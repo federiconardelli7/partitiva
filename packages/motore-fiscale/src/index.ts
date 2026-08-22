@@ -11,6 +11,8 @@ export { cents, euro, mulRate, roundEuroToCents, splitInRate } from './money'
 export type { Cents } from './money'
 export { defineParams, getParams, SUPPORTED_YEARS } from './params'
 export type { FiscalParams, Fonte, ParamAnnuale, Rate } from './params'
+export { coefficientePerAteco, GRUPPI_ATECO } from './params/ateco'
+export type { GruppoAteco } from './params/ateco'
 export type { Actuals, ExplainedValue, ExplainMap, NodeId, Origine } from './explain'
 
 export const ENGINE_NAME = 'motore-fiscale' as const

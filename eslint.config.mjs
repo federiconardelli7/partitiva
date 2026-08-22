@@ -3,7 +3,7 @@ import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
   {
-    ignores: ['**/node_modules/**', '**/dist/**', '**/coverage/**'],
+    ignores: ['**/node_modules/**', '**/dist/**', '**/coverage/**', '**/.vercel/**'],
   },
   eslint.configs.recommended,
   tseslint.configs.recommended,
@@ -13,6 +13,21 @@ export default tseslint.config(
       globals: {
         console: 'readonly',
         process: 'readonly',
+      },
+    },
+  },
+  {
+    files: ['apps/**/*.ts', 'apps/**/*.tsx'],
+    languageOptions: {
+      globals: {
+        document: 'readonly',
+        window: 'readonly',
+        navigator: 'readonly',
+        URL: 'readonly',
+        Blob: 'readonly',
+        File: 'readonly',
+        HTMLInputElement: 'readonly',
+        HTMLSelectElement: 'readonly',
       },
     },
   },

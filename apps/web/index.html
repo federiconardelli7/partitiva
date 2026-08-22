@@ -1,46 +1,16 @@
 <!doctype html>
 <html lang="it">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Partitiva</title>
-  <meta name="description" content="Gestione open source e privacy-first della Partita IVA in regime forfettario" />
-  <style>
-    :root { color-scheme: light dark; }
-    body {
-      margin: 0; min-height: 100dvh; display: grid; place-items: center;
-      font-family: system-ui, -apple-system, sans-serif;
-      background: light-dark(#fafaf7, #14141a); color: light-dark(#1c1c22, #eaeaf0);
-    }
-    main { max-width: 34rem; padding: 2rem; text-align: center; }
-    h1 { font-size: 2.6rem; margin: 0 0 .3rem; letter-spacing: -.02em; }
-    .tag { color: light-dark(#586, #9cb8a2); font-weight: 600; }
-    p { line-height: 1.6; }
-    .badge {
-      display: inline-block; margin: 1rem 0; padding: .35rem .9rem; border-radius: 999px;
-      background: light-dark(#eef3ee, #232b25); font-size: .85rem;
-    }
-    a { color: light-dark(#2a6, #7cc89a); }
-    .disclaimer {
-      margin-top: 2.5rem; font-size: .8rem; color: light-dark(#777, #999);
-      border-top: 1px solid light-dark(#e5e5e0, #2a2a33); padding-top: 1rem;
-    }
-  </style>
-</head>
-<body>
-  <main>
-    <h1>Partitiva</h1>
-    <p class="tag">La tua Partita IVA forfettaria, spiegata numero per numero.</p>
-    <span class="badge">🚧 In costruzione — il motore fiscale è in sviluppo (TDD sui golden test)</span>
-    <p>
-      Registro incassi per principio di cassa, F24 spiegati passo-passo, soglie sotto controllo.
-      Privacy-first: i tuoi dati non lasceranno mai il tuo browser.
-    </p>
-    <p><a href="https://github.com/federiconardelli7/partitiva">Segui lo sviluppo su GitHub →</a></p>
-    <p class="disclaimer">
-      Partitiva è uno strumento di tracciamento e comprensione, non consulenza fiscale:
-      per le decisioni c'è il commercialista. Open source, licenza MIT.
-    </p>
-  </main>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Partitiva</title>
+    <meta
+      name="description"
+      content="Gestione open source e privacy-first della Partita IVA in regime forfettario"
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>

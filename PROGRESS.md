@@ -3,6 +3,44 @@
 > Una voce per sessione: fatto, decisioni, next steps, blocchi. Le ultime 2 voci si leggono
 > all'inizio di ogni sessione (vedi CLAUDE.md).
 
+## 2026-08-22 — S3 Verticale app
+
+**Fatto**
+- **Dataset ATECO→coefficiente nel motore** (`params/ateco.ts`): i 9 gruppi dell'allegato 4
+  L. 190/2014 verificati su fonte tabellare (i gruppi restano su ATECO 2007 anche dopo la
+  riclassificazione 2025, `daVerificare` sul mapping ufficiale); match per prefisso più specifico
+  (46.1 vs 46.2, gruppi di terza cifra) — 7 test.
+- **`apps/web` in produzione**: wizard profilo (ATECO con riconoscimento automatico del gruppo,
+  copertura GS, anni dal 2025 perché i params partono da lì), registro entrate con data di
+  incasso distinta e bollo automatico dai params, bilancio per anno con carte, barra soglie,
+  countdown 5%, prossimi F24 con righe/crediti e **breakdown ricorsivo `ExplainedValue`**.
+  Stack come da ADR (React 19, Vite, Tailwind 4, Dexie, Zustand, RHF+zod); logica pura dell'app
+  (`lib/bilancio.ts`) testata (66 test totali nel repo). Nota: Intl it-IT non raggruppa sotto le
+  5 cifre (CLDR `minimumGroupingDigits=2`) → `useGrouping: 'always'`.
+- **Deploy**: build locale + `vercel deploy --prebuilt` da `apps/web` (il monorepo non va nel
+  cloud) → https://partitiva.vercel.app. Ripulita la confusione deployment (i 404 erano i vecchi
+  tentativi vuoti; i deploy si lanciano SOLO da apps/web e con scope esplicito — il default CLI
+  è il team enterprise!).
+- Dependabot: PR #4 chiusa (riproponeva TypeScript 7, incompatibile con typescript-eslint) +
+  `ignore` per `typescript >=7` in dependabot.yml.
+
+- **Review interna (code-reviewer): 5 blocchi, tutti verificati e corretti** con test dedicati
+  (76 totali, ora anche jsdom + fake-indexeddb per montare l'App): (1) `useLiveQuery` confondeva
+  caricamento e profilo assente → pagina bianca per ogni utente nuovo e Wizard irraggiungibile
+  (fix: sentinella + test di mount su DB vuoto); (2) `oggiIso` era in UTC → a mezzanotte italiana
+  scriveva l'incasso nell'anno fiscale precedente (fix: data locale); (3) `1.500` parsato come
+  1,50 € (fix: punto+3cifre = migliaia); (4) incassata-senza-data salvata in silenzio come mai
+  incassata (fix: superRefine + errore a video); (5) mancavano `navigator.storage.persist()` ed
+  **export/import JSON** promessi dall'architettura (fix: BackupMenu con schemaVersion).
+  Bonus: pulsante "profilo" per modificare il wizard (prima un coefficiente sbagliato era per sempre).
+
+**Next steps (S4)**: parser XML FatturaPA/p7m in TDD sulla fixture + upload/import nel registro;
+valutare shadcn/ui e Playwright E2E (i test componente ora hanno l'ambiente jsdom).
+
+**Blocchi/aperture**: mapping ufficiale ATECO 2025 (`daVerificare`); wizard limitato ad aperture
+≥ 2025 finché non esistono params per gli anni precedenti (serve anche il chiarimento
+deduzione-parziale per chi entra a metà carriera).
+
 ## 2026-08-22 — S2 Motore fiscale
 
 **Fatto**

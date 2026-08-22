@@ -13,10 +13,13 @@ governa la propria P.IVA — dalla fattura all'F24 spiegato — senza che i dati
   novembre, crediti esposti, soglie minime acconti (rata unica col 1791), metodo previsionale
   opt-in, fallback params con warning; actuals fino alla singola rata; albero di spiegazione per
   ogni importo; "quanto accantonare" per incasso; regole pure di cassa e bollo.
-- **S3 — Verticale app** (`apps/web`): React 19 + Vite + Tailwind/shadcn + Zustand + Dexie;
-  wizard iniziale (anno apertura P.IVA, ATECO→coefficiente con ricerca, aliquota 5/15,
-  Gestione Separata); registro entrate manuale con **data di incasso** distinta dalla data fattura;
-  bilancio con breakdown, alert soglie 85.000/100.000 €, countdown del 5%.
+- ✅ **S3 — Verticale app** (22/08/2026, `apps/web`): React 19 + Vite + Tailwind 4 + Zustand +
+  Dexie (+ RHF/zod); wizard (anno apertura dal 2025, ATECO→coefficiente con riconoscimento
+  automatico dalla tabella allegato 4, copertura GS); registro entrate con **data di incasso**
+  distinta e bollo automatico; bilancio con breakdown `ExplainedValue`, barra soglie
+  85.000/100.000 €, countdown del 5%, prossimi F24 con righe e crediti. Deploy su
+  partitiva.vercel.app (build locale + `--prebuilt`). Rimandati a sessioni successive: shadcn/ui,
+  export/import JSON, Playwright E2E.
 - **S4 — Ingestione XML**: parser FatturaPA FPR12 (tolleranza FPA12), firma XAdES ignorata,
   buste `.p7m` (unwrap del payload), upload multiplo e import storico, dedup
   (anno, numero, P.IVA cedente), validazioni e warning (somma righe vs totale, regime ≠ RF19),

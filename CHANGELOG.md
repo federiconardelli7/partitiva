@@ -7,6 +7,12 @@ Formato: [Keep a Changelog](https://keepachangelog.com/it-IT/1.1.0/); versioning
 
 ### Added
 
+- **App web (S3)**: wizard di onboarding (ATECO→coefficiente automatico dalla tabella
+  allegato 4, copertura GS), registro entrate per **data di incasso** con bollo automatico,
+  bilancio per anno con breakdown `ExplainedValue`, barra soglie 85k/100k, countdown del 5% e
+  prossimi F24; dati solo in IndexedDB (Dexie). Dataset ATECO→coefficiente nel motore
+  (`params/ateco.ts`) con fonte e test.
+
 - **Motore fiscale (S2)**: `computeAnno` e `computeTimeline` (F24 luglio/novembre per righe con
   codici tributo e causali, crediti espliciti, soglie minime acconti con rata unica, metodo
   previsionale opt-in, fallback parametri con warning), actuals fino alla singola rata F24, albero

@@ -20,7 +20,8 @@ una fonte contraddice queste tabelle ⇒ STOP e segnalazione, mai scelta silenzi
 | Uscita immediata | > 100.000 € incassati nell'anno | L. 190/2014 co. 71 | ✅ 15/08/2026 |
 | Principio di cassa | conta l'**incassato** nell'anno solare (data incasso, non data fattura) | L. 190/2014 co. 64 | ✅ 15/08/2026 |
 | Reddito imponibile | incassato × coefficiente di redditività (per gruppo ATECO) | L. 190/2014 co. 64, all. 4 | ✅ 15/08/2026 |
-| Coefficiente 67% | gruppo residuale "altre attività" (ATECO 58–63, incl. software: 62.02.00, ricodificato 62.20.10 in ATECO 2025 senza cambio coefficiente) | all. 4 L. 190/2014; ricodifica ISTAT ATECO 2025 | ⚠️ tabella completa da fonte ufficiale in S2 |
+| Coefficiente 67% | gruppo residuale "altre attività" (ATECO 58–63, incl. software: 62.02.00, ricodificato 62.20.10 in ATECO 2025 senza cambio coefficiente) | all. 4 L. 190/2014; ricodifica ISTAT ATECO 2025 | ✅ 22/08/2026 |
+| Tabella completa 9 gruppi | in `packages/motore-fiscale/src/params/ateco.ts` (40/40/40/54/86/62/40/78/67); i gruppi restano su ATECO 2007 anche dopo la riclassificazione 2025 | all. 4 L. 190/2014 (verifica incrociata su fonti tabellari) | ⚠️ `daVerificare`: mapping ufficiale ATECO 2025 in attesa |
 | Imposta sostitutiva | 5% per i primi 5 anni (requisiti startup, co. 65), poi 15%; sostituisce IRPEF, addizionali, IRAP | L. 190/2014 co. 64–65 | ✅ 15/08/2026 |
 | Unica deduzione | contributi previdenziali obbligatori **versati nell'anno** (cassa); niente spese, niente detrazioni IRPEF, niente deduzione fondo pensione | L. 190/2014 co. 64 | ✅ 15/08/2026 |
 | IVA / estero B2B | niente IVA in fattura; verso committente estero B2B: fuori campo art. 7-ter DPR 633/72, natura **N2.2**, regime **RF19**, nessuna ritenuta | DPR 633/72 art. 7-ter (riscontrato anche nell'XML reale) | ✅ 15/08/2026 |

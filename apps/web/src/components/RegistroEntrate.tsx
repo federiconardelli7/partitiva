@@ -1,0 +1,164 @@
+import { zodResolver } from '@hookform/resolvers/zod'
+import { bolloPerFattura, cents } from '@partitiva/motore-fiscale'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
+import { db, type Fattura } from '../db'
+import { annoDi, paramsVicini } from '../lib/bilancio'
+import { formatDataIt, formatEuro, oggiIso, parseImportoIt } from '../lib/format'
+
+import { fatturaFormSchema } from '../lib/schemi'
+
+type FormValues = z.input<typeof fatturaFormSchema>
+
+export function RegistroEntrate({ fatture }: { fatture: Fattura[] }) {
+  const {
+    register,
+    handleSubmit,
+    watch,
+    reset,
+    formState: { errors },
+  } = useForm<FormValues>({
+    resolver: zodResolver(fatturaFormSchema),
+    defaultValues: {
+      numero: '',
+      dataEmissione: oggiIso(),
+      importo: '',
+      descrizione: '',
+      incassata: true,
+      dataIncasso: oggiIso(),
+    },
+  })
+
+  const incassata = watch('incassata')
+  const importoCents = parseImportoIt(watch('importo') ?? '')
+  const anteprimaBollo =
+    importoCents !== null
+      ? bolloPerFattura(cents(importoCents), paramsVicini(annoDi(watch('dataEmissione') ?? oggiIso())))
+      : 0
+
+  const onSubmit = handleSubmit(async (values) => {
+    const parsed = fatturaFormSchema.parse(values)
+    const importo = parseImportoIt(parsed.importo)
+    if (importo === null) return
+    await db.fatture.add({
+      numero: parsed.numero,
+      dataEmissione: parsed.dataEmissione,
+      dataIncasso: parsed.incassata ? parsed.dataIncasso : null,
+      importoCents: importo,
+      bolloCents: bolloPerFattura(cents(importo), paramsVicini(annoDi(parsed.dataEmissione))),
+      descrizione: parsed.descrizione,
+    })
+    reset({ ...values, numero: '', importo: '', descrizione: '' })
+  })
+
+  const segnaIncassata = (fattura: Fattura) => db.fatture.update(fattura.id!, { dataIncasso: oggiIso() })
+  const elimina = (fattura: Fattura) => {
+    if (window.confirm(`Eliminare la fattura n. ${fattura.numero}?`)) void db.fatture.delete(fattura.id!)
+  }
+
+  return (
+    <div className="space-y-6">
+      <form
+        onSubmit={onSubmit}
+        className="grid gap-3 rounded-xl border border-stone-200 bg-white p-4 shadow-sm sm:grid-cols-2 dark:border-stone-800 dark:bg-stone-900"
+      >
+        <h2 className="text-sm font-semibold sm:col-span-2">Nuova fattura</h2>
+        <label className="text-sm">
+          Numero
+          <input {...register('numero')} className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2 dark:border-stone-700 dark:bg-stone-800" />
+          {errors.numero && <span className="text-red-600">{errors.numero.message}</span>}
+        </label>
+        <label className="text-sm">
+          Data emissione
+          <input type="date" {...register('dataEmissione')} className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2 dark:border-stone-700 dark:bg-stone-800" />
+        </label>
+        <label className="text-sm">
+          Importo (€)
+          <input placeholder="1.234,56" {...register('importo')} className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2 dark:border-stone-700 dark:bg-stone-800" />
+          {errors.importo && <span className="text-red-600">{errors.importo.message}</span>}
+          <span className="mt-1 block text-xs text-stone-500">
+            Bollo automatico: {formatEuro(anteprimaBollo)} {anteprimaBollo > 0 ? '(importo sopra 77,47 €)' : ''}
+          </span>
+        </label>
+        <label className="text-sm">
+          Descrizione
+          <input {...register('descrizione')} className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2 dark:border-stone-700 dark:bg-stone-800" />
+        </label>
+        <div className="flex items-end gap-3 text-sm">
+          <label className="flex items-center gap-2">
+            <input type="checkbox" {...register('incassata')} /> Già incassata
+          </label>
+          {incassata && (
+            <label>
+              il
+              <input type="date" {...register('dataIncasso')} className="ml-2 rounded-md border border-stone-300 px-2 py-1 dark:border-stone-700 dark:bg-stone-800" />
+              {errors.dataIncasso && (
+                <span className="block text-red-600">{errors.dataIncasso.message}</span>
+              )}
+            </label>
+          )}
+        </div>
+        <button type="submit" className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 sm:justify-self-end">
+          Aggiungi
+        </button>
+        <p className="text-xs text-stone-500 sm:col-span-2">
+          Nel forfettario conta la <strong>data di incasso</strong>: una fattura di dicembre
+          incassata a gennaio appartiene all’anno dopo.
+        </p>
+      </form>
+
+      <div className="overflow-x-auto rounded-xl border border-stone-200 bg-white shadow-sm dark:border-stone-800 dark:bg-stone-900">
+        <table className="w-full text-sm">
+          <thead className="border-b border-stone-200 text-left text-xs uppercase text-stone-500 dark:border-stone-800">
+            <tr>
+              <th className="px-3 py-2">N.</th>
+              <th className="px-3 py-2">Emessa</th>
+              <th className="px-3 py-2">Incassata</th>
+              <th className="px-3 py-2 text-right">Importo</th>
+              <th className="px-3 py-2 text-right">Bollo</th>
+              <th className="px-3 py-2" />
+            </tr>
+          </thead>
+          <tbody>
+            {fatture.length === 0 && (
+              <tr>
+                <td colSpan={6} className="px-3 py-6 text-center text-stone-500">
+                  Nessuna fattura: aggiungi la prima qui sopra.
+                </td>
+              </tr>
+            )}
+            {fatture.map((f) => (
+              <tr key={f.id} className="border-b border-stone-100 last:border-0 dark:border-stone-800/50">
+                <td className="px-3 py-2 font-mono">{f.numero}</td>
+                <td className="px-3 py-2">{formatDataIt(f.dataEmissione)}</td>
+                <td className="px-3 py-2">
+                  {f.dataIncasso ? (
+                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200">
+                      {formatDataIt(f.dataIncasso)}
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => void segnaIncassata(f)}
+                      className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800 hover:bg-amber-200 dark:bg-amber-900 dark:text-amber-200"
+                    >
+                      emessa — incassa oggi
+                    </button>
+                  )}
+                </td>
+                <td className="px-3 py-2 text-right tabular-nums">{formatEuro(f.importoCents)}</td>
+                <td className="px-3 py-2 text-right tabular-nums text-stone-500">
+                  {f.bolloCents > 0 ? formatEuro(f.bolloCents) : '—'}
+                </td>
+                <td className="px-3 py-2 text-right">
+                  <button onClick={() => elimina(f)} className="text-xs text-stone-400 hover:text-red-600">
+                    elimina
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
