@@ -27,6 +27,22 @@
 - 125 test verdi (19 nuovi: helper puri, Flusso year-aware, mount della nuova IA, sandbox che
   non scrive mai su Dexie); motore e params non toccati; import XML invariato.
 
+- **Post-commit: 404 in produzione risolto alla causa.** Il push su GitHub innescava
+  l'integrazione Git del progetto Vercel (Root Directory `.`, framework "Other" → deployment
+  VUOTO in 1s che ruba l'alias di produzione: erano questi i «tentativi vuoti» già visti in
+  S3). Alias ripuntato al deployment prebuilt buono e **integrazione Git scollegata**
+  (`vercel git disconnect`): il push non crea più deployment, il deploy resta SOLO quello
+  prebuilt da `apps/web`. Verifica live: 200 su tutte le rotte (rewrite SPA ok) e bundle di
+  produzione con le stringhe S5. Nota CLI: `vercel inspect`/`alias` ignorano il link e cadono
+  sullo scope enterprise di default → sempre `--scope federiconardelli-avalabsorgs-projects`.
+
+- **Review, secondo passaggio (sul commit)**: i 3 fix del primo giro confermati corretti;
+  un blocco nuovo e fondato — la card soglie della Panoramica hardcodava «85.000 €», la
+  tacca all'85% e «85k · 100k» con `soglia85/soglia100` già in scope dai params. Ora
+  etichette e tacca derivano da `params.soglie.*` (nuovo `formatEuroIntero`, test che segue
+  i params; gotcha: testing-library non concatena i text node fratelli di `{expr}` in JSX →
+  matcher a funzione su `textContent`). 130 test verdi.
+
 **Decisioni**: tracker wayfinder local-markdown (niente GitHub Issues); la mappa decide,
 la pipeline superpowers esegue; nel Simulatore MVP niente selettore dell'anno di apertura
 né F24 di scenario (riaperture = nuovo sforzo).

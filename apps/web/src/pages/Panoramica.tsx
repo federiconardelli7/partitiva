@@ -15,7 +15,7 @@ import {
   paramsVicini,
   prossimoF24,
 } from '../lib/bilancio'
-import { formatDataIt, formatEuro, oggiIso } from '../lib/format'
+import { formatDataIt, formatEuro, formatEuroIntero, oggiIso } from '../lib/format'
 
 const chip = 'rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-medium text-stone-600 dark:bg-stone-800 dark:text-stone-300'
 const card = 'rounded-xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900'
@@ -29,7 +29,7 @@ export function Panoramica({ profilo, fatture }: { profilo: Profilo; fatture: Fa
     ...fatture.map((f) => annoDi(f.dataEmissione)),
     ...fatture.filter((f) => f.dataIncasso !== null).map((f) => annoDi(f.dataIncasso!)),
   )
-  const [anno, setAnno] = useState(() => Math.min(annoCorrente, annoMassimo))
+  const [anno, setAnno] = useState(annoCorrente)
   const [nodoAttivo, setNodoAttivo] = useState<NodeId | null>(null)
   const timeline = useMemo(
     () => computeTimeline(buildTimelineInputs(profilo, fatture, annoMassimo)),
@@ -124,7 +124,7 @@ export function Panoramica({ profilo, fatture }: { profilo: Profilo; fatture: Fa
         </div>
 
         <div className={card}>
-          <h3 className="text-xs uppercase tracking-wide text-stone-500">Verso gli 85.000 €</h3>
+          <h3 className="text-xs uppercase tracking-wide text-stone-500">Verso gli {formatEuroIntero(soglia85)}</h3>
           <div className="mt-1 text-xl font-semibold tabular-nums">{formatEuro(incassato)}</div>
           <div className="relative mt-2 h-2.5 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-800">
             <div
@@ -133,11 +133,16 @@ export function Panoramica({ profilo, fatture }: { profilo: Profilo; fatture: Fa
               }`}
               style={{ width: `${percentualeSoglia}%` }}
             />
-            <div className="absolute inset-y-0 border-l-2 border-dashed border-stone-400" style={{ left: '85%' }} />
+            <div
+              className="absolute inset-y-0 border-l-2 border-dashed border-stone-400"
+              style={{ left: `${(soglia85 / soglia100) * 100}%` }}
+            />
           </div>
           <p className="mt-1 flex justify-between text-xs text-stone-500 dark:text-stone-400">
             <span>incassato nell'anno</span>
-            <span>85k · 100k</span>
+            <span>
+              {formatEuroIntero(soglia85)} · {formatEuroIntero(soglia100)}
+            </span>
           </p>
         </div>
       </div>

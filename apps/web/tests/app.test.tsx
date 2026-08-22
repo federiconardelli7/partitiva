@@ -4,7 +4,8 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { App } from '../src/App'
 import { db } from '../src/db'
-import { oggiIso } from '../src/lib/format'
+import { paramsVicini } from '../src/lib/bilancio'
+import { formatEuroIntero, oggiIso } from '../src/lib/format'
 
 const PROFILO = { id: 1, annoApertura: 2025, ateco: '62.02.00', coefficiente: 0.67, copertura: 'piena' as const }
 const ANNO = Number(oggiIso().slice(0, 4))
@@ -40,6 +41,19 @@ describe('App — landing condizionale su /', () => {
     render(<App />)
     fireEvent.click(await screen.findByRole('button', { name: '2025' }))
     expect(await screen.findByRole('heading', { name: /Il tuo 2025/ })).toBeTruthy()
+  })
+
+  it('la card delle soglie prende i valori dai params, mai hardcoded', async () => {
+    await db.profilo.put(PROFILO)
+    render(<App />)
+    const soglie = paramsVicini(ANNO).soglie
+    const s85 = formatEuroIntero(soglie.uscitaAnnoSuccessivo.valore)
+    const s100 = formatEuroIntero(soglie.uscitaImmediata.valore)
+    // matcher a funzione: il testo è spezzato in più text node ({valore} in JSX)
+    const conTestoEsatto = (atteso: string) => (_: string, elemento: Element | null) =>
+      elemento !== null && elemento.children.length === 0 && elemento.textContent === atteso
+    expect(await screen.findByText(conTestoEsatto(`Verso gli ${s85}`))).toBeTruthy()
+    expect(screen.getByText(conTestoEsatto(`${s85} · ${s100}`))).toBeTruthy()
   })
 
   it('le fatture non incassate finiscono nella card «Da incassare»', async () => {

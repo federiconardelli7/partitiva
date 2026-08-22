@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatDataIt, formatEuro, oggiIso, parseImportoIt } from '../src/lib/format'
+import { formatDataIt, formatEuro, formatEuroIntero, oggiIso, parseImportoIt } from '../src/lib/format'
 
 describe('formati italiani', () => {
   it('parseImportoIt accetta 1.234,56 / 1234,56 / 1234.56 / 1234', () => {
@@ -31,6 +31,12 @@ describe('formati italiani', () => {
   it('formatEuro rende il formato italiano', () => {
     expect(formatEuro(123_456)).toContain('1.234,56')
     expect(formatEuro(200)).toContain('2,00')
+  })
+
+  it('formatEuroIntero: euro senza decimali per le etichette compatte', () => {
+    expect(formatEuroIntero(8_500_000)).toContain('85.000')
+    expect(formatEuroIntero(8_500_000)).not.toContain(',')
+    expect(formatEuroIntero(10_000_000)).toContain('100.000')
   })
 
   it('formatDataIt: ISO → gg/mm/aaaa', () => {

@@ -12,6 +12,19 @@ export function formatEuro(cents: number): string {
   return euroFormatter.format(cents / 100)
 }
 
+const euroInteroFormatter = new Intl.NumberFormat('it-IT', {
+  style: 'currency',
+  currency: 'EUR',
+  useGrouping: 'always',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+})
+
+/** Euro senza decimali, per etichette compatte (es. soglie): 8_500_000 → "85.000 €". */
+export function formatEuroIntero(cents: number): string {
+  return euroInteroFormatter.format(cents / 100)
+}
+
 export function formatPercento(rate: number): string {
   return `${(rate * 100).toLocaleString('it-IT', { maximumFractionDigits: 2 })}%`
 }
