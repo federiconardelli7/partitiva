@@ -19,8 +19,13 @@ segnale: va sempre risalita alla fonte primaria prima di fissare un parametro).
 ## Prassi ufficiale
 
 - Circolare INPS n. 8 del 03/02/2026 — Gestione Separata 2026 (aliquote 26,07%/24%, massimale
-  122.295 €, minimale 4.903,25 €). Notizia INPS:
+  122.295 €, minimale di reddito 18.808 €). Notizia INPS:
   <https://www.inps.it/it/it/inps-comunica/notizie/dettaglio-news-page.news.2026.02.gestione-separata-le-aliquote-contributive-per-il-2026.html>
+- Circolare INPS n. 27 del 30/01/2025 — Gestione Separata 2025 (26,07%/24%, massimale 120.607 €,
+  minimale 18.555 €). Notizia INPS:
+  <https://www.inps.it/it/it/inps-comunica/notizie/dettaglio-news-page.news.2025.01.gestione-separata-le-aliquote-contributive-per-il-2025.html>
+- Scheda INPS "F24 per professionisti iscritti alla Gestione Separata" (causali PXX/P10):
+  <https://www.inps.it/it/it/dettaglio-approfondimento.schede-informative.49920.F24-per-professionisti-iscritti-alla-Gestione-Separata.html>
 - Circolare INPS n. 14 del 09/02/2026 — artigiani e commercianti (roadmap).
 - MEF, principali misure della Legge di Bilancio 2026:
   <https://www.mef.gov.it/focus/Principali-misure-della-legge-di-bilancio-2026/>
@@ -44,6 +49,8 @@ segnale: va sempre risalita alla fonte primaria prima di fissare un parametro).
   <https://www.ecnews.it/lavoro/news-del-giorno/legge-bilancio-2026-revisione-aliquote-irpef/>
 - FiscoeTasse — rateazione post-proroga per soggetti ISA:
   <https://www.fiscoetasse.com/approfondimenti/16567-dichiarazione-redditi-soggetti-ISA-rateazione-delle-imposte-e-date-da-ricordare.html>
+- Quickfisco — F24 nel regime forfettario (codici 1790/1791/1792, causali PXX/P10):
+  <https://quickfisco.it/blog/regime-forfettario/f24-nel-regime-forfettario/>
 
 ## Progetti di riferimento
 

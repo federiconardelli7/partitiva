@@ -3,6 +3,39 @@
 > Una voce per sessione: fatto, decisioni, next steps, blocchi. Le ultime 2 voci si leggono
 > all'inizio di ogni sessione (vedi CLAUDE.md).
 
+## 2026-08-22 — S2 Motore fiscale
+
+**Fatto**
+- **Motore fiscale completo in TDD** (RED verificato → GREEN): 41 test verdi, `pnpm verify` pulito.
+  Catena per anno (`computeAnno`) e timeline multi-anno (`computeTimeline`) con: F24 di luglio e
+  novembre composti per righe (codici 1790/1791/1792, causali PXX/P10), crediti esposti e mai
+  compensati in automatico, soglie minime acconti (nessun acconto ≤ 51,65 €; rata unica a novembre
+  col 1791 sotto 257,52 €), metodo previsionale opt-in con warning, fallback params con warning,
+  actuals fino alla **singola rata**, albero di spiegazione per ogni importo, quota di
+  accantonamento; regole pure `aggregaIncassato` (cassa) e `bolloPerFattura`.
+- **Params 2025/2026 come dati con fonte per valore** (zod al load): circ. INPS 27/2025 e 8/2026,
+  L. 190/2014, art. 58 DL 124/2019, DL 89/2026 (`daVerificare` in attesa di GU), soglie acconti.
+  Aritmetica in centesimi interi (per-diecimila): niente float nei calcoli.
+- Fonti chiuse in S2: causali **PXX/P10** (PXX professionisti; P10 pensionati/altra copertura) e
+  codici tributo confermati (il 1791 copre anche l'unica soluzione); minimale GS chiarito
+  (18.808 € di reddito ⇒ 4.903,25 € di contributo); valori 2025 (massimale 120.607, minimale 18.555).
+- Merge delle 3 PR dependabot (bump actions) e pull; placeholder `apps/web/index.html` pronto.
+- **Review interna (agente code-reviewer): 7 rilievi bloccanti, tutti verificati e corretti** con
+  test dedicati (51 totali): previsionale ora sull'imponibile previsto (reddito − versamenti
+  previsti) e attivo anche sull'anno di conguaglio; actuals con chiavi sconosciute → errore
+  esplicito, mai scarto silenzioso; anni duplicati/non consecutivi e incassato negativo → errore;
+  saldi con nodo di spiegazione proprio (`saldoImposta`/`saldoContributi`, sovrascrivibili e
+  referenziati dalle righe F24); `roundEuroToCents` corretto sui negativi; ripartizione rate e
+  soglie-sui-contributi ora letti DAI PARAMS (con seam `opts.getParams` per iniettarli).
+
+**Next steps (S3)**: verticale app (`apps/web` con Vite/React/Dexie), wizard con tabella
+ATECO→coefficiente (fonte ufficiale da chiudere), registro entrate con data di incasso, bilancio
+col breakdown `ExplainedValue`.
+
+**Blocchi**: deploy Vercel in attesa di `npx vercel login` (MCP 403 anche su preview: pare esistere
+un progetto "partitiva" fuori dal team hobby, da chiarire); GU DL 89/2026 e soglie GS restano
+`daVerificare` nei params.
+
 ## 2026-08-22 — S1.1 Pubblicazione e caso campione sintetico
 
 **Fatto**

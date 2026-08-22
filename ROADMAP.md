@@ -7,12 +7,12 @@ governa la propria P.IVA — dalla fattura all'F24 spiegato — senza che i dati
 
 - ✅ **S1 — Fondazione** (15/08/2026): decisioni fondanti (ADR-0001), regole fiscali documentate con
   fonti, scaffold monorepo, CI, privacy gate, fixture anonimizzata.
-- **S2 — Motore fiscale** (`packages/motore-fiscale`): TDD sui golden test di `TESTING.md`;
-  `params/2025.ts` e `params/2026.ts` con fonte per ogni valore; catena
-  incassato → reddito → contributi GS → deduzione (versati) → imponibile → imposta → netto;
-  timeline multi-anno con acconti/saldi (F24 di luglio e novembre, crediti inclusi);
-  override con valori reali di dichiarazione ("actuals"); albero di spiegazione per ogni importo;
-  "quanto accantonare" per incasso.
+- ✅ **S2 — Motore fiscale** (22/08/2026): TDD sui golden (41 test verdi); `params/2025-2026.ts`
+  con fonte per ogni valore; catena incassato → reddito → contributi GS → deduzione (versati) →
+  imponibile → imposta → netto (competenza e reale); timeline multi-anno con F24 di luglio e
+  novembre, crediti esposti, soglie minime acconti (rata unica col 1791), metodo previsionale
+  opt-in, fallback params con warning; actuals fino alla singola rata; albero di spiegazione per
+  ogni importo; "quanto accantonare" per incasso; regole pure di cassa e bollo.
 - **S3 — Verticale app** (`apps/web`): React 19 + Vite + Tailwind/shadcn + Zustand + Dexie;
   wizard iniziale (anno apertura P.IVA, ATECO→coefficiente con ricerca, aliquota 5/15,
   Gestione Separata); registro entrate manuale con **data di incasso** distinta dalla data fattura;

@@ -4,10 +4,13 @@ Ogni regola del motore vive qui con formula, fonte normativa e data di verifica.
 entra nel codice se non è in questa pagina. Legenda stato: ✅ verificata · ⚠️ da chiudere su fonte
 primaria · 🔭 roadmap (non ancora riverificata).
 
-**Ultimo double-check**: 15/08/2026, su fonti primarie (INPS, MEF) e stampa fiscale specializzata;
-la rilettura dei testi primari (normattiva, PDF circolari) è prevista in S2 **prima** di fissare i
-valori in `params/`. Regola ferma: se una fonte contraddice queste tabelle ⇒ STOP e segnalazione,
-mai scelta silenziosa.
+**Ultimo double-check**: 22/08/2026 (S2), su fonti primarie (INPS, MEF) e stampa fiscale
+specializzata; i valori sono fissati in `packages/motore-fiscale/src/params/` con la stessa fonte
+riportata qui. **Aperture residue** (parametri marcati `daVerificare` nel codice): testo GU del
+DL 89/2026 (maggiorazione 0,80%); applicabilità delle soglie minime acconto ai contributi GS
+(default prudente: non applicate); rilettura integrale L. 190/2014 su normattiva; tabella completa
+ATECO→coefficienti (serve in S3); scadenze trimestrali del bollo virtuale (S5). Regola ferma: se
+una fonte contraddice queste tabelle ⇒ STOP e segnalazione, mai scelta silenziosa.
 
 ## Regime forfettario — L. 190/2014, art. 1, commi 54–89
 
@@ -33,7 +36,8 @@ mai scelta silenziosa.
 | Aliquota con altra copertura / pensionati | 24% | circ. INPS 8/2026 | ✅ 15/08/2026 |
 | Base imponibile | reddito forfettario **lordo** (incassato × coefficiente), NON ridotto dei contributi | prassi INPS costante | ✅ 15/08/2026 |
 | Massimale 2026 | 122.295 € — **mai vincolante per un forfettario** (reddito max teorico = 100.000 × 0,86 = 86.000): modellato come warning informativo | circ. INPS 8/2026 | ✅ 15/08/2026 |
-| Minimale di accredito 2026 | 4.903,25 € (sotto questo reddito l'anno non accredita 12 mesi di contributi: informativo, NON è un minimo di versamento) | circ. INPS 8/2026 | ✅ 15/08/2026 |
+| Minimale di reddito 2026 | 18.808 € — sotto, l'anno non accredita 12 mesi di contributi (il contributo minimo corrispondente è 18.808 × 26,07% = 4.903,25 €). Informativo, NON è un minimo di versamento | circ. INPS 8/2026 | ✅ 22/08/2026 |
+| Valori 2025 | aliquote invariate (26,07% / 24%); massimale 120.607 €; minimale di reddito 18.555 € (contributo corrispondente 4.837,29 €) | circ. INPS n. 27 del 30/01/2025 | ✅ 22/08/2026 |
 | Contributo minimo fisso | nessuno (a differenza di artigiani/commercianti) | circ. INPS 8/2026 | ✅ 15/08/2026 |
 | Deducibilità | i contributi versati riducono l'imponibile fiscale dell'anno di **versamento** | L. 190/2014 co. 64 | ✅ 15/08/2026 |
 
@@ -50,7 +54,8 @@ mai scelta silenziosa.
 | Saldo + 1ª rata | 30/6, **differito al 20/7 in via strutturale** per ISA/forfettari | per il 2026: art. 6 DL 89/2026 | ✅ 15/08/2026 |
 | Maggiorazione differimento (fino al 20/8) | **0,40% ordinaria; 0,80% nel 2026** (raddoppiata) — parametro per-anno | art. 6 DL 89/2026; regola a regime: art. 1-sexies DL 63/2026, conv. L. 113/2026 | ⚠️ rileggere in GU in S2 |
 | 2ª rata | 30/11, NON rateizzabile; saldo+1ª rateizzabili fino a metà dicembre | prassi AdE | ✅ 15/08/2026 |
-| Codici tributo F24 | 1790 (1º acconto imposta), 1791 (2º acconto), 1792 (saldo); contributi GS in sezione INPS, causale PXX (aliquota piena) / P10, periodo 01–12 | prassi AdE/INPS | ⚠️ causali da confermare su fonte primaria in S2 |
+| Codici tributo F24 | 1790 (1º acconto imposta), 1791 (2º acconto **e** unica soluzione), 1792 (saldo); contributi GS in sezione INPS, periodo 01–12 | prassi AdE (guide specialistiche concordanti) | ✅ 22/08/2026 |
+| Causali contributo GS | **PXX** = professionisti (saldo/acconto); **P10** = titolari di pensione o con altra copertura previdenziale (la platea del 24%) | scheda INPS "F24 per professionisti iscritti alla Gestione Separata" + riscontro su F24 reali (verifica locale) | ✅ 22/08/2026 |
 
 ## Caso campione «Mario Rossi» — dataset golden sintetico
 
@@ -62,7 +67,8 @@ nessun importo reale entra nel repo.
 - **2025 (anno 1)**: incassato 24.000 → reddito 16.080 → imposta 804,00; contributi teorici
   4.192,06, **dichiarati 4.191,00** (l'arrotondamento all'euro della dichiarazione produce ±2 €);
   versato nel 2025: zero (prima scadenza nel 2026).
-- **F24 2026**: 20/7 teorico = 7.073,40, **effettivo 7.073,35** (saldo imposta 804,00 + saldo GS
+- **F24 2026**: 20/7 in tre regimi — teorico puro 7.074,89 (contributi 4.192,06), col dichiarato
+  7.073,40 (rate teoriche su 4.191,00), **effettivo 7.073,35** (saldo imposta 804,00 + saldo GS
   4.191,00 + 1ª rata acconti 402,00 + 1.676,35); 30/11 = **2.078,34** (402,00 + 1.676,34). Totale
   versato 2026 = **7.543,69** = deduzione dell'anno d'imposta 2026 (invariante: la deduzione di N è
   la somma delle righe INPS degli F24 pagati in N: 4.191,00 + 1.676,35 + 1.676,34 = 7.543,69).

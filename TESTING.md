@@ -15,7 +15,7 @@ Comandi: `pnpm test` (tutti), `pnpm verify` (lint + typecheck + test + privacy g
 | Caso | Input | Output atteso |
 |---|---|---|
 | Anno 1 (2025) | incassato 24.000, coeff. 67%, versati 0, aliquota 5% | reddito 16.080; contributi dovuti 4.192,06 (dichiarati 4.191,00); imposta 804,00 |
-| F24 anno 2 (2026) | saldo 2025 + acconti 2026 | luglio 7.073,40 teorico — 7.073,35 con le rate effettive (saldo 804,00 + 4.191,00, acconti 402,00 + 1.676,35); novembre 2.078,34 (402,00 + 1.676,34) |
+| F24 anno 2 (2026) | saldo 2025 + acconti 2026 | luglio: 7.074,89 teorico puro · 7.073,40 col dichiarato · **7.073,35** con le rate effettive (saldo 804,00 + 4.191,00, acconti 402,00 + 1.676,35); novembre 2.078,34 (402,00 + 1.676,34) |
 | Anno 2 (2026) | incassato 75.000, versati 7.543,69 | reddito 50.250; contributi dovuti 13.100,18; imponibile 42.706; imposta 2.135,30; netto di competenza 59.764,52 |
 | Conguaglio anno 3 (2027) | dai valori 2026 | F24 luglio 17.386,51 (saldo INPS 9.747,49 + saldo imposta 1.331,30 + 1ª rata acconti 6.307,72); novembre 6.307,72 |
 | Soglie | incassato 86.000 / 101.000 | flag uscita anno dopo / uscita immediata |
