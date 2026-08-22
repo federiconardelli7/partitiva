@@ -29,6 +29,26 @@ export const backupSchema = z.object({
   fatture: z.array(fatturaRecordSchema),
 })
 
+/** Anno minimo supportato: i parametri fiscali versionati partono dal 2025. */
+export const ANNO_MINIMO_PARAMS = 2025
+
+export const profiloFormSchema = z.object({
+  annoApertura: z.coerce
+    .number()
+    .int()
+    .min(ANNO_MINIMO_PARAMS, 'I parametri partono dal 2025 (per anni precedenti: contribuisci!)')
+    .max(new Date().getFullYear(), 'Anno nel futuro'),
+  ateco: z
+    .string()
+    .regex(/^\d{2}(\.\d{2}(\.\d{2})?)?$/, 'Formato atteso: 62.02.00')
+    .or(z.literal('')),
+  coefficiente: z.coerce
+    .number()
+    .min(0.01, 'Scegli il settore o inserisci il codice ATECO')
+    .max(1),
+  copertura: z.enum(['piena', 'ridotta']),
+})
+
 export const fatturaFormSchema = z
   .object({
     numero: z.string().min(1, 'Obbligatorio'),

@@ -1,5 +1,26 @@
 import { describe, expect, it } from 'vitest'
-import { backupSchema, fatturaFormSchema } from '../src/lib/schemi'
+import { backupSchema, fatturaFormSchema, profiloFormSchema } from '../src/lib/schemi'
+
+describe('schema del profilo (wizard) — ATECO facoltativo, settore obbligatorio', () => {
+  const base = { annoApertura: '2025', copertura: 'piena' }
+
+  it('basta il settore/coefficiente, senza codice ATECO', () => {
+    expect(profiloFormSchema.safeParse({ ...base, ateco: '', coefficiente: '0.67' }).success).toBe(true)
+  })
+
+  it('con ATECO valido ok; formato sbagliato → errore', () => {
+    expect(profiloFormSchema.safeParse({ ...base, ateco: '62.02.00', coefficiente: '0.67' }).success).toBe(true)
+    expect(profiloFormSchema.safeParse({ ...base, ateco: 'x62', coefficiente: '0.67' }).success).toBe(false)
+  })
+
+  it('senza coefficiente → errore (o ATECO riconosciuto o settore scelto)', () => {
+    expect(profiloFormSchema.safeParse({ ...base, ateco: '', coefficiente: '' }).success).toBe(false)
+  })
+
+  it('anno di apertura prima del 2025 → errore (i parametri partono da lì)', () => {
+    expect(profiloFormSchema.safeParse({ annoApertura: '2019', ateco: '', coefficiente: '0.67', copertura: 'piena' }).success).toBe(false)
+  })
+})
 
 const base = {
   numero: '7',

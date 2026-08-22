@@ -34,8 +34,18 @@
   **export/import JSON** promessi dall'architettura (fix: BackupMenu con schemaVersion).
   Bonus: pulsante "profilo" per modificare il wizard (prima un coefficiente sbagliato era per sempre).
 
+- **Feedback di Federico sul wizard, applicato**: l'ATECO ora è **facoltativo** (o scrivi il
+  codice e il settore si seleziona da solo, o scegli il settore dai 9 gruppi ufficiali — le
+  etichette spiegano dove trovare il codice); copy iniziale che spiega PERCHÉ servono i tre dati;
+  schema `profiloFormSchema` in lib con test either/or. Ricerca ATECO per descrizione puntuale
+  (lista ISTAT completa) → backlog.
+- **Lezione Vercel**: cancellare i deployment dal dashboard lascia l'alias di produzione senza
+  bersaglio → 404; gli URL per-deployment sono protetti da login (302). L'unico link da usare e
+  condividere è https://partitiva.vercel.app.
+
 **Next steps (S4)**: parser XML FatturaPA/p7m in TDD sulla fixture + upload/import nel registro;
-valutare shadcn/ui e Playwright E2E (i test componente ora hanno l'ambiente jsdom).
+valutare shadcn/ui e Playwright E2E (i test componente ora hanno l'ambiente jsdom); ricerca ATECO
+per descrizione (dataset ISTAT) in backlog.
 
 **Blocchi/aperture**: mapping ufficiale ATECO 2025 (`daVerificare`); wizard limitato ad aperture
 ≥ 2025 finché non esistono params per gli anni precedenti (serve anche il chiarimento
