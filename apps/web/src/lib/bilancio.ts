@@ -3,8 +3,11 @@
 import {
   aggregaIncassato,
   cents,
+  coefficientePerAteco,
   getParams,
+  GRUPPI_ATECO,
   SUPPORTED_YEARS,
+  type F24,
   type FiscalParams,
   type TimelineAnnoInput,
 } from '@partitiva/motore-fiscale'
@@ -53,8 +56,47 @@ export function buildTimelineInputs(
   return inputs
 }
 
-/** Anni residui di aliquota startup 5% per l'anno indicato (0 = già al 15%). */
-export function anniResiduiStartup(annoApertura: number, anno: number): number {
-  const anniStartup = paramsVicini(annoApertura).imposta.anniStartup.valore
-  return Math.max(0, anniStartup - (anno - annoApertura + 1))
+/** Ultimo anno di aliquota startup 5% (apertura 2025 e 5 anni → 2029). */
+export function annoUltimoStartup(annoApertura: number): number {
+  return annoApertura + paramsVicini(annoApertura).imposta.anniStartup.valore - 1
+}
+
+/** Anno di attività 1-based: nell'anno di apertura vale 1. */
+export function numeroAnnoAttivita(annoApertura: number, anno: number): number {
+  return anno - annoApertura + 1
+}
+
+/**
+ * Nome del settore di un profilo. L'ATECO decide (se coerente col coefficiente salvato);
+ * il solo coefficiente basta solo quando è univoco: quattro gruppi condividono il 40%,
+ * e nominare quello sbagliato nella "sorgente di verità" sarebbe peggio che tacere.
+ */
+export function settoreProfilo(profilo: Pick<Profilo, 'ateco' | 'coefficiente'>): string | null {
+  const daAteco = coefficientePerAteco(profilo.ateco)
+  if (daAteco && daAteco.coefficiente === profilo.coefficiente) return daAteco.settore
+  const stessoCoefficiente = GRUPPI_ATECO.filter((g) => g.coefficiente === profilo.coefficiente)
+  return stessoCoefficiente.length === 1 ? (stessoCoefficiente[0]?.settore ?? null) : null
+}
+
+/** Fatture emesse ma senza data di incasso: quante e per quanto. */
+export function daIncassare(fatture: readonly Fattura[]): { conteggio: number; importoCents: number } {
+  const aperte = fatture.filter((f) => f.dataIncasso === null)
+  return {
+    conteggio: aperte.length,
+    importoCents: aperte.reduce((somma, f) => somma + f.importoCents, 0),
+  }
+}
+
+/** Primo F24 con scadenza non ancora passata (null se sono tutti alle spalle). */
+export function prossimoF24(f24s: readonly F24[], oggi: string): F24 | null {
+  const futuri = [...f24s]
+    .filter((f) => f.dataScadenza >= oggi)
+    .sort((a, b) => a.dataScadenza.localeCompare(b.dataScadenza))
+  return futuri[0] ?? null
+}
+
+/** Giorni di calendario tra oggi e una data ISO (entrambe yyyy-mm-dd, confronto in UTC). */
+export function giorniA(dataIso: string, oggi: string): number {
+  const MS_PER_GIORNO = 86_400_000
+  return Math.round((Date.parse(dataIso) - Date.parse(oggi)) / MS_PER_GIORNO)
 }

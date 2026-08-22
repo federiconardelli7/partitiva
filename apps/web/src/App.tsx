@@ -1,11 +1,10 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { BrowserRouter, NavLink, Route, Routes, useNavigate } from 'react-router-dom'
-import { db, type Fattura, type Profilo } from './db'
-import { BackupMenu } from './components/Backup'
-import { Bilancio } from './components/Bilancio'
-import { RegistroEntrate } from './components/RegistroEntrate'
-import { Wizard } from './components/Wizard'
-import { Calcolatore } from './pages/Calcolatore'
+import { BrowserRouter, Link, Navigate, NavLink, Route, Routes } from 'react-router-dom'
+import { db, type Profilo } from './db'
+import { Dati } from './pages/Dati'
+import { Landing } from './pages/Landing'
+import { Panoramica } from './pages/Panoramica'
+import { Simulatore } from './pages/Simulatore'
 
 // Sentinella per distinguere "Dexie sta caricando" da "riga assente" (get → undefined).
 const CARICAMENTO = 'caricamento' as const
@@ -19,18 +18,29 @@ export function App() {
 }
 
 function Shell() {
-  const profilo = useLiveQuery(() => db.profilo.get(1), [], CARICAMENTO)
+  const profiloQuery = useLiveQuery(() => db.profilo.get(1), [], CARICAMENTO)
   const fatture = useLiveQuery(() => db.fatture.orderBy('dataEmissione').reverse().toArray(), [], CARICAMENTO)
-  const navigate = useNavigate()
 
-  if (profilo === CARICAMENTO || fatture === CARICAMENTO) return null
+  if (profiloQuery === CARICAMENTO || fatture === CARICAMENTO) return null
+  const profilo: Profilo | null = profiloQuery ?? null
 
-  const conProfilo = (contenuto: (profilo: Profilo, fatture: Fattura[]) => React.ReactNode) =>
-    profilo ? contenuto(profilo, fatture) : <Wizard />
+  // Nav profile-aware: senza profilo l'app invita (Simulatore / Inizia), col profilo orienta.
+  const voci = profilo
+    ? [
+        { to: '/', label: 'Panoramica', end: true, sim: false },
+        { to: '/simulatore', label: 'Simulatore', end: false, sim: true },
+        { to: '/dati', label: 'I miei dati', end: false, sim: false },
+      ]
+    : [
+        { to: '/simulatore', label: 'Simulatore', end: false, sim: true },
+        { to: '/dati', label: 'Inizia a tracciare', end: false, sim: false },
+      ]
 
-  const stileLink = ({ isActive }: { isActive: boolean }) =>
+  const stileLink = (attivo: boolean, sim: boolean) =>
     `rounded-md px-3 py-1 text-sm font-medium transition ${
-      isActive ? 'bg-white shadow dark:bg-stone-700' : 'text-stone-500 hover:text-stone-800 dark:hover:text-stone-200'
+      attivo
+        ? `bg-white shadow dark:bg-stone-700 ${sim ? 'text-indigo-700 dark:text-indigo-300' : ''}`
+        : 'text-stone-500 hover:text-stone-800 dark:hover:text-stone-200'
     }`
 
   return (
@@ -38,59 +48,41 @@ function Shell() {
       <header className="border-b border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900">
         <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-2 px-4 py-3">
           <h1 className="text-xl font-bold tracking-tight">
-            Partitiva <span className="font-normal text-emerald-700 dark:text-emerald-400">· forfettario</span>
+            <Link to="/">
+              Partitiva <span className="font-normal text-emerald-700 dark:text-emerald-400">· forfettario</span>
+            </Link>
           </h1>
-          <div className="flex items-center gap-3">
-            <nav className="flex gap-1 rounded-lg bg-stone-100 p-1 dark:bg-stone-800">
-              <NavLink to="/" end className={stileLink}>
-                Calcolatore
+          <nav className="flex gap-1 rounded-lg bg-stone-100 p-1 dark:bg-stone-800">
+            {voci.map((voce) => (
+              <NavLink
+                key={voce.to}
+                to={voce.to}
+                end={voce.end}
+                className={({ isActive }) => stileLink(isActive, voce.sim)}
+              >
+                {voce.label}
               </NavLink>
-              <NavLink to="/registro" className={stileLink}>
-                I miei dati
-              </NavLink>
-              <NavLink to="/bilancio" className={stileLink}>
-                Bilancio
-              </NavLink>
-            </nav>
-            {profilo && (
-              <>
-                <BackupMenu profilo={profilo} fatture={fatture} />
-                <NavLink
-                  to="/profilo"
-                  className="text-xs text-stone-500 underline hover:text-stone-800 dark:hover:text-stone-200"
-                  title="Modifica ATECO, coefficiente o copertura"
-                >
-                  profilo
-                </NavLink>
-              </>
-            )}
-          </div>
+            ))}
+          </nav>
         </div>
       </header>
 
       <main className="mx-auto max-w-4xl px-4 py-6">
         <Routes>
-          <Route path="/" element={<Calcolatore />} />
-          <Route path="/registro" element={conProfilo((_p, f) => <RegistroEntrate fatture={f} />)} />
-          <Route path="/bilancio" element={conProfilo((p, f) => <Bilancio profilo={p} fatture={f} />)} />
-          <Route
-            path="/profilo"
-            element={
-              profilo ? (
-                <Wizard esistente={profilo} onFine={() => navigate('/registro')} />
-              ) : (
-                <Wizard onFine={() => navigate('/registro')} />
-              )
-            }
-          />
-          <Route path="*" element={<Calcolatore />} />
+          <Route path="/" element={profilo ? <Panoramica profilo={profilo} fatture={fatture} /> : <Landing />} />
+          <Route path="/simulatore" element={<Simulatore profilo={profilo} fatture={fatture} />} />
+          <Route path="/dati" element={<Dati profilo={profilo} fatture={fatture} />} />
+          <Route path="/registro" element={<Navigate to="/dati" replace />} />
+          <Route path="/profilo" element={<Navigate to="/dati" replace />} />
+          <Route path="/bilancio" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
 
       <footer className="mx-auto max-w-4xl px-4 pb-8 pt-4 text-xs text-stone-500">
-        I dati restano solo in questo browser (IndexedDB): usa <strong>Esporta</strong> per i
-        backup. Partitiva è uno strumento di tracciamento e comprensione, non consulenza fiscale:
-        per le decisioni c’è il commercialista.{' '}
+        I dati restano solo in questo browser (IndexedDB): usa <strong>Esporta</strong> in I miei
+        dati per i backup. Partitiva è uno strumento di tracciamento e comprensione, non consulenza
+        fiscale: per le decisioni c'è il commercialista.{' '}
         <a className="underline" href="https://github.com/federiconardelli7/partitiva">Open source (MIT)</a>.
       </footer>
     </div>

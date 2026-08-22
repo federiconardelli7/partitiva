@@ -3,6 +3,40 @@
 > Una voce per sessione: fatto, decisioni, next steps, blocchi. Le ultime 2 voci si leggono
 > all'inizio di ogni sessione (vedi CLAUDE.md).
 
+## 2026-08-22 — S5 Redesign IA: Panoramica, Simulatore, I miei dati
+
+**Fatto**
+- **Wayfinder + prototipo approvato**: mappa decisionale in `.scratch/redesign-ia/` (tracker
+  local-markdown, untracked), prototipo HTML navigabile approvato da Federico (riserva: la resa
+  del Flusso andava migliorata in implementazione), spec e piano consolidati lì. Origine del
+  feedback: il Calcolatore in landing sembrava modificare il profilo; mancava una vista
+  d'insieme coi dati veri.
+- **Nuova IA a tre concetti**: `/` = **Panoramica** col profilo (vista derivata read-only che
+  «si aggiorna da sola da I miei dati») o landing di presentazione senza profilo; `/simulatore`
+  = sandbox con livrea indaco, banda «qui non si salva niente», toggle «primo anno (nulla da
+  dedurre)» e prefill SOLO esplicito «Parti dai tuoi dati»; `/dati` = hub della sorgente
+  (Fatture + import XML, Profilo con modifica inline, Backup). Redirect: `/registro`→`/dati`,
+  `/profilo`→`/dati`, `/bilancio`→`/`. Copy pattern: ogni pagina apre dichiarando la sorgente
+  dei dati e cosa NON fa; termini canonici in `CONTEXT.md` (nuovo).
+- **Componente `Flusso`** (il cuore, dai diagrammi di riferimento di Federico): proiezione
+  year-aware dell'`ExplainMap` — primo anno = imponibile pieno; dagli anni dopo compare da
+  solo il ramo «F24 pagati → di cui contributi deducibili» — nodi cliccabili che spostano la
+  radice dell'ExplainTree («ogni numero col suo perché»), zero logica fiscale nell'app.
+  Panoramica con riga «Adesso» (da incassare + CTA, prossimo F24 con countdown, barra soglie)
+  e pillole per anno: il Bilancio è assorbito lì.
+- 125 test verdi (19 nuovi: helper puri, Flusso year-aware, mount della nuova IA, sandbox che
+  non scrive mai su Dexie); motore e params non toccati; import XML invariato.
+
+**Decisioni**: tracker wayfinder local-markdown (niente GitHub Issues); la mappa decide,
+la pipeline superpowers esegue; nel Simulatore MVP niente selettore dell'anno di apertura
+né F24 di scenario (riaperture = nuovo sforzo).
+
+**Next steps (S6)**: spese + export CSV (ex S5); poi S7 parser PDF con form di revisione.
+Backlog: ricerca ATECO per descrizione (ISTAT), FPA12, import CSV storico, shadcn/ui,
+Playwright, drill-down del Flusso fino alla singola riga F24.
+
+**Blocchi/aperture**: invariati (GU DL 89/2026, soglie GS, mapping ATECO 2025, quadro RR).
+
 ## 2026-08-22 — S4 Pagine, calcolatore e parser XML
 
 **Fatto**

@@ -4,9 +4,14 @@ import { parseImportoIt } from './format'
 
 export const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 
+/** Anno minimo supportato: i parametri fiscali versionati partono dal 2025. */
+export const ANNO_MINIMO_PARAMS = 2025
+
+// Stessi limiti del form: un profilo fuori dagli anni coperti dai params farebbe
+// lanciare computeTimeline al mount della Panoramica (pagina bianca da backup).
 export const profiloSchema = z.object({
   id: z.literal(1),
-  annoApertura: z.number().int().min(2015),
+  annoApertura: z.number().int().min(ANNO_MINIMO_PARAMS).max(new Date().getFullYear()),
   ateco: z.string(),
   coefficiente: z.number().min(0.01).max(1),
   copertura: z.enum(['piena', 'ridotta']),
@@ -28,9 +33,6 @@ export const backupSchema = z.object({
   profilo: profiloSchema.nullable(),
   fatture: z.array(fatturaRecordSchema),
 })
-
-/** Anno minimo supportato: i parametri fiscali versionati partono dal 2025. */
-export const ANNO_MINIMO_PARAMS = 2025
 
 export const profiloFormSchema = z.object({
   annoApertura: z.coerce

@@ -7,6 +7,15 @@ Formato: [Keep a Changelog](https://keepachangelog.com/it-IT/1.1.0/); versioning
 
 ### Added
 
+- **Redesign IA (S5)**: `/` è la **Panoramica** — vista d'insieme read-only che si aggiorna
+  da «I miei dati», col nuovo componente **Flusso** (la catena del motore come diagramma
+  year-aware: primo anno senza deduzione, poi ramo «F24 → contributi deducibili»; nodi
+  cliccabili con ExplainTree come drill-down), riga «Adesso» e pillole per anno (assorbe il
+  Bilancio). **Simulatore** sandbox su `/simulatore` (livrea indaco, «qui non si salva
+  niente», toggle «primo anno», prefill esplicito «Parti dai tuoi dati») e hub **«I miei
+  dati»** su `/dati` (fatture, profilo, backup). Landing di presentazione per chi non ha
+  profilo; glossario dei termini in `CONTEXT.md`.
+
 - **Pagine e calcolatore (S4)**: landing «Calcolatore» (simulatore senza salvataggio), pagine
   «I miei dati» e «Bilancio» con URL propri; **parser FatturaPA** (XML FPR12 con firma XAdES,
   buste `.p7m` anche base64, euristica valuta/cambio, dedup e warning) e **import multiplo** nel
@@ -41,5 +50,7 @@ Formato: [Keep a Changelog](https://keepachangelog.com/it-IT/1.1.0/); versioning
 
 ### Changed
 
+- Il «Calcolatore» in landing e la pagina «Bilancio» sono sostituiti da **Simulatore** e
+  **Panoramica**; le rotte `/registro`, `/profilo` e `/bilancio` reindirizzano alle nuove.
 - Golden test, fixture e documentazione usano il **caso campione sintetico «Mario Rossi»**:
   nessun importo reale nel repo (i valori reali restano nelle verifiche locali).

@@ -20,4 +20,11 @@ describe('backup JSON (export/import)', () => {
     expect(() => deserializzaBackup('{"schemaVersion":99}')).toThrow(/backup/i)
     expect(() => deserializzaBackup('non-json')).toThrow()
   })
+
+  it('annoApertura fuori dagli anni coperti dai params → import rifiutato (mai pagina bianca)', () => {
+    const passato = serializzaBackup({ ...profilo, annoApertura: 2015 }, [], '2026-08-22')
+    expect(() => deserializzaBackup(passato)).toThrow(/backup/i)
+    const futuro = serializzaBackup({ ...profilo, annoApertura: new Date().getFullYear() + 1 }, [], '2026-08-22')
+    expect(() => deserializzaBackup(futuro)).toThrow(/backup/i)
+  })
 })

@@ -27,13 +27,19 @@ governa la propria P.IVA — dalla fattura all'F24 spiegato — senza che i dati
   (DER e base64), dedup (anno, numero, P.IVA cedente), warning su regime ≠ RF19 e somma righe vs
   totale, euristica valuta/cambio dalla descrizione; upload multiplo nel registro con bollo da
   `DatiBollo` e segnalazione mismatch con la regola. Rimandati: FPA12 esplicita, import CSV.
-- **S5 — Spese e bollo**: registro spese (non deducibili nel forfettario: il tool lo dice
+- ✅ **S5 — Redesign IA** (22/08/2026): app a tre concetti — **Panoramica** (vista d'insieme
+  read-only col **Flusso** year-aware della catena del motore, riga «Adesso», pillole per
+  anno; assorbe il Bilancio), **Simulatore** sandbox con livrea dedicata, toggle «primo anno»
+  e prefill esplicito, hub **«I miei dati»** (fatture + import XML, profilo, backup). Landing
+  di presentazione per chi non ha profilo; redirect dalle rotte vecchie; glossario in
+  `CONTEXT.md`.
+- **S6 — Spese e bollo**: registro spese (non deducibili nel forfettario: il tool lo dice
   chiaramente); bollo automatico 2,00 € sopra 77,47 € con override e confronto con `DatiBollo`;
   export/import JSON completo (backup) e export CSV dei registri.
-- **S6 — Parser PDF**: estrazione testo (pdf.js) + euristiche per layout "foglio di stile SdI" +
+- **S7 — Parser PDF**: estrazione testo (pdf.js) + euristiche per layout "foglio di stile SdI" +
   **form di revisione obbligatorio** prima di ogni salvataggio; degradazione a inserimento manuale
   per scansioni.
-- **S7 — Hardening**: mobile/a11y, PWA installabile, deploy Vercel, onboarding documentato.
+- **S8 — Hardening**: mobile/a11y, PWA installabile, deploy Vercel, onboarding documentato.
 
 ## Post-MVP
 
