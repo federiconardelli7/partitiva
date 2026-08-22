@@ -3,6 +3,38 @@
 > Una voce per sessione: fatto, decisioni, next steps, blocchi. Le ultime 2 voci si leggono
 > all'inizio di ogni sessione (vedi CLAUDE.md).
 
+## 2026-08-22 — S4 Pagine, calcolatore e parser XML
+
+**Fatto**
+- **Ristrutturazione a pagine** (feedback di Federico: "non è bello che chieda subito"): la
+  landing è il **Calcolatore** — simulatore libero che non salva nulla (incassato, settore,
+  startup, copertura, versati opzionali → catena spiegata) — e il tracciamento vive in
+  «I miei dati»/«Bilancio» (react-router con URL veri + rewrite SPA in vercel.json; il wizard
+  appare solo entrando nelle sezioni dati). Card estratta, zustand rimosso (sostituito dal router).
+- **Parser FatturaPA in TDD** (`packages/parser-fatture`): DOMParser per local-name (prefissi
+  variabili), firma XAdES ignorata, `sbustaP7m` per buste DER e base64, euristica valuta/cambio
+  ("USD $5,000.00 … al cambio 0,877"), `chiaveDedup` (anno:numero:P.IVA), warning su regime ≠
+  RF19 e somma righe ≠ totale; errori espliciti su file non-FatturaPA. 97 test totali nel repo.
+- **Upload nel registro**: import multiplo .xml/.p7m con dedup contro le fatture esistenti,
+  bollo da `DatiBollo` (mismatch con la regola segnalato), fatture importate come "emesse"
+  (l'incasso si segna quando arriva), riepilogo import con esiti per file.
+- Il calcolatore è forfettario-only: il confronto con l'ordinario resta il modulo post-MVP.
+
+- **Review interna (code-reviewer): 6 blocchi + 3 note, tutti verificati e corretti** con test
+  (106 totali): sbustamento p7m ora localizza gli offset in latin1 ma **ridecodifica il payload
+  in UTF-8** (gli accenti sopravvivono al percorso più comune, i file firmati SdI); i **lotti
+  multi-body** producono una fattura per body invece di scartare le successive in silenzio;
+  l'import è coperto da test end-to-end (nuovo/duplicato/file rotto/TD04); la **modifica profilo
+  è una rotta** (/profilo) così la navigazione la chiude davvero; `chiaveDedup` morta rimossa
+  (dedup (anno, numero) documentata: P.IVA cedente col multi-profilo); niente mutazione dei
+  warnings. Dalle note: **TipoDocumento esposto e TD04 saltate** con spiegazione, importi totali
+  negativi rifiutati, encoding ISO-8859-1 dichiarato rispettato.
+
+**Next steps (S5)**: spese + export CSV; poi S6 parser PDF con form di revisione. Backlog:
+ricerca ATECO per descrizione (ISTAT), FPA12, import CSV storico, shadcn/ui, Playwright.
+
+**Blocchi/aperture**: invariati (GU DL 89/2026, soglie GS, mapping ATECO 2025, quadro RR).
+
 ## 2026-08-22 — S3 Verticale app
 
 **Fatto**

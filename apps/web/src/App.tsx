@@ -1,23 +1,37 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useState } from 'react'
-import { db } from './db'
-import { useUi } from './stores/ui'
+import { BrowserRouter, NavLink, Route, Routes, useNavigate } from 'react-router-dom'
+import { db, type Fattura, type Profilo } from './db'
 import { BackupMenu } from './components/Backup'
 import { Bilancio } from './components/Bilancio'
 import { RegistroEntrate } from './components/RegistroEntrate'
 import { Wizard } from './components/Wizard'
+import { Calcolatore } from './pages/Calcolatore'
 
 // Sentinella per distinguere "Dexie sta caricando" da "riga assente" (get → undefined).
 const CARICAMENTO = 'caricamento' as const
 
 export function App() {
+  return (
+    <BrowserRouter>
+      <Shell />
+    </BrowserRouter>
+  )
+}
+
+function Shell() {
   const profilo = useLiveQuery(() => db.profilo.get(1), [], CARICAMENTO)
   const fatture = useLiveQuery(() => db.fatture.orderBy('dataEmissione').reverse().toArray(), [], CARICAMENTO)
-  const { vista, setVista } = useUi()
-  const [modificaProfilo, setModificaProfilo] = useState(false)
+  const navigate = useNavigate()
 
   if (profilo === CARICAMENTO || fatture === CARICAMENTO) return null
-  const mostraWizard = profilo === undefined || modificaProfilo
+
+  const conProfilo = (contenuto: (profilo: Profilo, fatture: Fattura[]) => React.ReactNode) =>
+    profilo ? contenuto(profilo, fatture) : <Wizard />
+
+  const stileLink = ({ isActive }: { isActive: boolean }) =>
+    `rounded-md px-3 py-1 text-sm font-medium transition ${
+      isActive ? 'bg-white shadow dark:bg-stone-700' : 'text-stone-500 hover:text-stone-800 dark:hover:text-stone-200'
+    }`
 
   return (
     <div className="min-h-dvh bg-stone-50 text-stone-900 dark:bg-stone-950 dark:text-stone-100">
@@ -26,44 +40,51 @@ export function App() {
           <h1 className="text-xl font-bold tracking-tight">
             Partitiva <span className="font-normal text-emerald-700 dark:text-emerald-400">· forfettario</span>
           </h1>
-          {!mostraWizard && (
-            <div className="flex items-center gap-3">
-              <nav className="flex gap-1 rounded-lg bg-stone-100 p-1 dark:bg-stone-800">
-                {(['registro', 'bilancio'] as const).map((v) => (
-                  <button
-                    key={v}
-                    onClick={() => setVista(v)}
-                    className={`rounded-md px-3 py-1 text-sm font-medium capitalize transition ${
-                      vista === v
-                        ? 'bg-white shadow dark:bg-stone-700'
-                        : 'text-stone-500 hover:text-stone-800 dark:hover:text-stone-200'
-                    }`}
-                  >
-                    {v}
-                  </button>
-                ))}
-              </nav>
-              <BackupMenu profilo={profilo ?? null} fatture={fatture} />
-              <button
-                onClick={() => setModificaProfilo(true)}
-                className="text-xs text-stone-500 underline hover:text-stone-800 dark:hover:text-stone-200"
-                title="Modifica ATECO, coefficiente o copertura"
-              >
-                profilo
-              </button>
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            <nav className="flex gap-1 rounded-lg bg-stone-100 p-1 dark:bg-stone-800">
+              <NavLink to="/" end className={stileLink}>
+                Calcolatore
+              </NavLink>
+              <NavLink to="/registro" className={stileLink}>
+                I miei dati
+              </NavLink>
+              <NavLink to="/bilancio" className={stileLink}>
+                Bilancio
+              </NavLink>
+            </nav>
+            {profilo && (
+              <>
+                <BackupMenu profilo={profilo} fatture={fatture} />
+                <NavLink
+                  to="/profilo"
+                  className="text-xs text-stone-500 underline hover:text-stone-800 dark:hover:text-stone-200"
+                  title="Modifica ATECO, coefficiente o copertura"
+                >
+                  profilo
+                </NavLink>
+              </>
+            )}
+          </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-4xl px-4 py-6">
-        {mostraWizard ? (
-          <Wizard esistente={profilo} onFine={() => setModificaProfilo(false)} />
-        ) : vista === 'registro' ? (
-          <RegistroEntrate fatture={fatture} />
-        ) : (
-          <Bilancio profilo={profilo} fatture={fatture} />
-        )}
+        <Routes>
+          <Route path="/" element={<Calcolatore />} />
+          <Route path="/registro" element={conProfilo((_p, f) => <RegistroEntrate fatture={f} />)} />
+          <Route path="/bilancio" element={conProfilo((p, f) => <Bilancio profilo={p} fatture={f} />)} />
+          <Route
+            path="/profilo"
+            element={
+              profilo ? (
+                <Wizard esistente={profilo} onFine={() => navigate('/registro')} />
+              ) : (
+                <Wizard onFine={() => navigate('/registro')} />
+              )
+            }
+          />
+          <Route path="*" element={<Calcolatore />} />
+        </Routes>
       </main>
 
       <footer className="mx-auto max-w-4xl px-4 pb-8 pt-4 text-xs text-stone-500">

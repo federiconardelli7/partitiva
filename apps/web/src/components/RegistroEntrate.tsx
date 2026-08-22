@@ -1,5 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { bolloPerFattura, cents } from '@partitiva/motore-fiscale'
+import { parseFatturaFile } from '@partitiva/parser-fatture'
+import { useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { db, type Fattura } from '../db'
@@ -56,13 +58,80 @@ export function RegistroEntrate({ fatture }: { fatture: Fattura[] }) {
     if (window.confirm(`Eliminare la fattura n. ${fattura.numero}?`)) void db.fatture.delete(fattura.id!)
   }
 
+  const inputFile = useRef<HTMLInputElement>(null)
+  const importaFile = async (files: FileList) => {
+    const esiti: string[] = []
+    const esistenti = new Set(fatture.map((f) => `${annoDi(f.dataEmissione)}:${f.numero}`))
+    for (const file of Array.from(files)) {
+      try {
+        const bytes = new Uint8Array(await file.arrayBuffer())
+        const { fatture: parsate, warnings: warningsFile } = parseFatturaFile(file.name, bytes)
+        for (const fattura of parsate) {
+          if (fattura.tipoDocumento !== 'TD01') {
+            esiti.push(
+              `↷ ${file.name}: n. ${fattura.numero} è ${fattura.tipoDocumento || 'di tipo ignoto'} (non TD01): gestiscila manualmente`,
+            )
+            continue
+          }
+          const chiave = `${annoDi(fattura.data)}:${fattura.numero}`
+          if (esistenti.has(chiave)) {
+            esiti.push(`↷ ${file.name}: n. ${fattura.numero}/${annoDi(fattura.data)} già presente, saltata`)
+            continue
+          }
+          const bolloRegola = bolloPerFattura(cents(fattura.importoTotaleCents), paramsVicini(annoDi(fattura.data)))
+          const bolloCents = fattura.bollo?.importoCents ?? bolloRegola
+          const warningsFattura =
+            fattura.bollo && fattura.bollo.importoCents !== bolloRegola
+              ? [...warningsFile, `bollo dichiarato ${formatEuro(fattura.bollo.importoCents)} ≠ regola ${formatEuro(bolloRegola)}`]
+              : warningsFile
+          await db.fatture.add({
+            numero: fattura.numero,
+            dataEmissione: fattura.data,
+            dataIncasso: null,
+            importoCents: fattura.importoTotaleCents,
+            bolloCents,
+            descrizione: fattura.righe[0]?.descrizione ?? '',
+          })
+          esistenti.add(chiave)
+          esiti.push(
+            `✓ ${file.name}: n. ${fattura.numero} del ${formatDataIt(fattura.data)}, ${formatEuro(fattura.importoTotaleCents)}${warningsFattura.length > 0 ? ` — ⚠ ${warningsFattura.join('; ')}` : ''}`,
+          )
+        }
+      } catch (errore) {
+        esiti.push(`✗ ${file.name}: ${errore instanceof Error ? errore.message : 'errore di lettura'}`)
+      }
+    }
+    window.alert(`Import completato:\n\n${esiti.join('\n')}\n\nLe fatture importate sono "emesse": segna l'incasso quando arriva.`)
+  }
+
   return (
     <div className="space-y-6">
       <form
         onSubmit={onSubmit}
         className="grid gap-3 rounded-xl border border-stone-200 bg-white p-4 shadow-sm sm:grid-cols-2 dark:border-stone-800 dark:bg-stone-900"
       >
-        <h2 className="text-sm font-semibold sm:col-span-2">Nuova fattura</h2>
+        <div className="flex items-center justify-between sm:col-span-2">
+          <h2 className="text-sm font-semibold">Nuova fattura</h2>
+          <button
+            type="button"
+            onClick={() => inputFile.current?.click()}
+            className="rounded-md border border-emerald-700 px-3 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950"
+            title="Carica fatture elettroniche XML FatturaPA, anche in busta .p7m"
+          >
+            ⬆ Importa XML / p7m
+          </button>
+          <input
+            ref={inputFile}
+            type="file"
+            multiple
+            accept=".xml,.p7m"
+            className="hidden"
+            onChange={(e) => {
+              if (e.target.files?.length) void importaFile(e.target.files)
+              e.target.value = ''
+            }}
+          />
+        </div>
         <label className="text-sm">
           Numero
           <input {...register('numero')} className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2 dark:border-stone-700 dark:bg-stone-800" />

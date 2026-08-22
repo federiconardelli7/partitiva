@@ -22,7 +22,9 @@ paese, id fiscale); righe (descrizione, prezzo unitario/totale, aliquota IVA, na
 
 **Validazioni e warning**:
 
-- dedup per chiave (anno della data documento, numero, P.IVA cedente);
+- dedup: la chiave completa da spec è (anno del documento, numero, P.IVA cedente); nell'app, a
+  profilo unico, si usa (anno, numero) — la P.IVA cedente entrerà in chiave col multi-profilo
+  (roadmap). Un file FPR12 può essere un LOTTO con più `FatturaElettronicaBody`: si parsano tutti;
 - coerenza: somma `PrezzoTotale` delle righe vs `ImportoTotaleDocumento` (warning se divergono);
 - warning se `RegimeFiscale` ≠ RF19 (il tool è pensato per forfettari) o natura ≠ N2.x.
 

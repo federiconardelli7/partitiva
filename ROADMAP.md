@@ -20,10 +20,13 @@ governa la propria P.IVA — dalla fattura all'F24 spiegato — senza che i dati
   85.000/100.000 €, countdown del 5%, prossimi F24 con righe e crediti. Deploy su
   partitiva.vercel.app (build locale + `--prebuilt`). Rimandati a sessioni successive: shadcn/ui,
   export/import JSON, Playwright E2E.
-- **S4 — Ingestione XML**: parser FatturaPA FPR12 (tolleranza FPA12), firma XAdES ignorata,
-  buste `.p7m` (unwrap del payload), upload multiplo e import storico, dedup
-  (anno, numero, P.IVA cedente), validazioni e warning (somma righe vs totale, regime ≠ RF19),
-  euristica importo in valuta + tasso di cambio dalla descrizione.
+- ✅ **S4 — Pagine + Ingestione XML** (22/08/2026): app ristrutturata su richiesta di Federico —
+  la landing è il **Calcolatore** (simulatore senza salvataggio), con «I miei dati» e «Bilancio»
+  come pagine vere (react-router, deep-link con rewrite SPA su Vercel; il wizard appare solo
+  entrando nelle sezioni dati). Parser FatturaPA FPR12: firma XAdES ignorata, buste `.p7m`
+  (DER e base64), dedup (anno, numero, P.IVA cedente), warning su regime ≠ RF19 e somma righe vs
+  totale, euristica valuta/cambio dalla descrizione; upload multiplo nel registro con bollo da
+  `DatiBollo` e segnalazione mismatch con la regola. Rimandati: FPA12 esplicita, import CSV.
 - **S5 — Spese e bollo**: registro spese (non deducibili nel forfettario: il tool lo dice
   chiaramente); bollo automatico 2,00 € sopra 77,47 € con override e confronto con `DatiBollo`;
   export/import JSON completo (backup) e export CSV dei registri.

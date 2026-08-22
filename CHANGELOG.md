@@ -7,6 +7,11 @@ Formato: [Keep a Changelog](https://keepachangelog.com/it-IT/1.1.0/); versioning
 
 ### Added
 
+- **Pagine e calcolatore (S4)**: landing «Calcolatore» (simulatore senza salvataggio), pagine
+  «I miei dati» e «Bilancio» con URL propri; **parser FatturaPA** (XML FPR12 con firma XAdES,
+  buste `.p7m` anche base64, euristica valuta/cambio, dedup e warning) e **import multiplo** nel
+  registro con bollo da `DatiBollo`.
+
 - **App web (S3)**: wizard di onboarding (ATECO→coefficiente automatico dalla tabella
   allegato 4, copertura GS), registro entrate per **data di incasso** con bollo automatico,
   bilancio per anno con breakdown `ExplainedValue`, barra soglie 85k/100k, countdown del 5% e
