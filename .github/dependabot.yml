@@ -7,6 +7,12 @@ updates:
     groups:
       dev-dependencies:
         dependency-type: development
+    ignore:
+      # TypeScript resta sulla serie 6 finché typescript-eslint non supporta TS 7
+      # (https://github.com/typescript-eslint/typescript-eslint/issues/10940).
+      # Rimuovere questo ignore quando il supporto arriva.
+      - dependency-name: typescript
+        versions: ['>=7']
 
   - package-ecosystem: github-actions
     directory: /
