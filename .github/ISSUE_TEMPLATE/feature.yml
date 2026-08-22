@@ -1,0 +1,24 @@
+name: Proposta di funzionalità
+description: Un'idea per migliorare Partitiva
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problema
+    attributes:
+      label: Problema da risolvere
+      description: Che bisogno reale copre? (siamo YAGNI-first)
+    validations:
+      required: true
+  - type: textarea
+    id: proposta
+    attributes:
+      label: Soluzione proposta
+    validations:
+      required: true
+  - type: checkboxes
+    id: principi
+    attributes:
+      label: Compatibilità con i principi del progetto
+      options:
+        - label: Non richiede che i dati fiscali lascino il dispositivo (o è opt-in esplicito)
+          required: true

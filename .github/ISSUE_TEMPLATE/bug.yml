@@ -1,0 +1,27 @@
+name: Segnalazione bug
+description: Qualcosa non funziona o un calcolo sembra sbagliato
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        Grazie! Se il bug riguarda un CALCOLO FISCALE, indica anche la fonte normativa
+        che ti aspetteresti (legge/circolare): ogni numero del motore ha una fonte in
+        docs/regole-fiscali.md. NON incollare dati personali reali (CF, P.IVA, nomi).
+  - type: textarea
+    id: descrizione
+    attributes:
+      label: Cosa succede
+      description: Comportamento osservato vs atteso, con passi per riprodurre
+    validations:
+      required: true
+  - type: input
+    id: anno
+    attributes:
+      label: Anno fiscale interessato (se rilevante)
+      placeholder: es. 2026
+  - type: textarea
+    id: fonte
+    attributes:
+      label: Fonte normativa attesa (per bug di calcolo)
+      placeholder: es. circolare INPS n. 8/2026

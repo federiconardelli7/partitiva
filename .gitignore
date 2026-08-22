@@ -1,0 +1,17 @@
+# dependencies / build
+node_modules/
+dist/
+coverage/
+
+# ambiente e sistema
+.DS_Store
+*.log
+.env
+.env.*
+
+# difesa in profondità: mai file fiscali reali nel repo
+# (le fixtures anonimizzate hanno nomi diversi, es. fattura-fpr12-esempio.xml)
+IT[0-9]*_*.xml
+IT[0-9]*_*.xml.p7m
+Sdi_file_*.pdf
+*.p7m

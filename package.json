@@ -1,0 +1,28 @@
+{
+  "name": "partitiva",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Gestione open source e privacy-first della Partita IVA in regime forfettario",
+  "license": "MIT",
+  "packageManager": "pnpm@11.21.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "pnpm -r typecheck",
+    "test": "vitest run",
+    "check-privacy": "node scripts/check-privacy.mjs",
+    "verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm check-privacy"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.2.0",
+    "eslint": "^10.8.1",
+    "prettier": "^3.9.6",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.67.0",
+    "vitest": "^4.1.10"
+  }
+}

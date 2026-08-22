@@ -1,0 +1,13 @@
+{
+  "name": "@partitiva/motore-fiscale",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Motore fiscale puro TypeScript per il regime forfettario (zero dipendenze UI)",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p ."
+  }
+}

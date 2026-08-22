@@ -1,0 +1,25 @@
+name: Aggiornamento fiscale annuale
+description: Nuovi parametri per un anno fiscale (aliquote, soglie, scadenze)
+labels: [fiscale, params]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        I parametri fiscali sono DATI versionati per anno (packages/motore-fiscale/src/params/).
+        Una PR di aggiornamento deve contenere: il file params del nuovo anno, la fonte
+        normativa per OGNI valore (con data di verifica), il golden test del nuovo anno
+        e una riga nel CHANGELOG. Vedi CONTRIBUTING.md.
+  - type: input
+    id: anno
+    attributes:
+      label: Anno fiscale
+      placeholder: es. 2027
+    validations:
+      required: true
+  - type: textarea
+    id: parametri
+    attributes:
+      label: Parametri cambiati e fonti
+      description: 'Formato: parametro → nuovo valore → fonte (legge/circolare con link)'
+    validations:
+      required: true

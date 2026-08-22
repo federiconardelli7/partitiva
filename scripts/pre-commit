@@ -1,0 +1,8 @@
+#!/bin/sh
+# Hook pre-commit di Partitiva: blocca commit con possibili dati personali reali.
+# Installazione: cp scripts/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+node scripts/check-privacy.mjs || {
+  echo ''
+  echo 'Commit bloccato dal privacy gate (vedi sopra).'
+  exit 1
+}

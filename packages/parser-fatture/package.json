@@ -1,0 +1,13 @@
+{
+  "name": "@partitiva/parser-fatture",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Parser FatturaPA (XML/p7m) e PDF per Partitiva",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p ."
+  }
+}
