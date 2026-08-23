@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { db, type Fattura } from '../db'
 import { annoDi, paramsVicini } from '../lib/bilancio'
-import { centsInInput, formatDataIt, formatEuro, oggiIso, parseImportoIt } from '../lib/format'
+import { centsInInput, formatDataIt, formatEuro, oggiIso, parseImportoIt, propostaDataIncasso } from '../lib/format'
 
 import { fatturaFormSchema } from '../lib/schemi'
 
@@ -58,7 +58,20 @@ export function RegistroEntrate({ fatture }: { fatture: Fattura[] }) {
     setAvvisoPdf(null)
   })
 
-  const segnaIncassata = (fattura: Fattura) => db.fatture.update(fattura.id!, { dataIncasso: oggiIso() })
+  // L'incasso si segna con una DATA esplicita (proposta: oggi solo per le fatture del mese
+  // corrente, altrimenti la data della fattura) e si può correggere o togliere: il vecchio
+  // «incassa oggi» spostava le fatture storiche nell'anno fiscale sbagliato.
+  const [incassoEdit, setIncassoEdit] = useState<{ id: number; data: string } | null>(null)
+  const salvaIncasso = async () => {
+    if (!incassoEdit || incassoEdit.data === '') return
+    await db.fatture.update(incassoEdit.id, { dataIncasso: incassoEdit.data })
+    setIncassoEdit(null)
+  }
+  const rimuoviIncasso = async () => {
+    if (!incassoEdit) return
+    await db.fatture.update(incassoEdit.id, { dataIncasso: null })
+    setIncassoEdit(null)
+  }
   const elimina = (fattura: Fattura) => {
     if (window.confirm(`Eliminare la fattura n. ${fattura.numero}?`)) void db.fatture.delete(fattura.id!)
   }
@@ -84,14 +97,16 @@ export function RegistroEntrate({ fatture }: { fatture: Fattura[] }) {
           return
         }
       }
+      const dataPdf = estratto.data ?? oggiIso()
       reset({
         numero: estratto.numero ?? '',
-        dataEmissione: estratto.data ?? oggiIso(),
+        dataEmissione: dataPdf,
         importo: estratto.importoTotaleCents !== null ? centsInInput(estratto.importoTotaleCents) : '',
         bollo: '',
         descrizione: '',
         incassata: false,
-        dataIncasso: oggiIso(),
+        // Se poi si spunta «già incassata», la proposta segue la fattura, mai «oggi» a sorpresa.
+        dataIncasso: propostaDataIncasso(dataPdf),
       })
       setAvvisoPdf({
         titolo: estratto.affidabile
@@ -290,16 +305,48 @@ export function RegistroEntrate({ fatture }: { fatture: Fattura[] }) {
                 <td className="px-3 py-2 font-mono">{f.numero}</td>
                 <td className="px-3 py-2">{formatDataIt(f.dataEmissione)}</td>
                 <td className="px-3 py-2">
-                  {f.dataIncasso ? (
-                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200">
-                      {formatDataIt(f.dataIncasso)}
+                  {incassoEdit !== null && incassoEdit.id === f.id ? (
+                    <span className="flex flex-wrap items-center gap-2">
+                      <input
+                        type="date"
+                        aria-label={`Data di incasso fattura n. ${f.numero}`}
+                        value={incassoEdit.data}
+                        onChange={(e) => setIncassoEdit({ id: f.id!, data: e.target.value })}
+                        className="rounded-md border border-stone-300 px-2 py-0.5 text-xs dark:border-stone-700 dark:bg-stone-800"
+                      />
+                      <button
+                        onClick={() => void salvaIncasso()}
+                        disabled={incassoEdit.data === ''}
+                        className="text-xs font-medium text-emerald-700 hover:underline disabled:opacity-40 dark:text-emerald-400"
+                      >
+                        salva
+                      </button>
+                      {f.dataIncasso && (
+                        <button
+                          onClick={() => void rimuoviIncasso()}
+                          className="text-xs text-stone-500 hover:text-amber-700"
+                        >
+                          non incassata
+                        </button>
+                      )}
+                      <button onClick={() => setIncassoEdit(null)} className="text-xs text-stone-500 hover:underline">
+                        annulla
+                      </button>
                     </span>
+                  ) : f.dataIncasso ? (
+                    <button
+                      onClick={() => setIncassoEdit({ id: f.id!, data: f.dataIncasso! })}
+                      title="Correggi la data di incasso"
+                      className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-800 hover:bg-emerald-200 dark:bg-emerald-900 dark:text-emerald-200"
+                    >
+                      {formatDataIt(f.dataIncasso)}
+                    </button>
                   ) : (
                     <button
-                      onClick={() => void segnaIncassata(f)}
+                      onClick={() => setIncassoEdit({ id: f.id!, data: propostaDataIncasso(f.dataEmissione) })}
                       className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800 hover:bg-amber-200 dark:bg-amber-900 dark:text-amber-200"
                     >
-                      emessa — incassa oggi
+                      emessa — segna incasso
                     </button>
                   )}
                 </td>

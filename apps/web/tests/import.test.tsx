@@ -83,3 +83,75 @@ describe('import XML nel registro', () => {
     expect(String((window.alert as ReturnType<typeof vi.fn>).mock.calls[0]?.[0])).toContain('TD04')
   })
 })
+
+describe('incasso dal registro: data esplicita, mai «oggi» a sorpresa', () => {
+  beforeEach(async () => {
+    vi.spyOn(window, 'alert').mockImplementation(() => {})
+    await db.fatture.clear()
+    await db.profilo.put({ id: 1, annoApertura: 2025, ateco: '62.02.00', coefficiente: 0.67, copertura: 'piena' })
+    window.history.pushState({}, '', '/')
+  })
+  afterEach(() => {
+    vi.restoreAllMocks()
+    cleanup()
+  })
+
+  it('fattura importata di un mese passato: «segna incasso» propone la data della FATTURA e salva quella scelta', async () => {
+    const input = await apriRegistro()
+    carica(input, 'IT01234567890_00010.xml', XML_MINIMA('10'))
+    await expect.poll(() => db.fatture.count()).toBe(1)
+    const bottone = await screen.findByText('emessa — segna incasso')
+    const riga = bottone.closest('tr')!
+    fireEvent.click(bottone)
+    const campoData = within(riga).getByLabelText<HTMLInputElement>(/data di incasso/i)
+    expect(campoData.value).toBe('2026-07-15') // la data della fattura, NON oggi
+    fireEvent.change(campoData, { target: { value: '2026-07-31' } })
+    fireEvent.click(within(riga).getByText('salva'))
+    await expect.poll(async () => (await db.fatture.toArray())[0]?.dataIncasso).toBe('2026-07-31')
+  })
+
+  it('una data di incasso salvata si corregge dalla tabella (e si può togliere)', async () => {
+    await db.fatture.add({
+      numero: '3',
+      dataEmissione: '2025-11-20',
+      dataIncasso: '2026-08-23', // il vecchio «incassa oggi» su una fattura 2025: anno fiscale sbagliato
+      importoCents: 100_000,
+      bolloCents: 200,
+      descrizione: 'storico',
+    })
+    await apriRegistro()
+    const pillola = await screen.findByTitle(/correggi la data di incasso/i)
+    const riga = pillola.closest('tr')!
+    fireEvent.click(pillola)
+    const campoData = within(riga).getByLabelText<HTMLInputElement>(/data di incasso/i)
+    expect(campoData.value).toBe('2026-08-23')
+    fireEvent.change(campoData, { target: { value: '2025-11-28' } })
+    fireEvent.click(within(riga).getByText('salva'))
+    await expect.poll(async () => (await db.fatture.toArray())[0]?.dataIncasso).toBe('2025-11-28')
+    // e da incassata si può tornare a «emessa»
+    fireEvent.click(await screen.findByTitle(/correggi la data di incasso/i))
+    fireEvent.click(within(riga).getByText('non incassata'))
+    await expect.poll(async () => (await db.fatture.toArray())[0]?.dataIncasso).toBeNull()
+  })
+
+  it('annulla chiude l’editor senza toccare la fattura; con data vuota non si salva', async () => {
+    await db.fatture.add({
+      numero: '4',
+      dataEmissione: '2025-12-01',
+      dataIncasso: null,
+      importoCents: 50_000,
+      bolloCents: 0,
+      descrizione: '',
+    })
+    await apriRegistro()
+    const bottone = await screen.findByText('emessa — segna incasso')
+    const riga = bottone.closest('tr')!
+    fireEvent.click(bottone)
+    const campoData = within(riga).getByLabelText<HTMLInputElement>(/data di incasso/i)
+    fireEvent.change(campoData, { target: { value: '' } })
+    expect(within(riga).getByText<HTMLButtonElement>('salva').disabled).toBe(true)
+    fireEvent.click(within(riga).getByText('annulla'))
+    expect(within(riga).queryByLabelText(/data di incasso/i)).toBeNull()
+    expect((await db.fatture.toArray())[0]?.dataIncasso).toBeNull()
+  })
+})

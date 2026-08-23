@@ -72,3 +72,10 @@ export function oggiIso(adesso: Date = new Date()): string {
   const giorno = String(adesso.getDate()).padStart(2, '0')
   return `${adesso.getFullYear()}-${mese}-${giorno}`
 }
+
+/** Data proposta quando si segna un incasso: oggi per le fatture del mese corrente
+ *  (l'incasso è appena arrivato), la data della fattura per quelle di mesi passati —
+ *  mai «oggi» su una fattura storica: sposterebbe l'incasso nell'anno fiscale sbagliato. */
+export function propostaDataIncasso(dataEmissione: string, oggi: string = oggiIso()): string {
+  return dataEmissione.slice(0, 7) === oggi.slice(0, 7) ? oggi : dataEmissione
+}

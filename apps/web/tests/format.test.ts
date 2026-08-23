@@ -6,6 +6,7 @@ import {
   formatEuroIntero,
   oggiIso,
   parseImportoIt,
+  propostaDataIncasso,
 } from '../src/lib/format'
 
 describe('formati italiani', () => {
@@ -54,5 +55,14 @@ describe('formati italiani', () => {
     expect(descriviGiorni(0)).toBe('oggi')
     expect(descriviGiorni(1)).toBe('domani')
     expect(descriviGiorni(100)).toBe('tra 100 giorni')
+  })
+
+  it('propostaDataIncasso: oggi solo per le fatture del mese corrente, altrimenti la data della fattura', () => {
+    // fattura del mese corrente: si sta segnando un incasso appena arrivato → oggi
+    expect(propostaDataIncasso('2026-08-05', '2026-08-23')).toBe('2026-08-23')
+    // fattura storica (import di anni/mesi passati): mai «oggi», l'anno fiscale cambierebbe
+    expect(propostaDataIncasso('2025-07-28', '2026-08-23')).toBe('2025-07-28')
+    // mesi adiacenti ma diversi: vale la data della fattura
+    expect(propostaDataIncasso('2026-07-31', '2026-08-01')).toBe('2026-07-31')
   })
 })
