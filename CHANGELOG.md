@@ -5,6 +5,13 @@ Formato: [Keep a Changelog](https://keepachangelog.com/it-IT/1.1.0/); versioning
 
 ## [Unreleased]
 
+_Nessuna modifica dopo la 0.1.0._
+
+## [0.1.0] - 2026-08-23
+
+Prima release: l'MVP completo della roadmap (S1–S9) — motore fiscale golden-tested,
+app in produzione su https://partitiva.vercel.app, installabile come PWA.
+
 ### Added
 
 - **PWA, accessibilità e onboarding (S9)**: l'app è **installabile** (manifest + icona,

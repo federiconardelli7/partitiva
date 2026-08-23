@@ -1,6 +1,6 @@
 {
   "name": "partitiva",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "description": "Gestione open source e privacy-first della Partita IVA in regime forfettario",
