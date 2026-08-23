@@ -111,6 +111,29 @@ export function contributiFissiIvs(gestione: GestioneIvsInput, params: FiscalPar
   return cents(quotaIvs(ivs.minimale.valore, ivs.aliquotaBase.valore, gestione, params) + ivs.maternitaAnnua.valore)
 }
 
+/** Contributi sull'eccedenza del minimale, a scaglioni fino al massimale della fascia di
+ *  anzianità. Serve a computeAnno e agli ACCONTI della timeline: le istruzioni del quadro RR
+ *  (Appendice «INPS - Modalità di calcolo degli acconti») vogliono l'acconto ricalcolato sul
+ *  reddito dell'anno precedente CON minimale, massimale, aliquote e agevolazioni dell'anno corrente. */
+export function contributiEccedenzaIvs(
+  redditoCents: Cents,
+  gestione: GestioneIvsInput,
+  params: FiscalParams,
+): Cents {
+  const ivs = params.previdenzaIvs
+  const massimaleIvs = gestione.anzianitaAl1995
+    ? ivs.massimaleAnzianita1995.valore
+    : ivs.massimalePost1995.valore
+  const imponibileIvs = cents(Math.min(redditoCents, massimaleIvs))
+  const fascia = ivs.fasciaPiuUno.valore
+  const scaglione1 = cents(Math.max(0, Math.min(imponibileIvs, fascia) - ivs.minimale.valore))
+  const scaglione2 = cents(Math.max(0, imponibileIvs - fascia))
+  return cents(
+    quotaIvs(scaglione1, ivs.aliquotaBase.valore, gestione, params) +
+      quotaIvs(scaglione2, ivs.aliquotaBase.valore + ivs.incrementoOltreFascia.valore, gestione, params),
+  )
+}
+
 export function computeAnno(input: AnnoInput, params: FiscalParams): RisultatoAnno {
   const explain = createExplain(input.actuals)
   const risultato = computeAnnoConExplain(input, params, explain)
@@ -206,19 +229,12 @@ export function computeAnnoConExplain(
       contributiFissiIvs(gestione, params),
       { fonte: ivs.minimale.fonte },
     )
-    const imponibileIvs = cents(Math.min(reddito, massimaleIvs))
-    const fascia = ivs.fasciaPiuUno.valore
-    const scaglione1 = cents(Math.max(0, Math.min(imponibileIvs, fascia) - ivs.minimale.valore))
-    const scaglione2 = cents(Math.max(0, imponibileIvs - fascia))
     contributiEccedenza = explain.nodo(
       id('contributiEccedenza'),
       'Contributi sulla quota eccedente il minimale',
       'scaglioni oltre il minimale (fino al massimale) × aliquota, +1 punto oltre la prima fascia, × eventuale riduzione',
       [id('reddito')],
-      cents(
-        quotaIvs(scaglione1, ivs.aliquotaBase.valore, gestione, params) +
-          quotaIvs(scaglione2, ivs.aliquotaBase.valore + ivs.incrementoOltreFascia.valore, gestione, params),
-      ),
+      contributiEccedenzaIvs(reddito, gestione, params),
       { fonte: ivs.fasciaPiuUno.fonte },
     )
     contributiDovuti = explain.nodo(

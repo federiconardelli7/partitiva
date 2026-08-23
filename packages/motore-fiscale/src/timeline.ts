@@ -2,6 +2,7 @@
 // e il versato di N alimenta la deduzione di N. Crediti esposti, mai compensati in automatico.
 import {
   computeAnnoConExplain,
+  contributiEccedenzaIvs,
   contributiFissiIvs,
   type Copertura,
   type Flag,
@@ -238,18 +239,27 @@ export function computeTimeline(inputs: TimelineAnnoInput[], opts: TimelineOpts 
     const ivsPrec = prev.gestione.tipo !== 'gestione-separata'
 
     let baseImposta: Cents = prev.result.impostaCents
-    // IVS: gli acconti contributivi riguardano SOLO l'eccedenza (quota dedicata dei params).
-    let baseContributi: Cents = ivsPrec
-      ? (prev.result.contributiEccedenzaCents ?? ZERO)
-      : prev.result.contributiDovutiCents
+    // IVS: gli acconti riguardano SOLO l'eccedenza, RICALCOLATA — reddito dell'anno prima,
+    // ma minimale/massimale/aliquote/agevolazioni dell'anno CORRENTE (istruzioni Redditi PF,
+    // Appendice «INPS - Modalità di calcolo degli acconti», p.to 1; le circolari INPS vi
+    // rinviano). GS: resta l'80% del dovuto dell'anno prima (actuals-aware): equivale alla
+    // lettera AdE finché aliquota e massimale non cambiano (equivalenza in regole-fiscali.md).
+    let baseContributi: Cents
+    if (prev.gestione.tipo !== 'gestione-separata') {
+      const gestioneAnno = inputCorrente ? gestioneDi(inputCorrente) : prev.gestione
+      const gestioneIvs = gestioneAnno.tipo !== 'gestione-separata' ? gestioneAnno : prev.gestione
+      baseContributi = contributiEccedenzaIvs(prev.result.redditoCents, gestioneIvs, params)
+    } else {
+      baseContributi = prev.result.contributiDovutiCents
+    }
     const quotaContributi = ivsPrec
       ? params.previdenzaIvs.quotaAccontiEccedenza.valore
       : params.acconti.quotaContributi.valore
     const nomeContributi = ivsPrec ? 'contributi sull’eccedenza' : 'contributi GS'
     const formulaContributi = ivsPrec
-      ? 'contributi sull’eccedenza dell’anno precedente × quota acconti × ripartizione'
+      ? 'eccedenza del reddito dell’anno precedente ricalcolata coi parametri dell’anno corrente (istruzioni quadro RR) × quota acconti × ripartizione'
       : 'contributi anno precedente × 80% × ripartizione'
-    const nodoBaseContributi: NodeId = ivsPrec ? `${anno - 1}:contributiEccedenza` : `${anno - 1}:contributiDovuti`
+    const nodoBaseContributi: NodeId = ivsPrec ? `${anno - 1}:reddito` : `${anno - 1}:contributiDovuti`
     // Previsionale: nell'MVP resta solo per la Gestione Separata (per IVS base storica).
     const previsto = previsionale && !ivsPrec ? opts.incassatoPrevistoCents?.[anno] : undefined
     let redditoPrevisto: Cents | undefined

@@ -47,8 +47,8 @@ una fonte contraddice queste tabelle ⇒ STOP e segnalazione, mai scelta silenzi
 | Regola | Valore | Fonte | Stato |
 |---|---|---|---|
 | Acconto imposta sostitutiva | 100% dell'imposta anno precedente | metodo storico, prassi AdE | ✅ 15/08/2026 |
-| Acconto Gestione Separata | 80% dei contributi dovuti anno precedente | prassi INPS | ✅ 15/08/2026 |
-| Rate | **due rate uguali 50/50** per soggetti ISA e forfettari | art. 58 DL 124/2019 (+ riscontro empirico su F24 reali, verificati in locale) | ✅ 15/08/2026 |
+| Acconto Gestione Separata | 80% — per la lettera AdE: «aliquote previste per l'anno [corrente] sull'80% del reddito di lavoro autonomo [dell'anno precedente], tenendo conto del massimale [corrente]». Il motore usa 80% × contributi dovuti anno precedente (actuals compresi): identico finché aliquota e massimale non cambiano gli importi (equivalenza dichiarata, v. Semplificazioni IVS) | istruzioni Redditi PF 2026, Fascicolo 2, Appendice «INPS - Modalità di calcolo degli acconti», p.to 2, pag. 62 | ✅ 23/08/2026 |
+| Rate | **due rate uguali 50/50** per soggetti ISA e forfettari (imposte, art. 58); per i **contributi** il 50/50 è regola propria delle istruzioni RR («due acconti di pari importo», per tutti) | art. 58 DL 124/2019 (+ riscontro empirico su F24 reali, verificati in locale); istruzioni Redditi PF 2026 Fasc. 2, Appendice pag. 62 | ✅ 23/08/2026 |
 | ⚠️ Trappola nota | molte fonti citano 40/60: è la regola dei soggetti NON-ISA. Anche la skill `italy-tax-optimization` di openaccountants riporta 40/60: errore per i forfettari | — | ✅ documentata |
 | Soglie minime (imposta sostitutiva) | nessun acconto se imposta anno prec. ≤ 51,65 €; **rata unica al 30/11** se acconto < 257,52 €; due rate sopra | prassi AdE (regole IRPEF estese alla sostitutiva) | ✅ 15/08/2026 |
 | Soglie minime per acconti GS | — | — | ⚠️ applicabilità da verificare in S2 |
@@ -88,7 +88,10 @@ Verifica del 23/08/2026 su PDF integrali: circ. INPS **38 del 07/02/2025** e **1
 09/02/2026** (valori e scadenze), **83 del 24/04/2025** (riduzione 50%), L. 190/2014
 art. 1 c. 76–84 e L. 207/2024 art. 1 c. 186 (testi vigenti su Normattiva), tabella causali
 contributo AdE (agg. 02/07/2026) + circ. INPS 87/2002. Ogni importo sotto è quadrato al
-centesimo contro il testo delle circolari.
+centesimo contro il testo delle circolari. Per gli **acconti sull'eccedenza** (S12,
+23/08/2026): istruzioni **Redditi PF 2026, Fascicolo 2** (agg. 13/05/2026, Appendice
+«INPS - Modalità di calcolo degli acconti», pag. 62) e **circ. INPS 62 del 27/05/2026**
+(che per il calcolo rinvia espressamente al Fascicolo 2).
 
 | Tema | 2025 | 2026 | Fonte | Stato |
 |---|---|---|---|---|
@@ -98,7 +101,7 @@ centesimo contro il testo delle circolari.
 | Contributi fissi annui (maternità 7,44 € inclusa) | 4.460,64 / 4.549,70 | 4.521,36 / 4.611,64 | §2 (= minimale × aliquota + 7,44, quadratura esatta) | ✅ 23/08/2026 |
 | Massimali (anzianità al 31/12/1995 / iscritti dal 1996) | 92.413 / 120.607 | 93.707 / 122.295 | §4 (contributo max 2026 ante-96 art.: 22.864,51 = riprodotto dal motore + 7,44) | ✅ 23/08/2026 |
 | 4 rate fisse | 16/05, 20/08, **17/11**, 16/02/26 | **18/05**, 20/08, 16/11, 16/02/27 | §9 — nel motore: date base (16/05, 20/08, 16/11, 16/02) + slittamento sab/dom → lunedì, che riproduce le date ufficiali | ✅ 23/08/2026 |
-| Eccedenza sul minimale | saldo + 1º e 2º acconto alle scadenze delle imposte | idem | §5 e §9 — quota acconti 100% ripartita 50/50 (art. 58 DL 124/2019, forfettari): le circolari rinviano alle istruzioni Redditi PF | ⚠️ quota daVerificare sulle istruzioni RR |
+| Eccedenza sul minimale | saldo + 1º e 2º acconto alle scadenze delle imposte; acconti = **due rate di pari importo** (regola propria delle istruzioni RR, vale per tutti gli iscritti), importo complessivo **senza riduzioni** (100%) = eccedenza del **reddito dell'anno precedente** ricalcolata con **minimale, massimale, aliquote e agevolazioni dell'anno corrente** | idem | circ. §5 e §9 (rinvio); **istruzioni Redditi PF 2026, Fascicolo 2 agg. 13/05/2026, Appendice «INPS - Modalità di calcolo degli acconti», p.to 1, pag. 62**; scadenze ex art. 18 c. 4 D.Lgs. 241/1997; circ. INPS 62/2026 §2.1 e §3 | ✅ 23/08/2026 (S12; il contrasto è il p.to 2 GS, dove l'80% è esplicito) |
 | Causali F24 | AF/CF (fissi sul minimale), AP/CP (eccedenza: stessa causale per saldo e acconti) | invariate | tabella causali AdE 02/07/2026; circ. 87/2002; circ. 62/2026 | ✅ 23/08/2026 |
 | Riduzione 35% (forfettari) | −35% su fissi + eccedenza; maternità sempre piena; a domanda (già attivi: entro il 28/02, termine di decadenza); permanenza automatica; uscita definitiva (c. 82) | invariata | L. 190/2014 c. 77–84; circ. 35/2016 §1; circ. 14/2026 §8 | ✅ — ⚠️ la 0,48 commercianti non è esclusa dal testo → nel motore è ridotta (lettura letterale, da confermare su una tariffazione reale) |
 | Riduzione 50% (nuovi iscritti) | solo prima iscrizione 1/1–31/12/**2025**, 36 mesi senza soluzione di continuità, one-shot, alternativa alla 35% per singolo lavoratore; maternità E 0,48 **sempre piene**; NON estesa ai nuovi iscritti 2026 | — | L. 207/2024 c. 186 (testo vigente); circ. 83/2025 §1–§8; msg 2449/2025 | ✅ 23/08/2026 |
@@ -110,6 +113,11 @@ l'accantonamento); nessuna maggiorazione da differimento (conflitto 0,40%/0,80% 
 DL 89/2026, v. Acconti); nessuna rateizzazione APR/CPR/API/CPI; metodo previsionale solo
 per la Gestione Separata; cambio di gestione tra gli anni di una stessa timeline non
 supportato (errore esplicito: gli acconti dell'anno di transizione non sono modellati);
+nell'**anno di conguaglio** (successivo all'ultimo anno di dati) gli acconti assumono le
+agevolazioni dell'ultimo anno inserito; **acconti GS** = 80% del dovuto dell'anno prima
+(actuals compresi) anziché il ricalcolo letterale dell'Appendice RR: identico finché
+aliquota e massimale non cambiano gli importi (per l'IVS invece il ricalcolo è
+implementato: minimale e massimali cambiano ogni anno);
 codice sede e code-line 17 cifre degli F24 INPS non calcolabili
 (in UI: rimando al Cassetto previdenziale).
 

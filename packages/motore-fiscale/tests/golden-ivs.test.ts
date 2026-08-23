@@ -134,6 +134,23 @@ describe('golden IVS — computeTimeline (rate fisse per cassa + eccedenza a sal
     ).not.toThrow()
   })
 
+  it('gli acconti usano i parametri e le agevolazioni dell’ANNO CORRENTE (istruzioni RR)', () => {
+    // 50% nel 2025, piena dal 2026: l'acconto 2026 si calcola sul reddito 2025 (30.150)
+    // con minimale 2026 (18.808) e SENZA la riduzione, che nel 2026 non spetta più:
+    // (30.150 − 18.808) × 24% = 2.722,08 → rate da 1.361,04 (mai il 50% del dovuto 2025).
+    const [i2025, i2026] = artigiano.inputs
+    const t = computeTimeline([
+      { ...i2025!, gestione: { ...artigiano.gestione, riduzione: 'riduzione50' } },
+      { ...i2026!, gestione: artigiano.gestione },
+    ])
+    const luglio = t.f24.find((f) => f.anno === 2026 && f.scadenza === 'luglio')!
+    const acconto = luglio.righe.find((r) => r.nodeId === '2026:accontoContributi:rata1')
+    expect(acconto?.importoCents).toBe(136_104)
+    // il saldo 2025, invece, resta quello del dovuto 2025 CON la riduzione del 2025
+    const saldo = luglio.righe.find((r) => r.nodeId === '2025:saldoContributi')
+    expect(saldo?.importoCents).toBe(139_140) // (30.150 − 18.555) × 24% × 0,5 = 1.391,40
+  })
+
   it('anno di conguaglio: la rata 4 dell’ultimo anno compare (2027-02-16)', () => {
     const t = timeline()
     const rata4 = t.f24.find((f) => f.anno === 2027 && f.scadenza === 'rata-4')

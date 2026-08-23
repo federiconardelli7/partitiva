@@ -18,11 +18,28 @@ Formato: [Keep a Changelog](https://keepachangelog.com/it-IT/1.1.0/); versioning
   acconti nei F24 di luglio/novembre (causali AP/CP), con spiegazione e actuals fino alla
   singola rata. Panoramica coi prossimi F24 ordinati per scadenza; Simulatore
   gestione-aware. Parametri 2025/2026 con fonte per valore (circ. INPS 38/2025, 14/2026,
-  83/2025; tabella causali AdE) e 10 nuovi golden test; due punti dichiarati da
-  verificare in `docs/regole-fiscali.md` (quota acconti dell'eccedenza; 0,48 sotto la
-  riduzione 35%).
+  83/2025; tabella causali AdE) e 10 nuovi golden test; un punto resta dichiarato da
+  verificare in `docs/regole-fiscali.md` (0,48 sotto la riduzione 35%); la quota acconti
+  dell'eccedenza è stata poi verificata su fonte primaria e corretta (v. Fixed).
 
 ### Fixed
+
+- **Acconti IVS sull'eccedenza ricalcolati come da istruzioni del quadro RR**: la verifica
+  su fonte primaria (istruzioni Redditi PF 2026, Fascicolo 2, Appendice «INPS - Modalità
+  di calcolo degli acconti»; le circolari INPS vi rinviano) conferma quota 100% e due rate
+  di pari importo ma smentisce la base modellata in S11 — l'acconto non fotografa il
+  dovuto dell'anno prima: ricalcola l'eccedenza del **reddito dell'anno precedente** con
+  **minimale, massimale, aliquote e agevolazioni dell'anno corrente**. Golden ricalcolati
+  a mano; per la Gestione Separata l'equivalenza col modello esistente è dichiarata in
+  `docs/regole-fiscali.md`.
+- **La data di incasso non è più «oggi» a scatola chiusa**: «segna incasso» apre un
+  editor con data proposta (oggi solo per le fatture del mese corrente, altrimenti la
+  data della fattura) e la data salvata si corregge o si toglie dalla tabella — prima una
+  fattura 2025 importata da XML finiva incassata «oggi», nell'anno fiscale sbagliato.
+- **Il parser PDF legge anche le stampe da browser del foglio di stile**
+  (fatturapa.gov.it): data in formato ISO e importi nel formato grezzo dell'XML
+  (es. «1234.56») ora riconosciuti, con l'italiano prioritario (1.500,00 resta 1.500 €);
+  verificato end-to-end su un PDF reale, fuori dal repo.
 
 - **Il settore si sceglie (e si ricorda) per nome**: quattro gruppi dell'allegato 4
   condividono il coefficiente 40% e la scelta scivolava sul primo, in Wizard e Simulatore;

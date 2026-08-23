@@ -75,9 +75,9 @@ export const params2026 = defineParams({
       valore: 1,
       fonte: {
         riferimento:
-          'Eccedenza a saldo + 2 acconti alle scadenze delle imposte (circ. 14/2026 §9); quota 100% ripartita 50/50 ex art. 58 DL 124/2019 per i forfettari — le circolari rinviano alle istruzioni Redditi PF, quota da riscontrare lì',
+          'Istruzioni Redditi PF 2026, Fascicolo 2 (agg. 13/05/2026), Appendice «INPS - Modalità di calcolo degli acconti», p.to 1, pag. 62: due acconti di pari importo, senza riduzioni; base = eccedenza del reddito dell’anno precedente ricalcolata con minimale/massimale/aliquote/agevolazioni dell’anno corrente (ricalcolo in timeline); scadenze IRPEF ex art. 18, c. 4, D.Lgs. 241/1997',
+        url: 'https://www.agenziaentrate.gov.it/portale/documents/d/guest/pf2_istruzioni_2026_agg-13-05-2026',
         verificatoIl: '2026-08-23',
-        daVerificare: true,
       },
     },
     riduzioni: {
@@ -104,8 +104,10 @@ export const params2026 = defineParams({
     quotaContributi: {
       valore: 0.8,
       fonte: {
-        riferimento: 'Acconto Gestione Separata = 80% dei contributi dovuti anno precedente (prassi INPS)',
-        verificatoIl: '2026-08-22',
+        riferimento:
+          'Acconto Gestione Separata = 80%: istruzioni Redditi PF 2026, Fascicolo 2, Appendice «INPS - Modalità di calcolo degli acconti», p.to 2, pag. 62 (aliquote dell’anno corrente sull’80% del reddito dell’anno precedente, col massimale corrente); il motore usa l’80% del dovuto dell’anno prima: identico finché aliquota e massimale non cambiano gli importi (equivalenza in docs/regole-fiscali.md)',
+        url: 'https://www.agenziaentrate.gov.it/portale/documents/d/guest/pf2_istruzioni_2026_agg-13-05-2026',
+        verificatoIl: '2026-08-23',
       },
     },
     ripartizione: {

@@ -13,9 +13,12 @@
 //   fissi   = 18.808×24% + 7,44        = 4.513,92 + 7,44   = 4.521,36 (rata 1.130,34)
 //   ecced.  = (40.200 − 18.808) × 24%  = 21.392 × 0,24     = 5.134,08
 //   dovuti  = 9.655,44
+//   acconti ecc. 2026 (istruzioni Redditi PF, Appendice «INPS - Modalità di calcolo degli
+//   acconti» p.to 1: reddito dell'anno PRECEDENTE coi parametri dell'anno CORRENTE):
+//     (30.150 − 18.808) × 24% = 11.342 × 0,24 = 2.722,08 → due rate di pari importo da 1.361,04
 //   versati 2026 = rata4/2025 (1.115,16) + rate 1–3/2026 (3.391,02)
-//                + saldo ecc. 2025 (2.782,80) + acconti ecc. 2026 (1.391,40 × 2) = 10.071,78
-//   imponibile = roundEuro(40.200 − 10.071,78 = 30.128,22) = 30.128,00 → imposta 1.506,40
+//                + saldo ecc. 2025 (2.782,80) + acconti ecc. 2026 (1.361,04 × 2) = 10.011,06
+//   imponibile = roundEuro(40.200 − 10.011,06 = 30.188,94) = 30.189,00 → imposta 1.509,45
 // Scadenze (slittamento sab/dom → lunedì, riproduce le date UFFICIALI delle circolari):
 //   2025: 16/05 (ven), 20/08, 17/11 (16/11 è domenica), 16/02/2026 (lun)
 //   2026: 18/05 (16/05 è sabato), 20/08, 16/11 (lun), 16/02/2027 (mar)
@@ -36,21 +39,21 @@ export const artigiano = {
   },
   atteso2026: {
     contributiDovutiCents: 965_544,
-    versatiContributiCents: 1_007_178,
-    imponibileCents: 3_012_800,
-    impostaCents: 150_640,
+    versatiContributiCents: 1_001_106,
+    imponibileCents: 3_018_900,
+    impostaCents: 150_945,
   },
   rate2025: { importoCents: 111_516, date: ['2025-05-16', '2025-08-20', '2025-11-17'] },
   rata4Del2025: { importoCents: 111_516, dataScadenza: '2026-02-16' },
   rate2026: { importoCents: 113_034, date: ['2026-05-18', '2026-08-20', '2026-11-16'] },
   luglio2026: {
-    // saldo imposta 1.340,25 + 1º acc. imposta 670,13 + saldo ecc. 2.782,80 + 1º acc. ecc. 1.391,40
-    totaleCents: 134_025 + 67_013 + 278_280 + 139_140,
-    accontoEccedenzaRata1Cents: 139_140,
+    // saldo imposta 1.340,25 + 1º acc. imposta 670,13 + saldo ecc. 2.782,80 + 1º acc. ecc. 1.361,04
+    totaleCents: 134_025 + 67_013 + 278_280 + 136_104,
+    accontoEccedenzaRata1Cents: 136_104,
   },
   novembre2026: {
-    // 2º acc. imposta 670,12 + 2º acc. ecc. 1.391,40
-    totaleCents: 67_012 + 139_140,
+    // 2º acc. imposta 670,12 + 2º acc. ecc. 1.361,04
+    totaleCents: 67_012 + 136_104,
   },
 } as const
 

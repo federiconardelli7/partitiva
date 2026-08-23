@@ -3,6 +3,57 @@
 > Una voce per sessione: fatto, decisioni, next steps, blocchi. Le ultime 2 voci si leggono
 > all'inizio di ogni sessione (vedi CLAUDE.md).
 
+## 2026-08-23 — S12 Quota acconti IVS su fonte primaria + fix dal collaudo di Federico
+
+**Fatto**
+- **daVerificare «quota acconti eccedenza» CHIUSO** (ricerca subagent, findings in
+  `.scratch/gestioni-inps/research/quota-acconti-eccedenza.md`): istruzioni **Redditi PF
+  2026 Fascicolo 2** (agg. 13/05/2026, Appendice «INPS - Modalità di calcolo degli
+  acconti», pag. 62) lette sul PDF AdE + **circ. INPS 62/2026** (rinvia al Fascicolo 2 per
+  il calcolo) + art. 18 c. 4 D.Lgs. 241/1997 (RGS). Verdetto PARZIALE: quota 100% ✓ e due
+  rate di pari importo ✓ (regola propria delle istruzioni RR, NON art. 58 DL 124/2019, che
+  riguarda le imposte); **base di calcolo SMENTITA** — l'acconto è l'eccedenza del reddito
+  N−1 ricalcolata con minimale/massimale/aliquote/**agevolazioni dell'anno N**, non il
+  dovuto N−1 fotografato.
+- **Fix motore in TDD** (golden rosso prima): `contributiEccedenzaIvs` estratta pura in
+  compute-anno e usata dagli acconti della timeline coi params dell'anno corrente; golden
+  artigiano 2026 ricalcolato a mano (acconti 2.722,08 = 1.361,04 × 2 col minimale 18.808;
+  versati 10.011,06; imposta 1.509,45); nuovo test: le agevolazioni seguono l'ANNO
+  CORRENTE (50% nel 2025 → acconti 2026 pieni, saldo 2025 ancora ridotto). **GS invariata**
+  (80% del dovuto N−1, actuals-aware): equivale alla lettera AdE finché aliquote/massimale
+  non incidono — equivalenza dichiarata in regole-fiscali.md, il golden «dichiarato» di
+  Mario Rossi resta il contratto. Fonti aggiornate nei params (via `daVerificare`; anche
+  la quotaContributi GS ora cita la primaria).
+- **Fix registro (bug dal collaudo)**: «incassa oggi» scriveva SEMPRE oggi — una fattura
+  2025 importata da XML finiva incassata nel 2026, anno fiscale sbagliato, senza modo di
+  correggere. Ora «segna incasso» apre un editor inline con data proposta
+  (`propostaDataIncasso`: oggi solo per fatture del mese corrente, altrimenti data
+  fattura), la pillola della data si clicca per correggere o togliere l'incasso; il
+  prefill PDF propone la data della fattura.
+- **Fix parser PDF (bug dal collaudo)**: le stampe da browser del foglio di stile
+  (fatturapa.gov.it) portano la data in ISO («2026-07-27 (27 Luglio 2026)») e gli importi
+  nel formato grezzo dell'XML (punto decimale): le euristiche vedevano solo gg/mm/aaaa e
+  1.234,56 → «data/totale non trovati». Ora `trovaData` accetta entrambe (calendario
+  sempre validato) e `ultimoImporto` ha il fallback XML con l'it-IT prioritario (1.500,00
+  resta migliaia); fixture sintetica del layout con le esche vere (date di stampa nel nome
+  file, importi EN nella descrizione). **Verifica end-to-end sul PDF reale** (fuori repo,
+  riproduzione locale con lo stesso pdfjs dell'app): tutti i campi estratti, 0 avvisi.
+- TDD: **210 test verdi** (9 nuovi/aggiornati, RED verificato prima del GREEN). Nota: un
+  flake una-tantum sul titolo in app.test.tsx (ordine dei file), non riproducibile in 3 run.
+
+**Decisioni**: base acconti IVS = ricalcolo coi params dell'anno corrente (lettera AdE);
+GS resta sul dovuto N−1 (cambiarla romperebbe la propagazione actuals del caso campione a
+beneficio zero con aliquote stabili); anno di conguaglio: agevolazioni assunte pari
+all'ultimo anno di dati (dichiarato in regole-fiscali.md); niente soglie minime sugli
+acconti IVS (le fonti non ne enunciano; coerente col default del motore).
+
+**Next steps**: retest di Federico su import PDF e incassi in produzione; resta l'ultimo
+daVerificare (0,48 commercianti sotto la 35%: solo con una tariffazione INPS reale); poi
+§2 confronto con l'ordinario o §1b casse professionali.
+
+**Blocchi/aperture**: invariati (GU DL 89/2026, soglie GS, mapping ATECO 2025, quadro RR
+arrotondamenti) — chiuso il daVerificare sulla quota acconti; resta quello sulla 0,48.
+
 ## 2026-08-23 — S11 Gestioni IVS: artigiani e commercianti (post-MVP §1)
 
 **Fatto**
