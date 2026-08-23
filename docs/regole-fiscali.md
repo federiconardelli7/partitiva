@@ -165,6 +165,30 @@ ogni fascia il carico coincide: 1,23·RC−430,50 fino a 75k, 1,73·RC−375−4
 l'aliquota come input unico resta solo nel ramo manuale della regionale e per la comunale
 (che le articolazioni per scaglioni possono avere anche lì: semplificazione dichiarata).
 
+## Lavoro dipendente — per il confronto «e se fossi dipendente?»
+
+Verifica del 23/08/2026 su fonti primarie: testi VIGENTI su Normattiva (TUIR artt. 7, 11,
+13, 19, 51; L. 207/2024, art. 1, c. 2-9; DL 3/2020; art. 2120 c.c.; L. 297/1982; L.
+335/1995; DL 384/1992; D.Lgs. 148/2015; D.Lgs. 252/2005), circ. AdE 4/E del 16/05/2025
+letta in PDF, CCNL Terziario Confcommercio (artt. 107 e 221). Alimenta `computeDipendente`
+(netto annuo da RAL). Ipotesi dichiarate: impiegato privato a tempo indeterminato, anno
+intero (i minimi e le proratizzazioni a giorni non scattano), nessun carico di famiglia,
+nessun arrotondamento all'euro (conguaglio del sostituto in centesimi); 13ª/14ª = parte
+della RAL (l'IRPEF è annuale ex art. 7 TUIR: le ritenute mensili sono solo timing,
+conguagliate ex art. 23, c. 3, DPR 600/1973).
+
+| Regola | Valore | Fonte | Stato |
+|---|---|---|---|
+| Detrazione lavoro dipendente | 1.955 € (RC ≤ 15.000, minimo 690 non rapportato) · 1.910 + 1.190 × (28.000−RC)/13.000 (≤ 28.000) · 1.910 × (50.000−RC)/22.000 (≤ 50.000) · zero oltre; **+65 €** se 25.000 < RC ≤ 35.000 (per intero); rapporti alle prime 4 cifre decimali | art. 13, c. 1, 1.1 e 6, TUIR (1.955 a regime da L. 207/2024, c. 2, lett. b) | ✅ 23/08/2026 |
+| Taglio del cuneo — somma integrativa | RC ≤ 20.000: somma ESENTE = 7,1% (RLD ≤ 8.500) / **5,3%** (≤ 15.000) / 4,8% (oltre) del reddito di lavoro dipendente | L. 207/2024, art. 1, c. 4-5 (strutturale dal 2025); circ. AdE 4/E/2025 §1.1 | ✅ 23/08/2026 |
+| Taglio del cuneo — ulteriore detrazione | RC 20.000-32.000: 1.000 €; poi 1.000 × (40.000−RC)/8.000 fino a 40.000 (precisione piena); spetta nei limiti della capienza dell'imposta lorda | L. 207/2024, art. 1, c. 6; circ. 4/E/2025, p. 16 | ✅ 23/08/2026 |
+| Trattamento integrativo | 1.200 € esenti se RC ≤ 15.000 e lorda > detrazione c. 1 − 75 €; cumulabile con la somma integrativa (nessuna clausola anti-cumulo); fascia 15.000-28.000 legata a oneri ante-2022: NON modellata | DL 3/2020, art. 1 vigente (correttivo −75 da L. 207/2024, c. 3) | ✅ 23/08/2026 |
+| Contributi a carico lavoratore | IVS FPLD **9,19%** (8,89 + 0,30 ex L. 296/2006, c. 769) + **1%** oltre la prima fascia pensionabile (55.448 nel 2025 / 56.224 nel 2026, la stessa dell'IVS artigiani); massimale post-1995 sulle sole voci pensionistiche (120.607 / 122.295, unico ex c. 18); **FIS**: un terzo di 0,50/0,80% (riparto 2/3-1/3, circ. INPS 176/2016 e 18/2022); **CIGS** 0,30% sopra i 15 dipendenti (dal 2022 anche commercio) | L. 296/2006; DL 384/1992, art. 3-ter; L. 335/1995, c. 18; D.Lgs. 148/2015, artt. 20, 23, 29 | ✅ 23/08/2026 |
+| TFR | quota annua = retribuzione/13,5 − 0,50% (≈ 6,91%), retribuzione differita FUORI dal netto; rivalutazione 1,5% + 75% FOI a sostitutiva 17%; all'uscita tassazione separata (aliquota media) | art. 2120 c.c.; L. 297/1982, art. 3; D.Lgs. 47/2000, art. 11; artt. 17 e 19 TUIR | ✅ 23/08/2026 |
+| Fon.Te (CCNL Commercio) | lavoratore min 0,55% (dedotto) e datore 1,55% della retribuzione utile TFR; deducibilità nel plafond 5.164,57 (2025) / 5.300 (2026); il TFR conferito non consuma il plafond; toggle ATTIVO di default nel confronto (scelta di prodotto: è uno dei vantaggi reali) | CCNL Terziario, art. 107; D.Lgs. 252/2005, art. 8 | ✅ 23/08/2026 |
+| Addizionali | come il confronto ordinario: dataset regionale per residenza o aliquota in input, comunale in input, dovute se IRPEF netta > 10 € | v. sezione «Regime ordinario» | ✅ 23/08/2026 |
+| Detassazioni 2026 (5% rinnovi, 15% notturni/festivi, premi 1%) | NON modellate (componenti variabili non derivabili dalla RAL): nota in UI | L. 199/2025, art. 1, c. 7-11 | ✅ dichiarato fuori perimetro |
+
 ## Parametri per moduli futuri (roadmap)
 
 | Tema | Valori | Fonte | Stato |

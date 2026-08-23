@@ -63,10 +63,15 @@ governa la propria P.IVA — dalla fattura all'F24 spiegato — senza che i dati
    per cassa + eccedenza a scaglioni (fascia del +1 punto, massimali per anzianità) a
    saldo/acconti, riduzioni 35%/50%, golden dedicati (circ. INPS 38/2025, 14/2026, 83/2025).
    Restano le **casse professionali** come parametri custom (sforzo separato).
-2. **Regime ordinario/semplificato** e confronto automatico "quando conviene uscire"
-   (IRPEF 2026: 23/33/43, detrazioni, addizionali parametriche).
-3. **Simulatore dipendente**: IRPEF, detrazioni, taglio del cuneo, fondo pensione con quota datore
-   da CCNL (Commercio/Fon.Te: 0,55% → 1,55%; 14 mensilità), TFR.
+2. **Regime ordinario/semplificato** — ✅ confronto «quando conviene uscire» (23/08/2026,
+   S14-S15): `computeOrdinario` nel Simulatore su fonti primarie (IRPEF 23/33/43,
+   detrazione lavoro autonomo, oneri 19% con tetto/degressione/taglio, addizionale
+   regionale AUTOMATICA per residenza dal dataset MEF delle 21 entità, comunale in input).
+   Resta fuori (dichiarato): F24/acconti multi-anno dell'ordinario, gestione del regime.
+3. **Simulatore dipendente** — ✅ confronto «e se fossi dipendente?» (23/08/2026, S16):
+   `computeDipendente` da RAL su fonti primarie (detrazioni art. 13, taglio del cuneo
+   L. 207/2024, trattamento integrativo, contributi con FIS/CIGS, addizionali dal dataset,
+   TFR e Fon.Te 0,55/1,55 come maturato a parte, toggle attivo di default).
 4. **Calcolo inverso** ("che fatturato per X € netti") e pianificazione mensile vs soglie.
 5. **Modulo investimenti/PAC** (richiede ADR dedicata sulle fonti dati: default = inserimento
    manuale/CSV; cambi via API BCE/Frankfurter opt-in; capital gain 26%, zainetto minusvalenze,

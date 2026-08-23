@@ -96,6 +96,49 @@ export interface FiscalParams {
       minimoIrpefDovutaCents: number
     }>
   }
+  /** Lavoro dipendente, per il confronto «e se fossi dipendente?» (impiegato privato ad
+   *  anno intero; massimale e prima fascia pensionabile sono riusati da previdenza.massimale
+   *  e previdenzaIvs.fasciaPiuUno: stessi valori di legge). */
+  dipendente: {
+    /** Art. 13, c. 1 e 1.1, TUIR: detrazione per redditi di lavoro dipendente
+     *  (rapporti alle prime 4 cifre decimali; minimo della lett. a non rapportato). */
+    detrazione: ParamAnnuale<{
+      bassa: { finoACents: number; importoCents: number; minimoCents: number }
+      media: { finoACents: number; baseCents: number; extraCents: number; divisoreCents: number }
+      alta: { finoACents: number; baseCents: number; divisoreCents: number }
+      bonus: { oltreCents: number; finoACents: number; importoCents: number }
+    }>
+    /** L. 207/2024, c. 4-5: somma ESENTE per RC ≤ soglia, percentuale per fascia di reddito. */
+    sommaIntegrativa: ParamAnnuale<{
+      sogliaRedditoCents: number
+      fasce: { finoACents: number | null; percentuale: Rate }[]
+    }>
+    /** L. 207/2024, c. 6: ulteriore detrazione piena poi degressiva (capienza sull'imposta). */
+    ulterioreDetrazione: ParamAnnuale<{
+      oltreCents: number
+      pienaFinoACents: number
+      aCents: number
+      importoCents: number
+    }>
+    /** DL 3/2020: trattamento integrativo (somma esente), test di capienza col correttivo. */
+    trattamentoIntegrativo: ParamAnnuale<{
+      importoCents: number
+      sogliaRedditoCents: number
+      correttivoCents: number
+    }>
+    /** Contributi a carico del lavoratore (FIS = quota del totale, frazione esatta). */
+    contributi: ParamAnnuale<{
+      ivs: Rate
+      aliquotaAggiuntivaOltreFascia: Rate
+      fisTotale: { finoA5: Rate; oltre5: Rate }
+      quotaFisLavoratore: { numeratore: number; denominatore: number }
+      cigsLavoratore: Rate
+    }>
+    /** Art. 2120 c.c. + L. 297/82: quota TFR = retribuzione × frazione − contributo detratto. */
+    tfr: ParamAnnuale<{ frazione: { numeratore: number; denominatore: number }; contributoDetratto: Rate }>
+    /** CCNL Terziario / Fon.Te + D.Lgs. 252/2005 (plafond di deducibilità). */
+    fondoPensione: ParamAnnuale<{ lavoratore: Rate; datore: Rate; plafondCents: number }>
+  }
   acconti: {
     quotaImposta: ParamAnnuale<Rate>
     quotaContributi: ParamAnnuale<Rate>
@@ -204,6 +247,47 @@ const fiscalParamsSchema = z.object({
     addizionali: param(
       z.object({ regionaleBase: rate, regionaleMax: rate, comunaleMax: rate, minimoIrpefDovutaCents: centsSchema }),
     ),
+  }),
+  dipendente: z.object({
+    detrazione: param(
+      z.object({
+        bassa: z.object({ finoACents: centsSchema, importoCents: centsSchema, minimoCents: centsSchema }),
+        media: z.object({ finoACents: centsSchema, baseCents: centsSchema, extraCents: centsSchema, divisoreCents: centsSchema }),
+        alta: z.object({ finoACents: centsSchema, baseCents: centsSchema, divisoreCents: centsSchema }),
+        bonus: z.object({ oltreCents: centsSchema, finoACents: centsSchema, importoCents: centsSchema }),
+      }),
+    ),
+    sommaIntegrativa: param(
+      z.object({
+        sogliaRedditoCents: centsSchema,
+        fasce: z
+          .array(z.object({ finoACents: z.number().int().positive().nullable(), percentuale: rate }))
+          .min(1)
+          .refine((f) => f[f.length - 1]!.finoACents === null, 'l’ultima fascia deve essere aperta'),
+      }),
+    ),
+    ulterioreDetrazione: param(
+      z.object({ oltreCents: centsSchema, pienaFinoACents: centsSchema, aCents: centsSchema, importoCents: centsSchema }),
+    ),
+    trattamentoIntegrativo: param(
+      z.object({ importoCents: centsSchema, sogliaRedditoCents: centsSchema, correttivoCents: centsSchema }),
+    ),
+    contributi: param(
+      z.object({
+        ivs: rate,
+        aliquotaAggiuntivaOltreFascia: rate,
+        fisTotale: z.object({ finoA5: rate, oltre5: rate }),
+        quotaFisLavoratore: z.object({ numeratore: z.number().int().positive(), denominatore: z.number().int().positive() }),
+        cigsLavoratore: rate,
+      }),
+    ),
+    tfr: param(
+      z.object({
+        frazione: z.object({ numeratore: z.number().int().positive(), denominatore: z.number().int().positive() }),
+        contributoDetratto: rate,
+      }),
+    ),
+    fondoPensione: param(z.object({ lavoratore: rate, datore: rate, plafondCents: centsSchema })),
   }),
   acconti: z.object({
     quotaImposta: param(rate),

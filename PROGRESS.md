@@ -3,6 +3,61 @@
 > Una voce per sessione: fatto, decisioni, next steps, blocchi. Le ultime 2 voci si leggono
 > all'inizio di ogni sessione (vedi CLAUDE.md).
 
+## 2026-08-23 — S16 «E se fossi dipendente?» (post-MVP §3)
+
+**Fatto**
+- **Ricerca su fonti primarie** (subagent; il messaggio di sintesi si è perso ma il
+  findings file era completo: `.scratch/simulatore-dipendente/research/`
+  `dipendente-2025-2026.md`, 331 righe): TUIR artt. 7/11/13/19/51, L. 207/2024 c. 2-9,
+  DL 3/2020, L. 199/2025, art. 2120 c.c., L. 297/82, L. 335/95, DL 384/92, D.Lgs.
+  148/2015, D.Lgs. 252/2005, circ. AdE 4/E/2025 in PDF, CCNL Terziario artt. 107/221.
+  Chiavi: cuneo = somma esente **7,1/5,3/4,8%** (RC ≤ 20k) o ulteriore detrazione 1.000
+  con degressione a 40k e CAPIENZA; trattamento integrativo 1.200 vivo (test con −75),
+  CUMULABILE con la somma; contributi 9,19% + **terzo del FIS** (le tabelle sintetiche
+  lo omettono: fanno fede le circ. INPS 176/2016 e 18/2022) + CIGS 0,30 sopra i 15
+  dipendenti (dal 2022 anche commercio: la vulgata «9,49 oltre 50» è pre-riforma) + 1%
+  oltre la prima fascia (la stessa dell'IVS) col massimale post-95 (lo stesso c. 18);
+  TFR 6,91% netto; 13ª/14ª = timing (IRPEF annuale + conguaglio); Fon.Te 0,55/1,55
+  invariato dal rinnovo 2024, plafond 5.164,57/5.300 (TFR conferito escluso);
+  Bilancio 2026 tocca solo il 33%. Esempi svolti → golden.
+- **Design gate con Federico**: RAL digitata (niente conversioni dal fatturato);
+  default contributivo 9,19% puro + selettore dimensione azienda; **Fon.Te col toggle
+  ATTIVO di default** (sua scelta: «è uno dei vantaggi»).
+- **Motore in TDD** (RED → GREEN, 96 test nel package): gruppo `dipendente` nei params
+  2025/2026 (detrazione art. 13 lavoro dipendente, somma integrativa, ulteriore
+  detrazione, trattamento integrativo, contributi con FIS a frazione esatta ⅓ via
+  `quotaLineare`, TFR 2/27, Fon.Te; massimale e prima fascia RIUSATI da
+  previdenza.massimale e previdenzaIvs.fasciaPiuUno — stessi valori di legge);
+  `computeDipendente` in `dipendente.ts` (niente arrotondamento all'euro: conguaglio
+  del sostituto in centesimi, dichiarato); **9 golden quadrati a mano** in
+  `tests/golden/caso-dipendente.ts` (RAL 30k → netto 24.021,37 identico 2025/2026;
+  40k → il 33% vale 166,48 di netta; 18k somma 4,8%; 15k cumulo trattamento+somma —
+  qui ho corretto in scrittura un mio errore di sottrazione a mano, RC 13.621,50 non
+  13.611,50; FIS/CIGS 2.927,00 esatto come l'esempio della ricerca; Fon.Te; massimale
+  130k; Trento a zero sotto i 30k anche da dipendente).
+- **UI**: sezione richiudibile «E se fossi dipendente?» nel Simulatore
+  (`ConfrontoDipendente.tsx`): RAL, contributi in busta (solo IVS default), regione
+  dal dataset (pre-selezionata dal profilo) o aliquota a mano, comunale + soglia,
+  toggle Fon.Te acceso; tabella con IRPEF spiegata, somme esenti, «Netto annuo da
+  dipendente», riga «Matura a parte» (TFR + Fon.Te datore) e confronto col netto
+  reale dello scenario forfettario; footer con le ipotesi. 3 mount test sui golden.
+- **Docs**: sezione «Lavoro dipendente» in regole-fiscali.md (tabella completa con
+  fonti); ROADMAP: spuntati **§2 (S14-S15)** e **§3 (S16)**; CHANGELOG.
+- `pnpm verify` verde: **256 test** (12 nuovi: 9 golden motore + 3 mount).
+
+**Decisioni**: RAL come input (mai derivata dal fatturato); Fon.Te ON di default;
+default contributivo confrontabile (9,19%) col selettore per il numero vero; TFR e
+fondo mai nel netto (retribuzione differita, riga «matura a parte»); detassazioni
+2026 fuori perimetro con nota; anno intero/nessun carico di famiglia dichiarati.
+
+**Next steps**: collaudo di Federico; eventuale Fase 2 addizionali comunali (dataset
+MEF); §4 calcolo inverso o §1b casse professionali; refresh annuale params (ora anche
+gruppo dipendente e dataset regionale).
+
+**Blocchi/aperture**: invariati + buchi dichiarati della ricerca (circolari INPS
+26/2025 e 6/2026 confermate solo via mirror concordanti; art. 13 TUIR ha una modifica
+già pubblicata con effetto 2027, da riverificare se si modellerà il 2027).
+
 ## 2026-08-23 — S15 Addizionale regionale automatica per residenza (Fase 1)
 
 **Fatto**

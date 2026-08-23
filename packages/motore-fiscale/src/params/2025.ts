@@ -150,6 +150,89 @@ export const params2025 = defineParams({
       },
     },
   },
+  dipendente: {
+    detrazione: {
+      valore: {
+        bassa: { finoACents: 1_500_000, importoCents: 195_500, minimoCents: 69_000 },
+        media: { finoACents: 2_800_000, baseCents: 191_000, extraCents: 119_000, divisoreCents: 1_300_000 },
+        alta: { finoACents: 5_000_000, baseCents: 191_000, divisoreCents: 2_200_000 },
+        bonus: { oltreCents: 2_500_000, finoACents: 3_500_000, importoCents: 6_500 },
+      },
+      fonte: {
+        riferimento:
+          'Art. 13, c. 1 e 1.1, TUIR vigente (1.955 a regime dal 2025: L. 207/2024, art. 1, c. 2, lett. b): 1.955 fino a 15.000 (minimo 690, non rapportato); 1.910 + 1.190 × (28.000 − RC)/13.000 fino a 28.000; 1.910 × (50.000 − RC)/22.000 fino a 50.000; +65 tra 25.000 e 35.000 (per intero); rapporti alle prime 4 cifre decimali (c. 6). Confronto ad anno intero',
+        url: 'https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.del.presidente.della.repubblica:1986-12-22;917~art13!vig=',
+        verificatoIl: '2026-08-23',
+      },
+    },
+    sommaIntegrativa: {
+      valore: {
+        sogliaRedditoCents: 2_000_000,
+        fasce: [
+          { finoACents: 850_000, percentuale: 0.071 },
+          { finoACents: 1_500_000, percentuale: 0.053 },
+          { finoACents: null, percentuale: 0.048 },
+        ],
+      },
+      fonte: {
+        riferimento:
+          'L. 207/2024, art. 1, c. 4-5 (strutturale dal 2025): somma che NON concorre al reddito, per reddito complessivo ≤ 20.000, pari al 7,1/5,3/4,8% del reddito di lavoro dipendente (fasce 8.500/15.000; percentuale individuata sul reddito annualizzato — qui anno intero); circ. AdE 4/E/2025, §1.1',
+        url: 'https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:legge:2024-12-30;207~art1!vig=',
+        verificatoIl: '2026-08-23',
+      },
+    },
+    ulterioreDetrazione: {
+      valore: { oltreCents: 2_000_000, pienaFinoACents: 3_200_000, aCents: 4_000_000, importoCents: 100_000 },
+      fonte: {
+        riferimento:
+          'L. 207/2024, art. 1, c. 6: ulteriore detrazione di 1.000 € per RC 20.000-32.000, poi 1.000 × (40.000 − RC)/8.000 fino a 40.000 (precisione piena: nessuna regola di troncamento); spetta nei limiti della capienza dell’imposta lorda (circ. AdE 4/E/2025, p. 16)',
+        url: 'https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:legge:2024-12-30;207~art1!vig=',
+        verificatoIl: '2026-08-23',
+      },
+    },
+    trattamentoIntegrativo: {
+      valore: { importoCents: 120_000, sogliaRedditoCents: 1_500_000, correttivoCents: 7_500 },
+      fonte: {
+        riferimento:
+          'DL 3/2020, art. 1 vigente (correttivo −75 da L. 207/2024, art. 1, c. 3): 1.200 € esenti se RC ≤ 15.000 e imposta lorda sui redditi di lavoro > detrazione art. 13, c. 1, − 75 €; la fascia 15.000-28.000 (legata a oneri ante-2022) NON è modellata, dichiarato',
+        url: 'https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legge:2020-02-05;3~art1!vig=',
+        verificatoIl: '2026-08-23',
+      },
+    },
+    contributi: {
+      valore: {
+        ivs: 0.0919,
+        aliquotaAggiuntivaOltreFascia: 0.01,
+        fisTotale: { finoA5: 0.005, oltre5: 0.008 },
+        quotaFisLavoratore: { numeratore: 1, denominatore: 3 },
+        cigsLavoratore: 0.003,
+      },
+      fonte: {
+        riferimento:
+          'IVS FPLD 9,19% a carico lavoratore (8,89 + 0,30 ex L. 296/2006, c. 769); +1% oltre la prima fascia pensionabile (DL 384/1992, art. 3-ter; la fascia è previdenzaIvs.fasciaPiuUno); massimale post-1995 sui soli contributi pensionistici = previdenza.massimale (L. 335/1995, c. 18, unico); FIS 0,50/0,80% con UN TERZO a carico lavoratore (D.Lgs. 148/2015, art. 29, c. 8; riparto 2/3-1/3 ex circ. INPS 176/2016 e 18/2022); CIGS 0,30% lavoratore sopra i 15 dipendenti, dal 2022 anche nel commercio (D.Lgs. 148/2015, artt. 20 e 23)',
+        url: 'https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2015-09-14;148~art23!vig=',
+        verificatoIl: '2026-08-23',
+      },
+    },
+    tfr: {
+      valore: { frazione: { numeratore: 2, denominatore: 27 }, contributoDetratto: 0.005 },
+      fonte: {
+        riferimento:
+          'Art. 2120 c.c.: quota annua = retribuzione utile / 13,5 (= × 2/27); L. 297/1982, art. 3: 0,50% detratto dalla quota. Accantonamento lordo DIFFERITO, mai nel netto annuo: all’uscita tassazione separata (artt. 17 e 19 TUIR), rivalutazioni a sostitutiva 17% (D.Lgs. 47/2000, art. 11)',
+        url: 'https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:legge:1982-05-29;297~art3!vig=',
+        verificatoIl: '2026-08-23',
+      },
+    },
+    fondoPensione: {
+      valore: { lavoratore: 0.0055, datore: 0.0155, plafondCents: 516_457 },
+      fonte: {
+        riferimento:
+          'CCNL Terziario Confcommercio, art. 107 (invariato dal rinnovo 22/03/2024): lavoratore min 0,55% e datore 1,55% della retribuzione utile TFR (qui ≈ RAL); deducibilità entro il plafond ex art. 8, c. 4, D.Lgs. 252/2005 — 5.164,57 € fino al 2025; il TFR conferito NON consuma il plafond',
+        url: 'https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2005-12-05;252~art8!vig=',
+        verificatoIl: '2026-08-23',
+      },
+    },
+  },
   acconti: {
     quotaImposta: {
       valore: 1,

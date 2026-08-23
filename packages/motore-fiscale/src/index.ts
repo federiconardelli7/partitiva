@@ -16,6 +16,8 @@ export { computeTimeline } from './timeline'
 export type { F24, F24Riga, Timeline, TimelineAnnoInput, TimelineOpts } from './timeline'
 export { computeOrdinario } from './ordinario'
 export type { FigliACarico, OrdinarioInput, RisultatoOrdinario } from './ordinario'
+export { computeDipendente } from './dipendente'
+export type { DimensioneAzienda, DipendenteInput, RisultatoDipendente } from './dipendente'
 export { calcolaAddizionaleRegionale } from './addizionali'
 export {
   ENTITA_REGIONALI,

@@ -2,6 +2,7 @@ import { computeAnno, computeTimeline, GRUPPI_ATECO, type Flag, type RisultatoAn
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Card } from '../components/Card'
+import { ConfrontoDipendente } from '../components/ConfrontoDipendente'
 import { ConfrontoOrdinario } from '../components/ConfrontoOrdinario'
 import { Flusso } from '../components/Flusso'
 import { IntestazionePagina } from '../components/IntestazionePagina'
@@ -299,6 +300,12 @@ export function Simulatore({
               regionePredefinita={profilo?.regione}
             />
           )}
+
+          <ConfrontoDipendente
+            anno={annoSimulato}
+            nettoRealeForfettarioCents={risultato.nettoRealeCents}
+            regionePredefinita={profilo?.regione}
+          />
         </>
       )}
 

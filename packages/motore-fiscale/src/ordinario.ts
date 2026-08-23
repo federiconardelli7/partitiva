@@ -57,12 +57,12 @@ export interface RisultatoOrdinario {
 
 /** Rapporto assunto «nelle prime quattro cifre decimali» (art. 13, c. 6 TUIR: troncamento).
  *  Aritmetica intera: il quoziente float di interi < 2^53 non può sbagliare il floor. */
-const rapportoTroncato4 = (numeratore: number, denominatore: number): number =>
+export const rapportoTroncato4 = (numeratore: number, denominatore: number): number =>
   Math.floor((numeratore * 10_000) / denominatore) / 10_000
 
-/** importo × numeratore/denominatore con arrotondamento half-up al centesimo (per la
- *  degressione art. 15, c. 3-bis, che non fissa un troncamento: scelta dichiarata). */
-const quotaLineare = (importo: Cents, numeratore: number, denominatore: number): Cents => {
+/** importo × numeratore/denominatore con arrotondamento half-up al centesimo (per le quote
+ *  senza regola legale di troncamento: degressione art. 15, ulteriore detrazione, terzo FIS, TFR). */
+export const quotaLineare = (importo: Cents, numeratore: number, denominatore: number): Cents => {
   const scaled = importo * numeratore
   const intPart = Math.floor(scaled / denominatore)
   const resto = scaled - intPart * denominatore

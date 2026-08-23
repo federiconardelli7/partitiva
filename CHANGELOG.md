@@ -7,6 +7,16 @@ Formato: [Keep a Changelog](https://keepachangelog.com/it-IT/1.1.0/); versioning
 
 ### Added
 
+- **«E se fossi dipendente?» nel Simulatore**: dato un RAL, il netto annuo da lavoro
+  dipendente con le regole vigenti — detrazioni art. 13 (troncamento a 4 decimali),
+  taglio del cuneo della L. 207/2024 (somma esente 7,1/5,3/4,8% fino a 20.000 o
+  ulteriore detrazione 1.000 con degressione a 40.000 e capienza), trattamento
+  integrativo 1.200, contributi in busta (IVS 9,19%, +1% oltre la prima fascia,
+  massimale post-1995; FIS e CIGS opzionali per dimensione azienda), addizionali col
+  dataset regionale — più TFR (6,91%) e Fon.Te (0,55% dedotto / 1,55% dal datore,
+  attivo di default) esposti come «matura a parte». Confronto col netto reale del
+  proprio scenario forfettario; ipotesi e fonti in `docs/regole-fiscali.md`
+  (sezione «Lavoro dipendente»); 9 golden quadrati a mano.
 - **Addizionale regionale automatica per residenza**: nel confronto con l'ordinario si
   sceglie la regione o provincia autonoma (salvabile nel profilo, campo facoltativo del
   wizard) e il motore applica la **struttura ufficiale MEF** dell'anno — scaglioni anche
