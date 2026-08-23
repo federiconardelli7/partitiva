@@ -1,0 +1,5 @@
+{
+  "buildCommand": "pnpm --filter @partitiva/web build",
+  "outputDirectory": "apps/web/dist",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}

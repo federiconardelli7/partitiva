@@ -8,10 +8,12 @@ coverage/
 *.log
 .env
 .env.*
+.vercel
 
 # difesa in profondità: mai file fiscali reali nel repo
 # (le fixtures anonimizzate hanno nomi diversi, es. fattura-fpr12-esempio.xml)
 IT[0-9]*_*.xml
 IT[0-9]*_*.xml.p7m
+IT*_*.pdf
 Sdi_file_*.pdf
 *.p7m

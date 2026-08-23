@@ -46,6 +46,16 @@
   cancello). Fixture sintetica dedicata + e2e su ENTRAMBI i PDF reali. Diagnosi fatta
   riproducendo il flusso in un browser headless pulito contro la produzione: il primo
   retest fallito era il layout nuovo, non il deploy (bundle verificato per marker).
+- **Auto-deploy dal push RIPRISTINATO** (richiesta di Federico): la causa del distacco di
+  S5 era il progetto Vercel con Root Directory «.» e framework «Other» → build vuote in 1s
+  che rubavano l'alias. Ora la build del monorepo è dichiarata nel `vercel.json` di RADICE
+  (install pnpm del workspace, `pnpm --filter @partitiva/web build`, output
+  `apps/web/dist`, rewrite SPA) e Git è ricollegato (`vercel git connect`); pipeline
+  collaudata con una **preview cloud** (READY, SPA ok, bundle coi marker correnti) PRIMA
+  del primo push. Se una build fallisce l'alias non si muove; il prebuilt manuale da
+  `apps/web` resta il fallback (il suo `vercel.json` locale è invariato). In `.gitignore`:
+  `.vercel` (link di radice) e `IT*_*.pdf` (le copie di cortesia reali, es.
+  `ITxxx…_yyy.pdf`, non devono mai poter entrare nel repo pubblico).
 - TDD: **210 test verdi** (9 nuovi/aggiornati, RED verificato prima del GREEN). Nota: un
   flake una-tantum sul titolo in app.test.tsx (ordine dei file), non riproducibile in 3 run.
 
