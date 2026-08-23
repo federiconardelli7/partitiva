@@ -38,8 +38,13 @@ Formato: [Keep a Changelog](https://keepachangelog.com/it-IT/1.1.0/); versioning
   fattura 2025 importata da XML finiva incassata «oggi», nell'anno fiscale sbagliato.
 - **Il parser PDF legge anche le stampe da browser del foglio di stile**
   (fatturapa.gov.it): data in formato ISO e importi nel formato grezzo dell'XML
-  (es. «1234.56») ora riconosciuti, con l'italiano prioritario (1.500,00 resta 1.500 €);
-  verificato end-to-end su un PDF reale, fuori dal repo.
+  (es. «1234.56») ora riconosciuti, con l'italiano prioritario (1.500,00 resta 1.500 €).
+  E le **copie di cortesia** (il PDF scaricabile all'invio, in alternativa all'XML):
+  «Numero:» senza la parola «documento», data coi punti e senza etichetta (cercata solo
+  nel blocco del numero, mai tra le date-esca), totale sulla riga «TOTALE … (EUR)» /
+  «Netto a pagare» con le voci del riepilogo IVA escluse; niente TDxx in questi PDF →
+  resta l'avviso di verificare che sia una fattura. Verificati end-to-end su PDF reali,
+  fuori dal repo.
 
 - **Il settore si sceglie (e si ricorda) per nome**: quattro gruppi dell'allegato 4
   condividono il coefficiente 40% e la scelta scivolava sul primo, in Wizard e Simulatore;

@@ -14,7 +14,7 @@ export interface EstrazionePdf {
   avvisi: string[]
 }
 
-const DATA_RE = /\b(\d{2})[-/](\d{2})[-/](\d{4})\b/
+const DATA_RE = /\b(\d{2})[-/.](\d{2})[-/.](\d{4})\b/
 // Le stampe browser del foglio di stile (fatturapa.gov.it) riportano la data in ISO.
 const DATA_ISO_RE = /\b(\d{4})-(\d{2})-(\d{2})\b/
 const IMPORTO_RE = /\d{1,3}(?:\.\d{3})*,\d{2}|\d+,\d{2}/g
@@ -109,12 +109,40 @@ export function estraiCampiPdf(righe: readonly string[]): EstrazionePdf {
     }
   }
 
+  // Copia di cortesia (il PDF scaricabile all'invio): «Numero: 7» senza la parola
+  // «documento», e la data — spesso coi punti — SENZA etichetta nel blocco sotto il
+  // numero (fusa con altre colonne). La si cerca solo lì, mai in tutto il documento:
+  // altrove vivono le date-esca (scadenze di pagamento, riferimenti normativi).
+  if (numero === null) {
+    const idxNumero = righe.findIndex((r) => /^numero\s*:/i.test(r))
+    if (idxNumero >= 0) {
+      numero = (righe[idxNumero] ?? '').replace(/^numero\s*:\s*/i, '').split(/\s+/)[0] || null
+      if (data === null) {
+        for (let j = idxNumero; j < Math.min(righe.length, idxNumero + 4); j++) {
+          const match = trovaData(righe[j] ?? '')
+          if (match) {
+            data = match.iso
+            break
+          }
+        }
+      }
+    }
+  }
+
   // In documenti multi-pagina «Totale documento» può ripetersi: l'ULTIMA occorrenza è il
   // riepilogo finale. Se quella riga non porta un importo, si risale alle precedenti.
   let importoTotaleCents: number | null = null
   for (let j = righe.length - 1; j >= 0 && importoTotaleCents === null; j--) {
     if (/totale documento/i.test(righe[j] ?? '')) {
       importoTotaleCents = ultimoImporto(righe[j] ?? '') ?? ultimoImporto(righe[j + 1] ?? '')
+    }
+  }
+  // Copia di cortesia: il totale vive su una riga «TOTALE … (EUR)» o «Netto a pagare».
+  // Mai le voci del riepilogo IVA («Totale imposta/imponibile/IVA…»): sono esche.
+  for (let j = righe.length - 1; j >= 0 && importoTotaleCents === null; j--) {
+    const riga = righe[j] ?? ''
+    if (/netto a pagare/i.test(riga) || /\btotale\b(?!\s*(?:imposta|imponibile|iva|sconto|ritenuta))/i.test(riga)) {
+      importoTotaleCents = ultimoImporto(riga)
     }
   }
 

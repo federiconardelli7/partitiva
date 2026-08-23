@@ -38,6 +38,14 @@
   resta migliaia); fixture sintetica del layout con le esche vere (date di stampa nel nome
   file, importi EN nella descrizione). **Verifica end-to-end sul PDF reale** (fuori repo,
   riproduzione locale con lo stesso pdfjs dell'app): tutti i campi estratti, 0 avvisi.
+  Secondo giro dal retest di Federico: le **copie di cortesia** (il PDF che si scarica
+  all'invio) sono un TERZO layout — «Numero:» senza «documento», data coi PUNTI senza
+  etichetta (fusa con l'indirizzo del committente: si cerca solo nel blocco del numero),
+  totale su riga «TOTALE … (EUR)» con esche «Totale imposta/imponibile» e bollo «Importo
+  2,00» da escludere, nessun TDxx (avviso mantenuto, la revisione obbligatoria è il
+  cancello). Fixture sintetica dedicata + e2e su ENTRAMBI i PDF reali. Diagnosi fatta
+  riproducendo il flusso in un browser headless pulito contro la produzione: il primo
+  retest fallito era il layout nuovo, non il deploy (bundle verificato per marker).
 - TDD: **210 test verdi** (9 nuovi/aggiornati, RED verificato prima del GREEN). Nota: un
   flake una-tantum sul titolo in app.test.tsx (ordine dei file), non riproducibile in 3 run.
 

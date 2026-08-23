@@ -158,3 +158,67 @@ describe('estraiCampiPdf — stampa browser del foglio di stile (data ISO, impor
     expect(it.importoTotaleCents).toBe(150_000)
   })
 })
+
+// Copia di cortesia (il PDF che si scarica all'invio, in alternativa all'XML): niente
+// etichette «… documento» né TDxx — «Numero:», data coi PUNTI senza etichetta nel blocco
+// sotto il numero (fusa con l'indirizzo del committente), totale su una riga «TOTALE …
+// (EUR)». Righe sintetiche che riproducono la struttura osservata su un PDF reale.
+const LAYOUT_COPIA_CORTESIA = [
+  'ROSSI, MARIO - C.F. RSSMRA80A01H501U - P.IVA 01234567890',
+  '(IT)',
+  'Regime fiscale: Regime forfettario (art.1, c.54-89, L. 190/2014)',
+  'Sede: VIA MILANO N 1 - 00100 ROMA (RM - IT)',
+  'Cessionario/committente',
+  'Fattura ACME SERVICES LLC - P.IVA 999999999 (US)',
+  'Numero: 7',
+  'Sede: 1 Main Street, 100 - 10001 New York',
+  '27.07.2026 City (US)',
+  'Descrizione Quantità Sconto/Magg. Ritenuta I.V.A. Importo',
+  'Fixed contract. Invoice for work',
+  '1 1.234,56 0,00% 1.234,56',
+  'mensile. USD $1,408.62 convertiti in',
+  'data 27/07 al cambio 0,877',
+  'Natura: Non soggette - altri casi',
+  'Dati di riepilogo',
+  'Aliquota Natura Spese accessorie Arrotondamento Imponibile Imposta',
+  '0,00% 1.234,56 0,00',
+  'Rif. Normativo: operazione effettuata ai sensi art1 commi da 54 a 89 L 190/2014 non soggetto art 7 ter dpr 633/72,',
+  'Bollo',
+  'Bollo assolto ai sensi del',
+  'Tipo decreto MEF 17 GIUGNO 2014 TOTALE 1.234,56 (EUR)',
+  '(ART. 6)',
+  'Importo 2,00',
+]
+
+describe('estraiCampiPdf — copia di cortesia («Numero:», data coi punti, riga TOTALE)', () => {
+  it('estrae numero, data e totale; il bollo e il riepilogo non ingannano', () => {
+    const e = estraiCampiPdf(LAYOUT_COPIA_CORTESIA)
+    expect(e.numero).toBe('7')
+    expect(e.data).toBe('2026-07-27')
+    expect(e.importoTotaleCents).toBe(123_456)
+    expect(e.affidabile).toBe(true)
+    // niente TDxx nelle copie di cortesia: l'avviso resta (la revisione è comunque obbligatoria)
+    expect(e.tipoDocumento).toBeNull()
+    expect(e.avvisi.some((a) => /tipologia/i.test(a))).toBe(true)
+  })
+
+  it('la data coi punti vale anche nel layout con etichetta', () => {
+    const e = estraiCampiPdf(['Numero documento: 5', 'Data documento: 03.02.2026', 'Totale documento 1.000,00'])
+    expect(e.data).toBe('2026-02-03')
+  })
+
+  it('«Totale imposta/imponibile/IVA» non sono mai il totale; senza una riga TOTALE vera resta null', () => {
+    const conTotale = estraiCampiPdf(['Numero: 9', '01.03.2026', 'Totale imposta 0,00', 'TOTALE 2.500,50 (EUR)'])
+    expect(conTotale.importoTotaleCents).toBe(250_050)
+    const senzaTotale = estraiCampiPdf(['Numero: 9', '01.03.2026', 'Totale imposta 123,00'])
+    expect(senzaTotale.importoTotaleCents).toBeNull()
+    expect(senzaTotale.avvisi.some((a) => /totale documento non trovato/i.test(a))).toBe(true)
+  })
+
+  it('la data senza etichetta si cerca SOLO nel blocco del numero, non in tutto il documento', () => {
+    // la data-esca in coda (scadenza di pagamento) non deve mai vincere
+    const e = estraiCampiPdf(['Numero: 3', 'qui niente data', 'ancora niente', 'nulla', 'Scadenza pagamento: 30.09.2026', 'TOTALE 100,00 (EUR)'])
+    expect(e.data).toBeNull()
+    expect(e.avvisi.some((a) => /data documento non trovata/i.test(a))).toBe(true)
+  })
+})
