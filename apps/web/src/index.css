@@ -1,5 +1,12 @@
 @import 'tailwindcss';
 
+/* Tema manuale: la variante dark: segue la classe `dark` su <html> (messa prima del paint
+   dallo script inline di index.html, poi dal TemaToggle), non più il solo media query. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
+}
+:root.dark {
+  color-scheme: dark;
 }

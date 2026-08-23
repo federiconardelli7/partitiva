@@ -12,6 +12,16 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#1c1917" media="(prefers-color-scheme: dark)" />
+    <script>
+      // Anti-flash: applica il tema salvato PRIMA del primo paint. Replica la lettura di
+      // src/lib/tema.ts (stessa chiave): se cambi lì, cambia anche qui. Se storage o
+      // matchMedia mancano si parte chiari; il toggle rimedia al mount.
+      try {
+        var tema = localStorage.getItem('partitiva-tema')
+        var scuro = tema === 'scuro' || (tema !== 'chiaro' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.classList.toggle('dark', scuro)
+      } catch (errore) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

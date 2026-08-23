@@ -7,6 +7,10 @@ Formato: [Keep a Changelog](https://keepachangelog.com/it-IT/1.1.0/); versioning
 
 ### Added
 
+- **Tema chiaro / scuro / sistema**: toggle nell'header (un click per ciclare; default
+  «come il dispositivo»). La preferenza resta sul dispositivo (localStorage, mai nei
+  backup), niente flash al caricamento e barra del browser/PWA coerente col tema scelto.
+
 - **Gestioni IVS artigiani e commercianti (S11)**: nel profilo si sceglie la gestione
   previdenziale (default: Gestione Separata — i profili e i backup esistenti restano
   validi senza toccare nulla), con anzianità al 31/12/1995 (massimale) e riduzione

@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect } from 'react'
 import { BrowserRouter, Link, Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom'
+import { TemaToggle } from './components/TemaToggle'
 import { db, type Profilo } from './db'
 import { Dati } from './pages/Dati'
 import { Landing } from './pages/Landing'
@@ -75,18 +76,21 @@ function Shell() {
               Partitiva <span className="font-normal text-emerald-700 dark:text-emerald-400">· forfettario</span>
             </Link>
           </h1>
-          <nav className="flex gap-1 rounded-lg bg-stone-100 p-1 dark:bg-stone-800">
-            {voci.map((voce) => (
-              <NavLink
-                key={voce.to}
-                to={voce.to}
-                end={voce.end}
-                className={({ isActive }) => stileLink(isActive, voce.sim)}
-              >
-                {voce.label}
-              </NavLink>
-            ))}
-          </nav>
+          <div className="flex items-center gap-2">
+            <nav className="flex gap-1 rounded-lg bg-stone-100 p-1 dark:bg-stone-800">
+              {voci.map((voce) => (
+                <NavLink
+                  key={voce.to}
+                  to={voce.to}
+                  end={voce.end}
+                  className={({ isActive }) => stileLink(isActive, voce.sim)}
+                >
+                  {voce.label}
+                </NavLink>
+              ))}
+            </nav>
+            <TemaToggle />
+          </div>
         </div>
       </header>
 

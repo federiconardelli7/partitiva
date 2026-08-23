@@ -3,6 +3,41 @@
 > Una voce per sessione: fatto, decisioni, next steps, blocchi. Le ultime 2 voci si leggono
 > all'inizio di ogni sessione (vedi CLAUDE.md).
 
+## 2026-08-23 — S13 Tema chiaro/scuro, pulizia Vercel e kickoff §2
+
+**Fatto**
+- **Tema chiaro/scuro/sistema in TDD** (6 test nuovi, RED→GREEN): variante Tailwind
+  `dark:` passata dal media query alla CLASSE (`@custom-variant dark` in index.css +
+  classe su `<html>`); script inline anti-flash in index.html (replica la lettura di
+  `lib/tema.ts`: stessa chiave `partitiva-tema`); `lib/tema.ts` con persistenza
+  localStorage **per-dispositivo** («sistema» rimuove la chiave; MAI nei backup: non è
+  un dato fiscale); `TemaToggle` nell'header (ciclo sistema→chiaro→scuro, aria-label
+  parlante, simboli ◐/☀/☾); meta theme-color pilotati dal tema effettivo (barra
+  browser/PWA coerente, con «sistema» tornano per-media); `color-scheme` segue la
+  classe. jsdom senza matchMedia → guardia nel componente (fallback chiaro nei test).
+- **Progetti fantasma partitiva-calc/partitiva-stats** (segnalazione S10): risultano già
+  assenti da TUTTI gli scope raggiungibili (team personale ed enterprise, verificato con
+  `vercel project ls` + `teams ls`): nulla da rimuovere, segnalazione chiusa.
+- **Kickoff §2 «Confronto con l'ordinario»** (mandato di Federico: «continue with the
+  full roadmap»): effort wayfinder `.scratch/confronto-ordinario/` (mappa) e **ricerca
+  fonti primarie lanciata** via subagent — art. 11/13 TUIR vigenti su Normattiva
+  (scaglioni IRPEF 2026 e detrazioni lavoro autonomo, oggi documentati solo su fonti
+  secondarie), taglio detrazioni >200k (Bilancio 2026), tetti L. 207/2024 c. 10,
+  addizionali regionale/comunale, acconti IRPEF; findings attesi in
+  `research/irpef-2026.md`. Design e implementazione partono SOLO dai findings.
+- `pnpm verify` verde: **220 test** (214 + 6 tema).
+
+**Decisioni**: tema = preferenza per-dispositivo in localStorage, esclusa dai backup;
+ciclo a tre stati con default «come il dispositivo»; theme-color aggiornati da
+`applicaTema` (i default per-media restano in index.html).
+
+**Next steps**: findings ricerca §2 → brainstorm con Federico sull'input «costi reali»
+(voce unica? percentuale?) → design motore ordinario (params IRPEF con fonte per valore,
+catena parallela, UI confronto nel Simulatore) → TDD.
+
+**Blocchi/aperture**: invariati (GU DL 89/2026, soglie GS, mapping ATECO 2025, quadro RR
+arrotondamenti, daVerificare 0,48 commercianti).
+
 ## 2026-08-23 — S12 Quota acconti IVS su fonte primaria + fix dal collaudo di Federico
 
 **Fatto**
