@@ -3,6 +3,59 @@
 > Una voce per sessione: fatto, decisioni, next steps, blocchi. Le ultime 2 voci si leggono
 > all'inizio di ogni sessione (vedi CLAUDE.md).
 
+## 2026-08-23 — S17 Calcolo inverso «che fatturato per X € netti» (post-MVP §4, prima metà)
+
+**Fatto**
+- **Nessuna ricerca fonti** (primo effort post-MVP senza `research/`): zero parametri
+  nuovi, si invertono le tre catene esistenti già golden-testate (computeAnno,
+  computeOrdinario, computeDipendente). Reuse-check: tutto riusato, un solo modulo nuovo.
+- **Motore in TDD** (RED 12 → GREEN al primo colpo, 108 test nel package):
+  `invertiNetto(obiettivo, nettoDiLordo, {massimo, passo})` in `inverso.ts` — griglia
+  0..massimo a passi di 50 € poi scansione all'euro nella cella del primo incrocio;
+  risposta in **euro interi** (al centesimo gli arrotondamenti micro-oscillano: plateau
+  dell'euro dell'imponibile −5/−15/−34 cent, troncamenti 4 decimali ±12 — verificato a
+  mano prima di scegliere la semantica); le catene NON sono monotone → dove il netto
+  ricade sotto l'obiettivo il risultato espone anche `lordoStabile`/`nettoStabile`
+  (primo euro oltre l'ultima ricaduta sulla griglia); null se al massimo non è
+  (stabilmente) raggiunto. 7 test di meccanica su chiusure sintetiche + **5 golden
+  quadrati a mano** in `tests/golden/caso-inverso.ts`: forfettario 78% startup
+  (30.000 → 39.596,00, flip al centesimo 39.595,92 verificato), tetto 85k non
+  raggiungibile (72.000 → null, al tetto 71.036,20), dipendente che ritrova il golden A
+  (24.021,37 → RAL esattamente 30.000,00), **trappola del trattamento integrativo**
+  (15.450 → RAL 16.452,00 MA a 16.550 si netta 15.391,02; stabile da 16.640,00 —
+  −1.200 di TI e −75 di somma persi insieme a RC 15.000), ordinario con regionale a
+  mano (25.000 → 44.870,00). Postcondizione testata: all'euro precedente il netto
+  non basta.
+- **UI**: sezione richiudibile «Che fatturato serve per il netto che vuoi? Calcolo
+  inverso» nel Simulatore (`CalcoloInverso.tsx`): netto desiderato, costi (registro +
+  altri, **identici sui due regimi d'impresa**: doctrine S7 — in ordinario dedotti, nel
+  forfettario fuori dal netto reale via `speseCents`), dimensione azienda + Fon.Te per
+  la RAL, regione dal dataset o aliquota a mano; tabella coi tre lordi necessari e il
+  **netto riverificato** al lordo proposto, nota ambra sulla ricaduta con lordo stabile,
+  messaggio dedicato quando il tetto di permanenza non basta; scansioni in useMemo con
+  chiave serializzata della gestione (decine di migliaia di computazioni pure, pochi ms).
+  3 mount test sui golden. Forfettario dello scenario: coefficiente/startup/gestione
+  correnti e versati FISSI (`risultato.versatiContributiCents`: in concatenata sono i
+  derivati; dipendono dall'anno precedente, quindi costanti nella scansione).
+- **Docs**: sezione «Calcolo inverso» in regole-fiscali.md (semantica, non-monotonie,
+  ipotesi dichiarate); ROADMAP **§4 prima metà** spuntata (resta la pianificazione
+  mensile vs soglie); CHANGELOG.
+- `pnpm verify` verde: **271 test** (15 nuovi: 12 motore + 3 mount).
+
+**Decisioni**: risposta all'euro intero, mai al centesimo (falsa precisione, golden
+fragili); ricadute rilevate sulla griglia da 50 € (finestre più strette possono sfuggire:
+dichiarato in UI e in regole-fiscali); tetto forfettario = soglia di permanenza 85.000
+(param `uscitaAnnoSuccessivo`), massimo di ricerca ordinario/RAL = 2.000.000 € (costante
+UI, dentro il safe-integer di mulRate); in ordinario oneri 19% e figli a zero (si
+raffinano nella sezione «E se uscissi»); netto ordinario = incassato − costi − totale.
+
+**Next steps**: collaudo di Federico (caso reale: il suo netto target con Trento nel
+select); §4 seconda metà (pianificazione mensile vs soglie) o Fase 2 comunali (dataset
+MEF ~7.900 comuni) o §1b casse professionali; housekeeping tag v0.2.0 (Unreleased ormai
+enorme: S10-S17).
+
+**Blocchi/aperture**: invariati (nessuna apertura nuova: nessun parametro toccato).
+
 ## 2026-08-23 — S16 «E se fossi dipendente?» (post-MVP §3)
 
 **Fatto**

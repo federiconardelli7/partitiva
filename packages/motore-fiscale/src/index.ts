@@ -18,6 +18,8 @@ export { computeOrdinario } from './ordinario'
 export type { FigliACarico, OrdinarioInput, RisultatoOrdinario } from './ordinario'
 export { computeDipendente } from './dipendente'
 export type { DimensioneAzienda, DipendenteInput, RisultatoDipendente } from './dipendente'
+export { invertiNetto } from './inverso'
+export type { RisultatoInverso } from './inverso'
 export { calcolaAddizionaleRegionale } from './addizionali'
 export {
   ENTITA_REGIONALI,

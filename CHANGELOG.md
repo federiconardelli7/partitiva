@@ -7,6 +7,17 @@ Formato: [Keep a Changelog](https://keepachangelog.com/it-IT/1.1.0/); versioning
 
 ### Added
 
+- **Calcolo inverso nel Simulatore** («che fatturato serve per il netto che vuoi?»): dal
+  netto annuo desiderato al **minimo lordo in euro interi** che lo raggiunge nei tre
+  regimi — fatturato forfettario (quando il tetto di permanenza 85.000 € non basta lo
+  dichiara, col netto massimo raggiungibile), fatturato in ordinario (costi reali identici
+  sui due regimi d'impresa: in ordinario si deducono, nel forfettario escono comunque dal
+  netto reale), RAL da lavoro dipendente — sempre col netto ricalcolato e verificato al
+  lordo proposto. Le catene non sono monotone: dove il netto RICADE sotto l'obiettivo
+  (es. la trappola del trattamento integrativo: per nettare 15.450 € bastano 16.452 € di
+  RAL, ma a 16.550 € si netta di meno) la sezione dichiara anche il lordo «stabile».
+  `invertiNetto` nel motore (griglia 50 € + scansione all'euro), 5 golden quadrati a mano;
+  semantica e ipotesi in `docs/regole-fiscali.md` (sezione «Calcolo inverso»).
 - **«E se fossi dipendente?» nel Simulatore**: dato un RAL, il netto annuo da lavoro
   dipendente con le regole vigenti — detrazioni art. 13 (troncamento a 4 decimali),
   taglio del cuneo della L. 207/2024 (somma esente 7,1/5,3/4,8% fino a 20.000 o

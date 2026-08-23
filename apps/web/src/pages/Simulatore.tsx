@@ -1,6 +1,7 @@
 import { computeAnno, computeTimeline, GRUPPI_ATECO, type Flag, type RisultatoAnno } from '@partitiva/motore-fiscale'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { CalcoloInverso } from '../components/CalcoloInverso'
 import { Card } from '../components/Card'
 import { ConfrontoDipendente } from '../components/ConfrontoDipendente'
 import { ConfrontoOrdinario } from '../components/ConfrontoOrdinario'
@@ -304,6 +305,17 @@ export function Simulatore({
           <ConfrontoDipendente
             anno={annoSimulato}
             nettoRealeForfettarioCents={risultato.nettoRealeCents}
+            regionePredefinita={profilo?.regione}
+          />
+
+          <CalcoloInverso
+            anno={annoSimulato}
+            coefficiente={coefficiente}
+            startup={startup}
+            copertura={copertura}
+            gestione={gestioneScenario}
+            versatiCents={risultato.versatiContributiCents}
+            spese={spese}
             regionePredefinita={profilo?.regione}
           />
         </>

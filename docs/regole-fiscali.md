@@ -189,6 +189,30 @@ conguagliate ex art. 23, c. 3, DPR 600/1973).
 | Addizionali | come il confronto ordinario: dataset regionale per residenza o aliquota in input, comunale in input, dovute se IRPEF netta > 10 € | v. sezione «Regime ordinario» | ✅ 23/08/2026 |
 | Detassazioni 2026 (5% rinnovi, 15% notturni/festivi, premi 1%) | NON modellate (componenti variabili non derivabili dalla RAL): nota in UI | L. 199/2025, art. 1, c. 7-11 | ✅ dichiarato fuori perimetro |
 
+## Calcolo inverso — «che fatturato per X € netti» (Simulatore)
+
+Nessun parametro nuovo: `invertiNetto` inverte per scansione le tre catene già documentate
+qui sopra (forfettario, ordinario, dipendente). Definizione: il **più piccolo lordo in euro
+interi** (fatturato, o RAL) il cui netto — sempre ricalcolato sulla catena forward a quel
+lordo — raggiunge l'obiettivo; griglia da 50 € poi scansione all'euro nella cella del primo
+incrocio. Al centesimo il minimo sarebbe falsa precisione: gli arrotondamenti della catena
+micro-oscillano (plateau dell'euro dell'imponibile: −5/−15/−34 cent a scalino; troncamenti
+a 4 decimali: ±12 cent), all'euro il risultato è stabile. Le catene **non sono monotone**
+(trattamento integrativo a scalino a 15.000 di RC, fasce della somma integrativa, gate dei
+10 € delle addizionali, esenzioni regionali a scalino, tetto/taglio oneri): dove il netto
+RICADE sotto l'obiettivo oltre il primo incrocio, il risultato espone anche il **lordo
+stabile** — il primo euro oltre l'ultima ricaduta vista sulla griglia (ricadute più strette
+del passo possono sfuggire, dichiarato in UI). Ipotesi del confronto, dichiarate: forfettario
+cercato entro la **soglia di permanenza** (85.000 €: oltre, «non raggiungibile» col netto al
+tetto mostrato); **costi reali identici sui due regimi d'impresa** (in ordinario dedotti E
+sottratti dal netto, nel forfettario non deducibili ma sottratti dal netto reale — la
+doctrine S7); contributi versati/deducibili dello scenario forfettario **fissi** al variare
+del fatturato (saldi e acconti dipendono dall'anno precedente); in ordinario oneri 19% e
+carichi di famiglia a zero; da dipendente le ipotesi della sezione qui sopra. Golden
+dedicati quadrati a mano in `tests/golden/caso-inverso.ts`, inclusa la trappola del
+trattamento integrativo resa visibile: per nettare 15.450 € bastano 16.452 € di RAL, ma a
+16.550 € il netto scende a 15.391,02 € e serve arrivare a 16.640 € perché torni stabile.
+
 ## Parametri per moduli futuri (roadmap)
 
 | Tema | Valori | Fonte | Stato |

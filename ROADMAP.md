@@ -72,7 +72,13 @@ governa la propria P.IVA — dalla fattura all'F24 spiegato — senza che i dati
    `computeDipendente` da RAL su fonti primarie (detrazioni art. 13, taglio del cuneo
    L. 207/2024, trattamento integrativo, contributi con FIS/CIGS, addizionali dal dataset,
    TFR e Fon.Te 0,55/1,55 come maturato a parte, toggle attivo di default).
-4. **Calcolo inverso** ("che fatturato per X € netti") e pianificazione mensile vs soglie.
+4. **Calcolo inverso** — ✅ «che fatturato per X € netti» (23/08/2026, S17): `invertiNetto`
+   nel motore (minimo lordo in euro interi con netto ≥ obiettivo, griglia 50 € + scansione
+   all'euro; dove le catene non sono monotone espone anche il lordo «stabile» oltre
+   l'ultima ricaduta) e sezione del Simulatore sui tre regimi — fatturato forfettario (con
+   tetto di permanenza 85.000 dichiarato), fatturato in ordinario (costi identici sui due
+   regimi d'impresa), RAL da dipendente — sempre col netto riverificato al lordo proposto.
+   Resta la **pianificazione mensile vs soglie**.
 5. **Modulo investimenti/PAC** (richiede ADR dedicata sulle fonti dati: default = inserimento
    manuale/CSV; cambi via API BCE/Frankfurter opt-in; capital gain 26%, zainetto minusvalenze,
    scenario PIR). Mai consigli di investimento.
