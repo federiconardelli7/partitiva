@@ -37,6 +37,24 @@ describe('schema del profilo (wizard) — ATECO facoltativo, settore per NOME', 
     expect(profiloFormSchema.safeParse({ ...base, ateco: '', settore: 'Gruppo inventato' }).success).toBe(false)
   })
 
+  it('tornare alla Gestione Separata azzera gli stati IVS rimasti nel form', () => {
+    // react-hook-form conserva i campi smontati: senza normalizzazione il profilo GS
+    // porterebbe con sé una riduzione IVS mai riconfermata.
+    const esito = profiloFormSchema.safeParse({
+      ...base,
+      ateco: '',
+      settore: 'Altre attività economiche',
+      gestione: 'gestione-separata',
+      anzianitaAl1995: true,
+      riduzioneIvs: 'riduzione35',
+    })
+    expect(esito.success).toBe(true)
+    if (esito.success) {
+      expect(esito.data.riduzioneIvs).toBe('nessuna')
+      expect(esito.data.anzianitaAl1995).toBe(false)
+    }
+  })
+
   it('anno di apertura prima del 2025 → errore (i parametri partono da lì)', () => {
     expect(
       profiloFormSchema.safeParse({

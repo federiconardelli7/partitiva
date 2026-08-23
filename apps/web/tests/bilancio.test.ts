@@ -7,6 +7,7 @@ import {
   bolliPerAnno,
   buildTimelineInputs,
   daIncassare,
+  gestioneDelProfilo,
   giorniA,
   numeroAnnoAttivita,
   prossimoF24,
@@ -154,6 +155,32 @@ describe('riepiloghi annuali (pregresso) negli input della timeline', () => {
     const r = computeTimeline(inputs).anni[2026]!
     expect(r.speseCents).toBe(30_000)
     expect(r.nettoRealeCents).toBe(r.nettoCompetenzaCents - r.bolliCents - r.speseCents)
+  })
+
+  it('gestioneDelProfilo: GS per default e per i profili storici; IVS con finestra della 50%', () => {
+    expect(gestioneDelProfilo({ annoApertura: 2025, copertura: 'piena' }, 2026)).toEqual({
+      tipo: 'gestione-separata',
+      copertura: 'piena',
+    })
+    const artigiano = {
+      annoApertura: 2025,
+      copertura: 'piena' as const,
+      gestione: 'artigiani' as const,
+      riduzioneIvs: 'riduzione50' as const,
+    }
+    // 36 mesi dall'apertura 2025 ≈ anni 2025–2027 interi; dal 2028 si torna al pieno (prudente)
+    expect(gestioneDelProfilo(artigiano, 2026)).toEqual({ tipo: 'artigiani', anzianitaAl1995: false, riduzione: 'riduzione50' })
+    expect(gestioneDelProfilo(artigiano, 2028)).toEqual({ tipo: 'artigiani', anzianitaAl1995: false, riduzione: 'nessuna' })
+    // la 35% non ha finestra: resta finché c'è
+    expect(gestioneDelProfilo({ ...artigiano, gestione: 'commercianti', riduzioneIvs: 'riduzione35' }, 2030)).toMatchObject(
+      { tipo: 'commercianti', riduzione: 'riduzione35' },
+    )
+  })
+
+  it('buildTimelineInputs porta la gestione del profilo dentro gli input del motore', () => {
+    const artigiano = { annoApertura: 2025, coefficiente: 0.4, copertura: 'piena' as const, gestione: 'artigiani' as const }
+    const inputs = buildTimelineInputs(artigiano, [], [], [], 2026)
+    expect(inputs[0]?.gestione).toEqual({ tipo: 'artigiani', anzianitaAl1995: false, riduzione: 'nessuna' })
   })
 
   it('annoParamsVicini dice QUALE anno di parametri viene usato (ripiego incluso)', () => {

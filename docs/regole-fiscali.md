@@ -82,13 +82,44 @@ nessun importo reale entra nel repo.
 - **2027**: F24 20/7 = **17.386,51** (saldo GS 9.747,49 + saldo imposta 1.331,30 + 1ª rata acconti
   6.307,72); 30/11 = **6.307,72**.
 
+## Artigiani e commercianti (gestioni IVS)
+
+Verifica del 23/08/2026 su PDF integrali: circ. INPS **38 del 07/02/2025** e **14 del
+09/02/2026** (valori e scadenze), **83 del 24/04/2025** (riduzione 50%), L. 190/2014
+art. 1 c. 76–84 e L. 207/2024 art. 1 c. 186 (testi vigenti su Normattiva), tabella causali
+contributo AdE (agg. 02/07/2026) + circ. INPS 87/2002. Ogni importo sotto è quadrato al
+centesimo contro il testo delle circolari.
+
+| Tema | 2025 | 2026 | Fonte | Stato |
+|---|---|---|---|---|
+| Minimale di reddito | 18.555 € | 18.808 € | circ. 38/2025 §2; 14/2026 §2 | ✅ 23/08/2026 |
+| Aliquote artigiani / commercianti | 24% / 24,48% (0,46 indennizzo cessazione + 0,02) | invariate | §1 (under 21: non più ridotte dal 2025) | ✅ 23/08/2026 |
+| Fascia del +1 punto | oltre 55.448 € (→25/25,48%) | oltre 56.224 € | §3 | ✅ 23/08/2026 |
+| Contributi fissi annui (maternità 7,44 € inclusa) | 4.460,64 / 4.549,70 | 4.521,36 / 4.611,64 | §2 (= minimale × aliquota + 7,44, quadratura esatta) | ✅ 23/08/2026 |
+| Massimali (anzianità al 31/12/1995 / iscritti dal 1996) | 92.413 / 120.607 | 93.707 / 122.295 | §4 (contributo max 2026 ante-96 art.: 22.864,51 = riprodotto dal motore + 7,44) | ✅ 23/08/2026 |
+| 4 rate fisse | 16/05, 20/08, **17/11**, 16/02/26 | **18/05**, 20/08, 16/11, 16/02/27 | §9 — nel motore: date base (16/05, 20/08, 16/11, 16/02) + slittamento sab/dom → lunedì, che riproduce le date ufficiali | ✅ 23/08/2026 |
+| Eccedenza sul minimale | saldo + 1º e 2º acconto alle scadenze delle imposte | idem | §5 e §9 — quota acconti 100% ripartita 50/50 (art. 58 DL 124/2019, forfettari): le circolari rinviano alle istruzioni Redditi PF | ⚠️ quota daVerificare sulle istruzioni RR |
+| Causali F24 | AF/CF (fissi sul minimale), AP/CP (eccedenza: stessa causale per saldo e acconti) | invariate | tabella causali AdE 02/07/2026; circ. 87/2002; circ. 62/2026 | ✅ 23/08/2026 |
+| Riduzione 35% (forfettari) | −35% su fissi + eccedenza; maternità sempre piena; a domanda (già attivi: entro il 28/02, termine di decadenza); permanenza automatica; uscita definitiva (c. 82) | invariata | L. 190/2014 c. 77–84; circ. 35/2016 §1; circ. 14/2026 §8 | ✅ — ⚠️ la 0,48 commercianti non è esclusa dal testo → nel motore è ridotta (lettura letterale, da confermare su una tariffazione reale) |
+| Riduzione 50% (nuovi iscritti) | solo prima iscrizione 1/1–31/12/**2025**, 36 mesi senza soluzione di continuità, one-shot, alternativa alla 35% per singolo lavoratore; maternità E 0,48 **sempre piene**; NON estesa ai nuovi iscritti 2026 | — | L. 207/2024 c. 186 (testo vigente); circ. 83/2025 §1–§8; msg 2449/2025 | ✅ 23/08/2026 |
+| Accredito con riduzioni | mesi accreditati ∝ versato / contributo pieno sul minimale (es. INPS: 50% sul minimale → 6 mesi) | — | art. 2 c. 29 L. 335/1995; circ. 83/2025 §4 | ✅ (informativo in app, flag `accredito-ridotto`) |
+
+Semplificazioni del motore, dichiarate: finestra della 50% per **anni interi**
+apertura..apertura+2 (dal terzo anno successivo si torna al pieno: prudente per
+l'accantonamento); nessuna maggiorazione da differimento (conflitto 0,40%/0,80% del
+DL 89/2026, v. Acconti); nessuna rateizzazione APR/CPR/API/CPI; metodo previsionale solo
+per la Gestione Separata; cambio di gestione tra gli anni di una stessa timeline non
+supportato (errore esplicito: gli acconti dell'anno di transizione non sono modellati);
+codice sede e code-line 17 cifre degli F24 INPS non calcolabili
+(in UI: rimando al Cassetto previdenziale).
+
 ## Parametri per moduli futuri (roadmap)
 
 | Tema | Valori | Fonte | Stato |
 |---|---|---|---|
 | IRPEF 2026 | 23% ≤28.000; **33%** 28.000–50.000; 43% oltre; sterilizzazione >200.000 (−440 € di detrazioni) | L. 199/2025 (Bilancio 2026) | ✅ 15/08/2026 (fonti secondarie) |
 | Previdenza complementare | plafond deducibile **5.300 €/anno** dal 2026 (era 5.164,57) | L. 199/2025 | ✅ 15/08/2026 |
-| Artigiani/commercianti 2026 | 24% / 24,48%; +1 punto oltre 56.224 €; minimale 18.808 € (fissi 4.521,36 / 4.611,64); massimali 93.707 / 122.295; riduzione 35% forfettari su domanda; 4 rate fisse | circ. INPS 14 del 09/02/2026 | 🔭 riverificare all'implementazione |
+| Artigiani/commercianti | implementato: vedi la sezione dedicata «Artigiani e commercianti (gestioni IVS)» | circ. INPS 38/2025 e 14/2026 | ✅ 23/08/2026 |
 | CCNL Commercio / Fon.Te | 14 mensilità; lavoratore min 0,55% → datore 1,55% (con TFR conferito) | CCNL/Fon.Te | 🔭 riverificare all'implementazione |
 
 ## Procedura di manutenzione

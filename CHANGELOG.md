@@ -5,6 +5,23 @@ Formato: [Keep a Changelog](https://keepachangelog.com/it-IT/1.1.0/); versioning
 
 ## [Unreleased]
 
+### Added
+
+- **Gestioni IVS artigiani e commercianti (S11)**: nel profilo si sceglie la gestione
+  previdenziale (default: Gestione Separata — i profili e i backup esistenti restano
+  validi senza toccare nulla), con anzianità al 31/12/1995 (massimale) e riduzione
+  contributiva (35% forfettari a domanda / 50% nuovi iscritti 2025, finestra di 36 mesi
+  gestita ad anni interi). Il motore calcola i **contributi fissi sul minimale** in 4 rate
+  per cassa (16/05, 20/08, 16/11, 16/02 con slittamento sab/dom → lunedì; causali AF/CF) e
+  l'**eccedenza a scaglioni** (fascia del +1 punto, massimale per anzianità; maternità
+  7,44 € mai ridotta; con la 50% anche la 0,48 dei commercianti resta piena) a saldo e
+  acconti nei F24 di luglio/novembre (causali AP/CP), con spiegazione e actuals fino alla
+  singola rata. Panoramica coi prossimi F24 ordinati per scadenza; Simulatore
+  gestione-aware. Parametri 2025/2026 con fonte per valore (circ. INPS 38/2025, 14/2026,
+  83/2025; tabella causali AdE) e 10 nuovi golden test; due punti dichiarati da
+  verificare in `docs/regole-fiscali.md` (quota acconti dell'eccedenza; 0,48 sotto la
+  riduzione 35%).
+
 ### Fixed
 
 - **Il settore si sceglie (e si ricorda) per nome**: quattro gruppi dell'allegato 4

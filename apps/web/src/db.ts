@@ -1,4 +1,5 @@
 // Storage locale (IndexedDB via Dexie): i dati fiscali non lasciano mai il dispositivo.
+import type { RiduzioneIvs } from '@partitiva/motore-fiscale'
 import Dexie, { type Table } from 'dexie'
 
 export interface Profilo {
@@ -11,6 +12,12 @@ export interface Profilo {
    *  da solo non basta a ricordare la scelta. Assente nei profili salvati prima di S10. */
   settore?: string
   copertura: 'piena' | 'ridotta'
+  /** Gestione previdenziale: assente = Gestione Separata (profili pre-S11). */
+  gestione?: 'gestione-separata' | 'artigiani' | 'commercianti'
+  /** Solo gestioni IVS: anzianità contributiva al 31/12/1995 (cambia il massimale). */
+  anzianitaAl1995?: boolean
+  /** Solo gestioni IVS: agevolazione richiesta all'INPS (la finestra della 50% la deriva l'app). */
+  riduzioneIvs?: RiduzioneIvs
 }
 
 export interface Fattura {

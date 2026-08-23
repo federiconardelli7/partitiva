@@ -9,6 +9,26 @@ const CIRC_INPS_8_2026 = {
   verificatoIl: '2026-08-22',
 } as const
 
+const CIRC_INPS_14_2026 = {
+  riferimento: 'Circolare INPS n. 14 del 09/02/2026 — Artigiani e commercianti: contribuzione 2026 (PDF verificato integralmente)',
+  url: 'https://www.inps.it/it/it/inps-comunica/atti/circolari-messaggi-e-normativa/dettaglio.circolari-e-messaggi.2026.02.circolare-numero-14-del-09-02-2026_15162.html',
+  verificatoIl: '2026-08-23',
+} as const
+
+const CAUSALI_ADE_IVS = {
+  riferimento: 'Tabella causali contributo INPS (AdE, agg. 02/07/2026): AF/CF minimale, AP/CP extra minimale; conferma circ. INPS 87/2002',
+  url: 'https://www.agenziaentrate.gov.it/portale/web/guest/strumenti/codici-attivita-e-tributo/f24-codici-tributo-per-i-versamenti/tabelle-dei-codici-tributo-e-altri-codici-per-il-modello-f24/tabelle-codici-inps-e-enti-previdenziali-ed-assicurativi',
+  verificatoIl: '2026-08-23',
+} as const
+
+const RIDUZIONI_IVS = {
+  riferimento:
+    'Riduzione 35%: L. 190/2014 art. 1 c. 77 (fissi+eccedenza, maternità piena; la 0,48 non è esclusa dal testo: inclusione letterale, da confermare su tariffazione reale). Riduzione 50%: L. 207/2024 art. 1 c. 186 + circ. INPS 83 del 24/04/2025 §3 (solo IVS: maternità e 0,48 SEMPRE piene)',
+  url: 'https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:legge:2024-12-30;207',
+  verificatoIl: '2026-08-23',
+  daVerificare: true,
+} as const
+
 const L190_SOGLIE = {
   riferimento: 'L. 190/2014, art. 1 co. 54 e 71 (soglie modificate dalla L. 197/2022)',
   url: 'https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:legge:2014-12-23;190',
@@ -29,6 +49,44 @@ export const params2026 = defineParams({
     aliquotaRidotta: { valore: 0.24, fonte: CIRC_INPS_8_2026 },
     massimale: { valore: cents(12_229_500), fonte: CIRC_INPS_8_2026 },
     minimaleAccredito: { valore: cents(1_880_800), fonte: CIRC_INPS_8_2026 },
+  },
+  previdenzaIvs: {
+    minimale: { valore: cents(1_880_800), fonte: CIRC_INPS_14_2026 },
+    aliquotaBase: { valore: 0.24, fonte: CIRC_INPS_14_2026 },
+    aliquotaAggiuntivaCommercianti: { valore: 0.0048, fonte: CIRC_INPS_14_2026 },
+    maternitaAnnua: { valore: cents(744), fonte: CIRC_INPS_14_2026 },
+    fasciaPiuUno: { valore: cents(5_622_400), fonte: CIRC_INPS_14_2026 },
+    incrementoOltreFascia: { valore: 0.01, fonte: CIRC_INPS_14_2026 },
+    massimaleAnzianita1995: { valore: cents(9_370_700), fonte: CIRC_INPS_14_2026 },
+    massimalePost1995: { valore: cents(12_229_500), fonte: CIRC_INPS_14_2026 },
+    scadenzeRateFisse: {
+      valore: ['05-16', '08-20', '11-16', '02-16'],
+      fonte: {
+        ...CIRC_INPS_14_2026,
+        riferimento:
+          'Circ. INPS 14/2026 §9: 18/05 (16/5 è sabato), 20/08, 16/11, 16/02/2027 — date base con slittamento sab/dom → lunedì (art. 18 D.Lgs. 241/1997; 20/08 da proroga di Ferragosto)',
+      },
+    },
+    causali: {
+      valore: { fissiArtigiani: 'AF', fissiCommercianti: 'CF', eccedenzaArtigiani: 'AP', eccedenzaCommercianti: 'CP' },
+      fonte: CAUSALI_ADE_IVS,
+    },
+    quotaAccontiEccedenza: {
+      valore: 1,
+      fonte: {
+        riferimento:
+          'Eccedenza a saldo + 2 acconti alle scadenze delle imposte (circ. 14/2026 §9); quota 100% ripartita 50/50 ex art. 58 DL 124/2019 per i forfettari — le circolari rinviano alle istruzioni Redditi PF, quota da riscontrare lì',
+        verificatoIl: '2026-08-23',
+        daVerificare: true,
+      },
+    },
+    riduzioni: {
+      valore: {
+        riduzione35: { moltiplicatore: 0.65, riduceAliquotaAggiuntiva: true },
+        riduzione50: { moltiplicatore: 0.5, riduceAliquotaAggiuntiva: false },
+      },
+      fonte: RIDUZIONI_IVS,
+    },
   },
   imposta: {
     startup: { valore: 0.05, fonte: L190_IMPOSTA },

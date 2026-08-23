@@ -69,12 +69,15 @@ export function Panoramica({
     risultato.versatiContributiCents > 0 && f24Anno.length > 0
       ? {
           totaleCents: f24Anno.reduce((somma, f) => somma + f.totaleCents, 0),
-          dettaglio: `F24 di ${f24Anno.map((f) => f.scadenza).join(' e ')}: solo le righe INPS si deducono`,
+          dettaglio: `${f24Anno.length} F24 dell'anno: solo le righe INPS si deducono`,
         }
       : undefined
 
   const ultimoStartup = annoUltimoStartup(profilo.annoApertura)
-  const f24Futuri = timeline.f24.filter((f) => f.dataScadenza >= oggi).slice(0, 2)
+  const f24Futuri = [...timeline.f24]
+    .filter((f) => f.dataScadenza >= oggi)
+    .sort((a, b) => a.dataScadenza.localeCompare(b.dataScadenza))
+    .slice(0, 2)
   const radice = nodoAttivo ?? `${anno}:nettoReale`
 
   return (

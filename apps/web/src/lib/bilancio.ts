@@ -9,6 +9,8 @@ import {
   SUPPORTED_YEARS,
   type F24,
   type FiscalParams,
+  type GestioneInput,
+  type RiduzioneIvs,
   type TimelineAnnoInput,
 } from '@partitiva/motore-fiscale'
 import type { Fattura, Profilo, RiepilogoAnnuale, Spesa } from '../db'
@@ -45,8 +47,28 @@ export function spesePerAnno(spese: readonly Spesa[], anno: number): number {
   return spese.filter((s) => annoDi(s.data) === anno).reduce((somma, s) => somma + s.importoCents, 0)
 }
 
+type ProfiloPrevidenza = Pick<
+  Profilo,
+  'annoApertura' | 'copertura' | 'gestione' | 'anzianitaAl1995' | 'riduzioneIvs'
+>
+
+/**
+ * Gestione previdenziale del motore per un dato anno. La finestra dei 36 mesi della
+ * riduzione 50% (L. 207/2024) è approssimata agli anni interi apertura..apertura+2:
+ * dal terzo anno successivo si torna al pieno — prudente per l'accantonamento; l'anno
+ * di scadenza reale (a cavallo) è segnalato solo dal commercialista.
+ */
+export function gestioneDelProfilo(profilo: ProfiloPrevidenza, anno: number): GestioneInput {
+  const tipo = profilo.gestione ?? 'gestione-separata'
+  if (tipo === 'gestione-separata') return { tipo, copertura: profilo.copertura }
+  const scelta: RiduzioneIvs = profilo.riduzioneIvs ?? 'nessuna'
+  const riduzione: RiduzioneIvs =
+    scelta === 'riduzione50' && anno > profilo.annoApertura + 2 ? 'nessuna' : scelta
+  return { tipo, anzianitaAl1995: profilo.anzianitaAl1995 ?? false, riduzione }
+}
+
 export function buildTimelineInputs(
-  profilo: Pick<Profilo, 'annoApertura' | 'coefficiente' | 'copertura'>,
+  profilo: Pick<Profilo, 'annoApertura' | 'coefficiente' | 'copertura'> & ProfiloPrevidenza,
   fatture: readonly Fattura[],
   riepiloghi: readonly RiepilogoAnnuale[],
   spese: readonly Spesa[],
@@ -69,6 +91,7 @@ export function buildTimelineInputs(
       coefficiente: profilo.coefficiente,
       startup: anno - profilo.annoApertura < anniStartup,
       copertura: profilo.copertura,
+      gestione: gestioneDelProfilo(profilo, anno),
       bolliCents: bolliPerAnno(fatture, anno) + (pregresso?.bolliCents ?? 0),
       speseCents: spesePerAnno(spese, anno),
     })

@@ -1,7 +1,17 @@
 // Motore fiscale di Partitiva — TypeScript puro, zero dipendenze UI/storage.
 // Sviluppato in TDD sui golden test del caso campione (vedi TESTING.md).
-export { computeAnno } from './compute-anno'
-export type { AnnoInput, Copertura, Flag, FlagCodice, RisultatoAnno } from './compute-anno'
+export { computeAnno, contributiFissiIvs } from './compute-anno'
+export type {
+  AnnoInput,
+  Copertura,
+  Flag,
+  FlagCodice,
+  GestioneInput,
+  GestioneIvsInput,
+  GestioneSeparataInput,
+  RiduzioneIvs,
+  RisultatoAnno,
+} from './compute-anno'
 export { computeTimeline } from './timeline'
 export type { F24, F24Riga, Timeline, TimelineAnnoInput, TimelineOpts } from './timeline'
 export { aggregaIncassato } from './cassa'

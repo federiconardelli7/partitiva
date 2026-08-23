@@ -3,6 +3,62 @@
 > Una voce per sessione: fatto, decisioni, next steps, blocchi. Le ultime 2 voci si leggono
 > all'inizio di ogni sessione (vedi CLAUDE.md).
 
+## 2026-08-23 — S11 Gestioni IVS: artigiani e commercianti (post-MVP §1)
+
+**Fatto**
+- **Effort wayfinder** `.scratch/gestioni-inps/` (mappa + 6 ticket, tutti chiusi): 3
+  ricerche su fonti primarie lette integralmente (circ. INPS 38/2025 e 14/2026 per valori
+  e scadenze, 83/2025 per la riduzione 50%, 35/2016, L. 190/2014 c. 77–84 e L. 207/2024
+  c. 186 su Normattiva, tabella causali AdE + circ. 87/2002); scope approvato: solo IVS
+  (casse professionali = sforzo separato); design in delega (`design.md`).
+- **Motore** (modifiche sanzionate per questo sforzo): `gestione?: GestioneInput` su
+  `AnnoInput` (assente = Gestione Separata → retrocompatibilità totale, i 183 test
+  preesistenti sono invariati); blocco `previdenzaIvs` nei params 2025/2026 con fonte per
+  valore (minimale, aliquote 24/24,48, maternità 7,44 mai ridotta, fascia +1%, massimali
+  per anzianità, scadenze rate con slittamento sab/dom→lunedì, causali AF/CF/AP/CP,
+  riduzioni 35%/50% — con la 50% la 0,48 resta piena); `contributiFissiIvs` + eccedenza a
+  scaglioni fino al massimale; 4 rate fisse per CASSA (nodi `rataFissa:1..4`, actuals per
+  singola rata; la rata 4 cade a febbraio dell'anno dopo) ed eccedenza a saldo+acconti nei
+  F24 di luglio/novembre; flag `massimale-ivs`, `sotto-minimale-ivs`, `accredito-ridotto`.
+- **App**: `Profilo` += `gestione`/`anzianitaAl1995`/`riduzioneIvs` (additivi: nessun bump
+  Dexie, backup v3 invariato, default GS per i profili esistenti); fieldset «Previdenza
+  INPS» nel Wizard; Simulatore gestione-aware (`gestioneDelProfilo`, finestra 36 mesi
+  della 50% ad anni interi, prudente); dd «Previdenza» in Dati; Panoramica coi F24 futuri
+  ordinati per scadenza.
+- **Docs**: sezione «Artigiani e commercianti (gestioni IVS)» in `docs/regole-fiscali.md`
+  (ogni importo quadrato al centesimo contro le circolari), ROADMAP §1 ✓, CHANGELOG.
+- TDD: 202 test verdi (19 nuovi, di cui 10 golden IVS calcolati a mano in
+  `tests/golden/caso-artigiano.ts` e 4 dalla review).
+
+- **Review (code-reviewer): 3 blocchi, tutti con repro, corretti in TDD**: (1) il flag
+  `sotto-minimale-ivs` non scattava a reddito ZERO — proprio il primo giorno di ogni
+  nuovo artigiano, con 4.521,36 € di rate emesse senza una riga di spiegazione (via la
+  guardia `reddito > 0`, clonata dalla GS dove invece ha senso); (2) tornando su
+  «Gestione Separata» nel Wizard, RHF conserva i campi IVS smontati e l'hub dichiarava
+  «riduzione 35%» a un profilo GS — ora `profiloFormSchema` azzera gli stati IVS per la
+  GS e l'hub li mostra solo per artigiani/commercianti (copre anche i backup scombinati,
+  lezione S10); (3) su timeline a gestione MISTA (GS→IVS o viceversa) gli acconti
+  prendevano base e quota dal regime dell'anno prima con causale/etichetta dell'anno
+  corrente (F24 incoerente): non raggiungibile dall'app, ma `computeTimeline` è API
+  pubblica → errore esplicito al cambio di `tipo` tra anni consecutivi (semplificazione
+  dichiarata in regole-fiscali.md); la finestra della 50% (stesso tipo, riduzione diversa
+  per anno) resta valida. 3 note non bloccanti a backlog: memo di `gestioneDelProfilo`
+  instabile nel Simulatore, flag `previsionale-sanzioni` emesso anche dove l'IVS ignora
+  il previsionale, copy Panoramica «2 F24 dell'anno» meno parlante per la GS.
+
+**Decisioni**: massimale default post-1995 con toggle anzianità; riduzioni a 3 stati con
+avvisi; niente maggiorazioni da differimento nell'MVP (conflitto 0,40/0,80 DL 89/2026);
+due **daVerificare** dichiarati — quota acconti dell'eccedenza (le circolari rinviano alle
+istruzioni Redditi PF) e 0,48 commercianti sotto la riduzione 35% (lettura letterale, da
+confermare su una tariffazione reale).
+
+**Next steps**: casse professionali come parametri custom (§1b) o confronto con
+l'ordinario (§2); backlog residuo: offline PWA (vite-plugin-pwa), apple-touch-icon PNG,
+messaggio del superRefine riepiloghi che non riaffiora nell'import.
+
+**Blocchi/aperture**: invariati (GU DL 89/2026, soglie GS, mapping ATECO 2025, quadro RR)
+più i due daVerificare IVS qui sopra.
+
 ## 2026-08-23 — S10 Rifiniture dal backlog (post-v0.1.0)
 
 **Fatto**

@@ -221,8 +221,20 @@ export function Dati({
               <dd className="mt-0.5 font-mono font-semibold">{profilo.ateco || '—'}</dd>
             </div>
             <div>
-              <dt className="text-xs uppercase tracking-wide text-stone-500">Gestione Separata</dt>
-              <dd className="mt-0.5 font-semibold">{profilo.copertura === 'piena' ? 'Piena' : 'Ridotta'}</dd>
+              <dt className="text-xs uppercase tracking-wide text-stone-500">Previdenza</dt>
+              <dd className="mt-0.5 font-semibold">
+                {profilo.gestione === 'artigiani'
+                  ? 'Artigiani'
+                  : profilo.gestione === 'commercianti'
+                    ? 'Commercianti'
+                    : `Gestione Separata — ${profilo.copertura === 'piena' ? 'piena' : 'ridotta'}`}
+                {(profilo.gestione === 'artigiani' || profilo.gestione === 'commercianti') && (
+                  <>
+                    {profilo.riduzioneIvs === 'riduzione35' && ' · riduzione 35%'}
+                    {profilo.riduzioneIvs === 'riduzione50' && ' · riduzione 50%'}
+                  </>
+                )}
+              </dd>
             </div>
           </dl>
         )}

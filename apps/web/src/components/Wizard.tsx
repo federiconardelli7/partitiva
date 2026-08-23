@@ -27,8 +27,19 @@ export function Wizard({ esistente, onFine }: { esistente?: Profilo; onFine?: ()
           // nome certo richiedono una scelta esplicita, mai pre-selezionare il primo.
           settore: settoreProfilo(esistente) ?? '',
           copertura: esistente.copertura,
+          gestione: esistente.gestione ?? 'gestione-separata',
+          anzianitaAl1995: esistente.anzianitaAl1995 ?? false,
+          riduzioneIvs: esistente.riduzioneIvs ?? 'nessuna',
         }
-      : { annoApertura: ANNO_CORRENTE, ateco: '', settore: '', copertura: 'piena' },
+      : {
+          annoApertura: ANNO_CORRENTE,
+          ateco: '',
+          settore: '',
+          copertura: 'piena',
+          gestione: 'gestione-separata',
+          anzianitaAl1995: false,
+          riduzioneIvs: 'nessuna',
+        },
   })
 
   const gruppo = coefficientePerAteco(watch('ateco') ?? '')
@@ -116,16 +127,60 @@ export function Wizard({ esistente, onFine }: { esistente?: Profilo; onFine?: ()
       </label>
 
       <fieldset className="text-sm">
-        <legend className="font-medium">Gestione Separata INPS</legend>
+        <legend className="font-medium">Previdenza INPS</legend>
         <label className="mt-1 flex items-center gap-2">
-          <input type="radio" value="piena" {...register('copertura')} />
-          Aliquota piena (26,07%) — nessun’altra copertura previdenziale
+          <input type="radio" value="gestione-separata" {...register('gestione')} />
+          Gestione Separata — professionisti senza cassa né albo
         </label>
         <label className="mt-1 flex items-center gap-2">
-          <input type="radio" value="ridotta" {...register('copertura')} />
-          Aliquota ridotta (24%) — pensionato o altra copertura
+          <input type="radio" value="artigiani" {...register('gestione')} />
+          Artigiani — iscritti alla gestione IVS artigiani
         </label>
+        <label className="mt-1 flex items-center gap-2">
+          <input type="radio" value="commercianti" {...register('gestione')} />
+          Commercianti — iscritti alla gestione IVS commercianti
+        </label>
+        <p className="mt-1 text-xs text-stone-500">
+          Cambia tutto: la GS paga in percentuale sul reddito; artigiani e commercianti
+          pagano contributi fissi sul minimale in 4 rate, più l’eccedenza sul reddito.
+        </p>
       </fieldset>
+
+      {watch('gestione') === 'gestione-separata' ? (
+        <fieldset className="text-sm">
+          <legend className="font-medium">Gestione Separata INPS</legend>
+          <label className="mt-1 flex items-center gap-2">
+            <input type="radio" value="piena" {...register('copertura')} />
+            Aliquota piena (26,07%) — nessun’altra copertura previdenziale
+          </label>
+          <label className="mt-1 flex items-center gap-2">
+            <input type="radio" value="ridotta" {...register('copertura')} />
+            Aliquota ridotta (24%) — pensionato o altra copertura
+          </label>
+        </fieldset>
+      ) : (
+        <div className="space-y-3 text-sm">
+          <label className="block">
+            <span className="font-medium">Riduzione contributiva</span>
+            <select
+              {...register('riduzioneIvs')}
+              className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2 dark:border-stone-700 dark:bg-stone-800"
+            >
+              <option value="nessuna">Nessuna — contribuzione piena</option>
+              <option value="riduzione35">Riduzione 35% (forfettari, richiesta all’INPS)</option>
+              <option value="riduzione50">Riduzione 50% (prima iscrizione nel 2025, 36 mesi)</option>
+            </select>
+            <span className="mt-1 block text-xs text-stone-500">
+              Vale solo se l’hai chiesta all’INPS. Entrambe riducono anche i mesi accreditati
+              per la pensione quando resti al minimale.
+            </span>
+          </label>
+          <label className="flex items-center gap-2">
+            <input type="checkbox" {...register('anzianitaAl1995')} />
+            Avevo contributi già prima del 1996 (massimale più basso — caso raro)
+          </label>
+        </div>
+      )}
 
       <button
         type="submit"

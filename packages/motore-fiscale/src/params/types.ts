@@ -29,6 +29,34 @@ export interface FiscalParams {
     /** Reddito minimo per l'accredito di 12 mesi di contributi (informativo, NON un minimo di versamento). */
     minimaleAccredito: ParamAnnuale<Cents>
   }
+  /** Artigiani ed esercenti attività commerciali (IVS): fissi sul minimale + eccedenza. */
+  previdenzaIvs: {
+    minimale: ParamAnnuale<Cents>
+    aliquotaBase: ParamAnnuale<Rate>
+    /** 0,48% commercianti (0,46 indennizzo cessazione + 0,02 gestione). Zero per gli artigiani. */
+    aliquotaAggiuntivaCommercianti: ParamAnnuale<Rate>
+    /** 0,62 €/mese, sempre dovuta per intero, inclusa nelle rate fisse. */
+    maternitaAnnua: ParamAnnuale<Cents>
+    /** Prima fascia di retribuzione pensionabile: oltre, l'aliquota sale di un punto. */
+    fasciaPiuUno: ParamAnnuale<Cents>
+    incrementoOltreFascia: ParamAnnuale<Rate>
+    massimaleAnzianita1995: ParamAnnuale<Cents>
+    massimalePost1995: ParamAnnuale<Cents>
+    /** MM-DD base delle 4 rate fisse (la 4ª è dell'anno successivo); sabato/domenica → lunedì. */
+    scadenzeRateFisse: ParamAnnuale<[string, string, string, string]>
+    causali: ParamAnnuale<{
+      fissiArtigiani: string
+      fissiCommercianti: string
+      eccedenzaArtigiani: string
+      eccedenzaCommercianti: string
+    }>
+    /** Quota degli acconti sull'eccedenza (ripartita con acconti.ripartizione). */
+    quotaAccontiEccedenza: ParamAnnuale<Rate>
+    riduzioni: ParamAnnuale<{
+      riduzione35: { moltiplicatore: Rate; riduceAliquotaAggiuntiva: boolean }
+      riduzione50: { moltiplicatore: Rate; riduceAliquotaAggiuntiva: boolean }
+    }>
+  }
   imposta: {
     startup: ParamAnnuale<Rate>
     ordinaria: ParamAnnuale<Rate>
@@ -79,6 +107,32 @@ const fiscalParamsSchema = z.object({
     aliquotaRidotta: param(rate),
     massimale: param(centsSchema),
     minimaleAccredito: param(centsSchema),
+  }),
+  previdenzaIvs: z.object({
+    minimale: param(centsSchema),
+    aliquotaBase: param(rate),
+    aliquotaAggiuntivaCommercianti: param(rate),
+    maternitaAnnua: param(centsSchema),
+    fasciaPiuUno: param(centsSchema),
+    incrementoOltreFascia: param(rate),
+    massimaleAnzianita1995: param(centsSchema),
+    massimalePost1995: param(centsSchema),
+    scadenzeRateFisse: param(z.tuple([scadenza, scadenza, scadenza, scadenza])),
+    causali: param(
+      z.object({
+        fissiArtigiani: z.string(),
+        fissiCommercianti: z.string(),
+        eccedenzaArtigiani: z.string(),
+        eccedenzaCommercianti: z.string(),
+      }),
+    ),
+    quotaAccontiEccedenza: param(rate),
+    riduzioni: param(
+      z.object({
+        riduzione35: z.object({ moltiplicatore: rate, riduceAliquotaAggiuntiva: z.boolean() }),
+        riduzione50: z.object({ moltiplicatore: rate, riduceAliquotaAggiuntiva: z.boolean() }),
+      }),
+    ),
   }),
   imposta: z.object({
     startup: param(rate),

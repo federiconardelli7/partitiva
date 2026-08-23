@@ -57,9 +57,12 @@ governa la propria P.IVA — dalla fattura all'F24 spiegato — senza che i dati
 
 ## Post-MVP
 
-1. **Altre gestioni INPS**: artigiani/commercianti (contributi fissi sul minimale 18.808 €,
-   aliquote 24%/24,48%, +1 punto oltre 56.224 €, riduzione 35% per forfettari su domanda, 4 rate
-   fisse + eccedenza — circ. INPS 14/2026); casse professionali come parametri custom.
+1. **Altre gestioni INPS** — ✅ **artigiani/commercianti** (23/08/2026, S11): gestione
+   previdenziale nel profilo (default Gestione Separata, retro-compatibile), parametri
+   `previdenzaIvs` 2025/2026 con fonte per valore, contributi fissi sul minimale in 4 rate
+   per cassa + eccedenza a scaglioni (fascia del +1 punto, massimali per anzianità) a
+   saldo/acconti, riduzioni 35%/50%, golden dedicati (circ. INPS 38/2025, 14/2026, 83/2025).
+   Restano le **casse professionali** come parametri custom (sforzo separato).
 2. **Regime ordinario/semplificato** e confronto automatico "quando conviene uscire"
    (IRPEF 2026: 23/33/43, detrazioni, addizionali parametriche).
 3. **Simulatore dipendente**: IRPEF, detrazioni, taglio del cuneo, fondo pensione con quota datore

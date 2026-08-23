@@ -13,12 +13,31 @@ import type { FiscalParams } from './params/types'
 
 export type Copertura = 'piena' | 'ridotta'
 
+export type RiduzioneIvs = 'nessuna' | 'riduzione35' | 'riduzione50'
+
+export interface GestioneSeparataInput {
+  tipo: 'gestione-separata'
+  copertura: Copertura
+}
+
+export interface GestioneIvsInput {
+  tipo: 'artigiani' | 'commercianti'
+  /** Anzianità contributiva al 31/12/1995: cambia il massimale (caso raro, default false in app). */
+  anzianitaAl1995: boolean
+  /** Agevolazione attiva NELL'ANNO: la finestra (es. 36 mesi della 50%) la decide il chiamante. */
+  riduzione: RiduzioneIvs
+}
+
+export type GestioneInput = GestioneSeparataInput | GestioneIvsInput
+
 export interface AnnoInput {
   anno: number
   incassatoCents: number
   coefficiente: number
   startup: boolean
   copertura: Copertura
+  /** Gestione previdenziale: assente = Gestione Separata con la `copertura` qui sopra. */
+  gestione?: GestioneInput
   /** Contributi previdenziali versati nell'anno (deduzione per cassa). Derivati dagli F24 nella timeline. */
   versatiContributiCents: number
   bolliCents?: number
@@ -33,6 +52,9 @@ export type FlagCodice =
   | 'minimale-accredito'
   | 'params-fallback'
   | 'previsionale-sanzioni'
+  | 'massimale-ivs'
+  | 'sotto-minimale-ivs'
+  | 'accredito-ridotto'
 
 export interface Flag {
   codice: FlagCodice
@@ -43,6 +65,9 @@ export interface RisultatoAnno {
   anno: number
   redditoCents: Cents
   contributiDovutiCents: Cents
+  /** Solo gestioni IVS: componenti dei dovuti (i fissi si versano in 4 rate, l'eccedenza a saldo/acconti). */
+  contributiFissiCents?: Cents
+  contributiEccedenzaCents?: Cents
   versatiContributiCents: Cents
   imponibileCents: Cents
   impostaCents: Cents
@@ -54,6 +79,36 @@ export interface RisultatoAnno {
   quotaAccantonamento: number
   flags: Flag[]
   explain: ExplainMap
+}
+
+/** Quota IVS su un importo: aliquota base (× riduzione) + aliquota aggiuntiva commercianti
+ *  (ridotta solo se la riduzione lo prevede: la 50% la lascia piena, circ. 83/2025 §3). */
+function quotaIvs(
+  importoCents: Cents,
+  aliquotaBase: number,
+  gestione: GestioneIvsInput,
+  params: FiscalParams,
+): Cents {
+  const ivs = params.previdenzaIvs
+  const riduzione = gestione.riduzione === 'nessuna' ? null : ivs.riduzioni.valore[gestione.riduzione]
+  const base = riduzione
+    ? mulRate(mulRate(importoCents, aliquotaBase), riduzione.moltiplicatore)
+    : mulRate(importoCents, aliquotaBase)
+  const aliquotaAggiuntiva =
+    gestione.tipo === 'commercianti' ? ivs.aliquotaAggiuntivaCommercianti.valore : 0
+  if (aliquotaAggiuntiva === 0) return base
+  const aggiuntivaPiena = mulRate(importoCents, aliquotaAggiuntiva)
+  const aggiuntiva =
+    riduzione && riduzione.riduceAliquotaAggiuntiva
+      ? mulRate(aggiuntivaPiena, riduzione.moltiplicatore)
+      : aggiuntivaPiena
+  return cents(base + aggiuntiva)
+}
+
+/** Contributi fissi annui sul minimale (maternità inclusa): servono anche alla timeline per le 4 rate. */
+export function contributiFissiIvs(gestione: GestioneIvsInput, params: FiscalParams): Cents {
+  const ivs = params.previdenzaIvs
+  return cents(quotaIvs(ivs.minimale.valore, ivs.aliquotaBase.valore, gestione, params) + ivs.maternitaAnnua.valore)
 }
 
 export function computeAnno(input: AnnoInput, params: FiscalParams): RisultatoAnno {
@@ -92,29 +147,95 @@ export function computeAnnoConExplain(
     mulRate(incassato, input.coefficiente),
   )
 
-  const aliquotaGs =
-    input.copertura === 'piena' ? params.previdenza.aliquotaPiena : params.previdenza.aliquotaRidotta
-  const massimale = params.previdenza.massimale.valore
-  const oltreMassimale = reddito > massimale
-  if (oltreMassimale) {
-    flags.push({
-      codice: 'massimale-gs',
-      messaggio: 'Reddito oltre il massimale Gestione Separata: i contributi si calcolano sul massimale.',
-    })
+  const gestione: GestioneInput = input.gestione ?? { tipo: 'gestione-separata', copertura: input.copertura }
+
+  let contributiDovuti: Cents
+  let contributiFissi: Cents | undefined
+  let contributiEccedenza: Cents | undefined
+
+  if (gestione.tipo === 'gestione-separata') {
+    const aliquotaGs =
+      gestione.copertura === 'piena' ? params.previdenza.aliquotaPiena : params.previdenza.aliquotaRidotta
+    const massimale = params.previdenza.massimale.valore
+    const oltreMassimale = reddito > massimale
+    if (oltreMassimale) {
+      flags.push({
+        codice: 'massimale-gs',
+        messaggio: 'Reddito oltre il massimale Gestione Separata: i contributi si calcolano sul massimale.',
+      })
+    }
+    contributiDovuti = explain.nodo(
+      id('contributiDovuti'),
+      'Contributi Gestione Separata dovuti',
+      'min(reddito, massimale) × aliquota GS',
+      [id('reddito')],
+      mulRate(oltreMassimale ? massimale : reddito, aliquotaGs.valore),
+      { fonte: aliquotaGs.fonte },
+    )
+  } else {
+    const ivs = params.previdenzaIvs
+    const massimaleIvs = gestione.anzianitaAl1995
+      ? ivs.massimaleAnzianita1995.valore
+      : ivs.massimalePost1995.valore
+    if (reddito > massimaleIvs) {
+      flags.push({
+        codice: 'massimale-ivs',
+        messaggio: 'Reddito oltre il massimale IVS: i contributi si calcolano fino al massimale della tua fascia.',
+      })
+    }
+    // Anche a reddito zero: i fissi sul minimale sono dovuti comunque (a differenza della GS).
+    if (reddito < ivs.minimale.valore) {
+      flags.push({
+        codice: 'sotto-minimale-ivs',
+        messaggio: 'Reddito sotto il minimale: i contributi fissi sul minimale si pagano comunque.',
+      })
+    }
+    if (gestione.riduzione !== 'nessuna') {
+      flags.push({
+        codice: 'accredito-ridotto',
+        messaggio:
+          'Riduzione contributiva attiva: se il versato resta sotto il contributo pieno sul minimale, i mesi accreditati ai fini pensionistici sono proporzionalmente ridotti (art. 2, c. 29, L. 335/1995).',
+      })
+    }
+
+    contributiFissi = explain.nodo(
+      id('contributiFissi'),
+      `Contributi fissi sul minimale (${gestione.tipo})`,
+      'minimale × aliquota IVS (× eventuale riduzione) + maternità 7,44 € (mai ridotta)',
+      [],
+      contributiFissiIvs(gestione, params),
+      { fonte: ivs.minimale.fonte },
+    )
+    const imponibileIvs = cents(Math.min(reddito, massimaleIvs))
+    const fascia = ivs.fasciaPiuUno.valore
+    const scaglione1 = cents(Math.max(0, Math.min(imponibileIvs, fascia) - ivs.minimale.valore))
+    const scaglione2 = cents(Math.max(0, imponibileIvs - fascia))
+    contributiEccedenza = explain.nodo(
+      id('contributiEccedenza'),
+      'Contributi sulla quota eccedente il minimale',
+      'scaglioni oltre il minimale (fino al massimale) × aliquota, +1 punto oltre la prima fascia, × eventuale riduzione',
+      [id('reddito')],
+      cents(
+        quotaIvs(scaglione1, ivs.aliquotaBase.valore, gestione, params) +
+          quotaIvs(scaglione2, ivs.aliquotaBase.valore + ivs.incrementoOltreFascia.valore, gestione, params),
+      ),
+      { fonte: ivs.fasciaPiuUno.fonte },
+    )
+    contributiDovuti = explain.nodo(
+      id('contributiDovuti'),
+      `Contributi ${gestione.tipo} dovuti`,
+      'contributi fissi sul minimale + quota eccedente',
+      [id('contributiFissi'), id('contributiEccedenza')],
+      cents(contributiFissi + contributiEccedenza),
+    )
   }
-  const contributiDovuti = explain.nodo(
-    id('contributiDovuti'),
-    'Contributi Gestione Separata dovuti',
-    'min(reddito, massimale) × aliquota GS',
-    [id('reddito')],
-    mulRate(oltreMassimale ? massimale : reddito, aliquotaGs.valore),
-    { fonte: aliquotaGs.fonte },
-  )
 
   const versati = explain.nodo(
     id('versatiContributi'),
     'Contributi versati nell’anno (deducibili)',
-    'saldo anno precedente + acconti pagati nell’anno (mai negativo)',
+    gestione.tipo === 'gestione-separata'
+      ? 'saldo anno precedente + acconti pagati nell’anno (mai negativo)'
+      : 'rate fisse pagate nell’anno + saldo e acconti sull’eccedenza (mai negativo)',
     [],
     cents(Math.max(0, input.versatiContributiCents)),
   )
@@ -166,7 +287,7 @@ export function computeAnnoConExplain(
       messaggio: 'Incassato oltre 85.000 €: uscita dal regime forfettario dall’anno successivo.',
     })
   }
-  if (reddito > 0 && reddito < params.previdenza.minimaleAccredito.valore) {
+  if (gestione.tipo === 'gestione-separata' && reddito > 0 && reddito < params.previdenza.minimaleAccredito.valore) {
     flags.push({
       codice: 'minimale-accredito',
       messaggio: 'Reddito sotto il minimale: l’anno non accredita 12 mesi di contributi (informativo).',
@@ -179,6 +300,8 @@ export function computeAnnoConExplain(
     anno,
     redditoCents: reddito,
     contributiDovutiCents: contributiDovuti,
+    ...(contributiFissi !== undefined ? { contributiFissiCents: contributiFissi } : {}),
+    ...(contributiEccedenza !== undefined ? { contributiEccedenzaCents: contributiEccedenza } : {}),
     versatiContributiCents: versati,
     imponibileCents: imponibile,
     impostaCents: imposta,

@@ -2,8 +2,11 @@
 // e il versato di N alimenta la deduzione di N. Crediti esposti, mai compensati in automatico.
 import {
   computeAnnoConExplain,
+  contributiFissiIvs,
   type Copertura,
   type Flag,
+  type GestioneInput,
+  type GestioneIvsInput,
   type RisultatoAnno,
 } from './compute-anno'
 import {
@@ -23,6 +26,8 @@ export interface TimelineAnnoInput {
   coefficiente: number
   startup: boolean
   copertura: Copertura
+  /** Gestione previdenziale: assente = Gestione Separata con la `copertura`. */
+  gestione?: GestioneInput
   bolliCents?: number
   speseCents?: number
 }
@@ -36,7 +41,8 @@ export interface F24Riga {
 
 export interface F24 {
   anno: number
-  scadenza: 'luglio' | 'novembre'
+  /** luglio/novembre = scadenze delle imposte; rata-N = le 4 rate fisse IVS (per anno di pagamento). */
+  scadenza: 'luglio' | 'novembre' | 'rata-1' | 'rata-2' | 'rata-3' | 'rata-4'
   dataScadenza: string
   totaleCents: Cents
   /** Saldi a credito emersi a questa scadenza (esposti, MAI sottratti in automatico dall'F24). */
@@ -78,9 +84,38 @@ interface SaldiPrecedenti {
 interface StatoPrecedente {
   result: RisultatoAnno
   acconti?: AccontiAnno
+  gestione: GestioneInput
+}
+
+/** Rata fissa IVS in attesa di pagamento nell'anno successivo (la 4ª scade a febbraio). */
+interface RataFissaPendente {
+  annoCompetenza: number
+  importoCents: Cents
+  dataScadenza: string
+  causale: string
+  gestione: GestioneIvsInput['tipo']
 }
 
 const ZERO = cents(0)
+
+const gestioneDi = (input: TimelineAnnoInput): GestioneInput =>
+  input.gestione ?? { tipo: 'gestione-separata', copertura: input.copertura }
+
+/** Sabato/domenica → lunedì (le 4 date canoniche non cadono mai su festivi nazionali). */
+function slittaGiornoLavorativo(iso: string): string {
+  const [anno, mese, giorno] = iso.split('-').map(Number)
+  const data = new Date(Date.UTC(anno!, mese! - 1, giorno!))
+  if (data.getUTCDay() === 6) data.setUTCDate(data.getUTCDate() + 2)
+  else if (data.getUTCDay() === 0) data.setUTCDate(data.getUTCDate() + 1)
+  return data.toISOString().slice(0, 10)
+}
+
+/** Divide i fissi annui in 4 rate a centesimi esatti (gli eventuali resti alle prime rate). */
+function rateFisseAnnue(fissi: Cents): [Cents, Cents, Cents, Cents] {
+  const base = Math.floor(fissi / 4)
+  const resto = fissi - base * 4
+  return [0, 1, 2, 3].map((i) => cents(base + (i < resto ? 1 : 0))) as [Cents, Cents, Cents, Cents]
+}
 
 export function computeTimeline(inputs: TimelineAnnoInput[], opts: TimelineOpts = {}): Timeline {
   const ordinati = [...inputs].sort((a, b) => a.anno - b.anno)
@@ -92,6 +127,15 @@ export function computeTimeline(inputs: TimelineAnnoInput[], opts: TimelineOpts 
     if (corrente !== precedente + 1) {
       throw new Error(
         `Gli anni della timeline devono essere consecutivi: manca il ${precedente + 1} tra ${precedente} e ${corrente}`,
+      )
+    }
+    // Base e quota degli acconti in transizione di regime non sono modellate (fuori MVP):
+    // meglio un errore esplicito di un F24 con importi di una gestione e causali dell'altra.
+    const tipoPrecedente = gestioneDi(ordinati[i - 1]!).tipo
+    const tipoCorrente = gestioneDi(ordinati[i]!).tipo
+    if (tipoPrecedente !== tipoCorrente) {
+      throw new Error(
+        `Cambio di gestione previdenziale nella timeline (${tipoPrecedente} nel ${precedente} → ${tipoCorrente} nel ${corrente}): non supportato`,
       )
     }
   }
@@ -132,10 +176,12 @@ export function computeTimeline(inputs: TimelineAnnoInput[], opts: TimelineOpts 
   const aliquotaGsPer = (copertura: Copertura, params: FiscalParams): ParamAnnuale<Rate> =>
     copertura === 'piena' ? params.previdenza.aliquotaPiena : params.previdenza.aliquotaRidotta
 
-  /** Crea i nodi di spiegazione dei saldi dell'anno precedente e ne restituisce i valori effettivi. */
+  /** Crea i nodi di spiegazione dei saldi dell'anno precedente e ne restituisce i valori effettivi.
+   *  Per le gestioni IVS il saldo contributi riguarda SOLO l'eccedenza (i fissi hanno le loro rate). */
   const buildSaldi = (prev: StatoPrecedente): SaldiPrecedenti => {
     const annoPrec = prev.result.anno
     const acconti = prev.acconti
+    const ivsPrec = prev.gestione.tipo !== 'gestione-separata'
     const versatiImposta = (acconti?.impostaRata1 ?? 0) + (acconti?.impostaRata2 ?? 0)
     const versatiContributi = (acconti?.contributiRata1 ?? 0) + (acconti?.contributiRata2 ?? 0)
     const inputImposta: NodeId[] = [`${annoPrec}:imposta`]
@@ -144,7 +190,12 @@ export function computeTimeline(inputs: TimelineAnnoInput[], opts: TimelineOpts 
         acconti.impostaUnica ? `${annoPrec}:accontoImposta:unica` : `${annoPrec}:accontoImposta:rata1`,
       )
     }
-    const inputContributi: NodeId[] = [`${annoPrec}:contributiDovuti`]
+    const baseContributi = ivsPrec
+      ? (prev.result.contributiEccedenzaCents ?? ZERO)
+      : prev.result.contributiDovutiCents
+    const inputContributi: NodeId[] = [
+      ivsPrec ? `${annoPrec}:contributiEccedenza` : `${annoPrec}:contributiDovuti`,
+    ]
     if (acconti && (acconti.contributiRata1 > 0 || acconti.contributiRata2 > 0)) {
       inputContributi.push(
         acconti.contributiUnica
@@ -161,10 +212,12 @@ export function computeTimeline(inputs: TimelineAnnoInput[], opts: TimelineOpts 
     )
     const contributiEff = explain.nodo(
       `${annoPrec}:saldoContributi`,
-      `Saldo contributi Gestione Separata ${annoPrec}`,
-      'contributi dovuti − acconti versati (negativo = credito)',
+      ivsPrec ? `Saldo contributi sull'eccedenza ${annoPrec}` : `Saldo contributi Gestione Separata ${annoPrec}`,
+      ivsPrec
+        ? 'contributi sull’eccedenza dovuti − acconti versati (negativo = credito)'
+        : 'contributi dovuti − acconti versati (negativo = credito)',
       inputContributi,
-      cents(prev.result.contributiDovutiCents - versatiContributi),
+      cents(baseContributi - versatiContributi),
     )
     return { anno: annoPrec, impostaCents: impostaEff, contributiCents: contributiEff }
   }
@@ -182,10 +235,23 @@ export function computeTimeline(inputs: TimelineAnnoInput[], opts: TimelineOpts 
     const minimo = params.acconti.minimoAcconto.valore
     const sogliaUnica = params.acconti.sogliaRataUnica.valore
     const soglieSuContributi = params.acconti.soglieApplicabiliAContributi.valore
+    const ivsPrec = prev.gestione.tipo !== 'gestione-separata'
 
     let baseImposta: Cents = prev.result.impostaCents
-    let baseContributi: Cents = prev.result.contributiDovutiCents
-    const previsto = previsionale ? opts.incassatoPrevistoCents?.[anno] : undefined
+    // IVS: gli acconti contributivi riguardano SOLO l'eccedenza (quota dedicata dei params).
+    let baseContributi: Cents = ivsPrec
+      ? (prev.result.contributiEccedenzaCents ?? ZERO)
+      : prev.result.contributiDovutiCents
+    const quotaContributi = ivsPrec
+      ? params.previdenzaIvs.quotaAccontiEccedenza.valore
+      : params.acconti.quotaContributi.valore
+    const nomeContributi = ivsPrec ? 'contributi sull’eccedenza' : 'contributi GS'
+    const formulaContributi = ivsPrec
+      ? 'contributi sull’eccedenza dell’anno precedente × quota acconti × ripartizione'
+      : 'contributi anno precedente × 80% × ripartizione'
+    const nodoBaseContributi: NodeId = ivsPrec ? `${anno - 1}:contributiEccedenza` : `${anno - 1}:contributiDovuti`
+    // Previsionale: nell'MVP resta solo per la Gestione Separata (per IVS base storica).
+    const previsto = previsionale && !ivsPrec ? opts.incassatoPrevistoCents?.[anno] : undefined
     let redditoPrevisto: Cents | undefined
     if (previsto !== undefined && inputCorrente) {
       redditoPrevisto = mulRate(cents(previsto), inputCorrente.coefficiente)
@@ -196,9 +262,9 @@ export function computeTimeline(inputs: TimelineAnnoInput[], opts: TimelineOpts 
       )
     }
 
-    // Contributi GS: calcolati per primi perché nel previsionale concorrono alla deduzione prevista.
+    // Contributi: calcolati per primi perché nel previsionale concorrono alla deduzione prevista.
     const gsDovuto = soglieSuContributi ? baseContributi > minimo : baseContributi > 0
-    const gsTotale = gsDovuto ? mulRate(baseContributi, params.acconti.quotaContributi.valore) : ZERO
+    const gsTotale = gsDovuto ? mulRate(baseContributi, quotaContributi) : ZERO
     const gsUnica = gsDovuto && soglieSuContributi && gsTotale < sogliaUnica
     let contributiRata1: Cents = ZERO
     let contributiRata2: Cents = ZERO
@@ -206,25 +272,25 @@ export function computeTimeline(inputs: TimelineAnnoInput[], opts: TimelineOpts 
       if (gsUnica) {
         contributiRata2 = explain.nodo(
           `${anno}:accontoContributi:unica`,
-          `Acconto contributi GS ${anno} in unica rata (novembre)`,
-          'contributi anno precedente × 80% (sotto la soglia: rata unica)',
-          [`${anno - 1}:contributiDovuti`],
+          `Acconto ${nomeContributi} ${anno} in unica rata (novembre)`,
+          `${formulaContributi} (sotto la soglia: rata unica)`,
+          [nodoBaseContributi],
           gsTotale,
         )
       } else {
         const [rata1, rata2] = splitInRate(gsTotale, ripartizione)
         contributiRata1 = explain.nodo(
           `${anno}:accontoContributi:rata1`,
-          `1ª rata acconto contributi GS ${anno}`,
-          'contributi anno precedente × 80% × ripartizione',
-          [`${anno - 1}:contributiDovuti`],
+          `1ª rata acconto ${nomeContributi} ${anno}`,
+          formulaContributi,
+          [nodoBaseContributi],
           rata1,
         )
         contributiRata2 = explain.nodo(
           `${anno}:accontoContributi:rata2`,
-          `2ª rata acconto contributi GS ${anno}`,
-          'contributi anno precedente × 80% × ripartizione',
-          [`${anno - 1}:contributiDovuti`],
+          `2ª rata acconto ${nomeContributi} ${anno}`,
+          formulaContributi,
+          [nodoBaseContributi],
           rata2,
         )
       }
@@ -280,15 +346,33 @@ export function computeTimeline(inputs: TimelineAnnoInput[], opts: TimelineOpts 
     versatiContributiCents: number
   }
 
+  const causaleContributi = (gestione: GestioneInput, params: FiscalParams): string => {
+    if (gestione.tipo === 'gestione-separata') {
+      return gestione.copertura === 'piena'
+        ? params.acconti.causaliInps.valore.piena
+        : params.acconti.causaliInps.valore.ridotta
+    }
+    return gestione.tipo === 'artigiani'
+      ? params.previdenzaIvs.causali.valore.eccedenzaArtigiani
+      : params.previdenzaIvs.causali.valore.eccedenzaCommercianti
+  }
+
+  const nomeSaldoContributi = (gestione: GestioneInput, anno: number): string =>
+    gestione.tipo === 'gestione-separata'
+      ? `Saldo contributi Gestione Separata ${anno}`
+      : `Saldo contributi sull'eccedenza ${anno}`
+
   const buildF24 = (
     anno: number,
     params: FiscalParams,
-    copertura: Copertura,
+    gestioneCorrente: GestioneInput,
+    gestionePrecedente: GestioneInput,
     saldi: SaldiPrecedenti | undefined,
     acconti: AccontiAnno | undefined,
   ): EsitoF24 => {
-    const causale =
-      copertura === 'piena' ? params.acconti.causaliInps.valore.piena : params.acconti.causaliInps.valore.ridotta
+    const causaleSaldo = causaleContributi(gestionePrecedente, params)
+    const causaleAcconti = causaleContributi(gestioneCorrente, params)
+    const nomeAcconti = gestioneCorrente.tipo === 'gestione-separata' ? 'contributi GS' : 'contributi eccedenza'
     const codici = params.acconti.codiciTributo.valore
     const righeLuglio: F24Riga[] = []
     let crediti = 0
@@ -307,8 +391,8 @@ export function computeTimeline(inputs: TimelineAnnoInput[], opts: TimelineOpts 
       }
       if (saldi.contributiCents > 0) {
         righeLuglio.push({
-          codice: causale,
-          descrizione: `Saldo contributi Gestione Separata ${saldi.anno}`,
+          codice: causaleSaldo,
+          descrizione: nomeSaldoContributi(gestionePrecedente, saldi.anno),
           importoCents: saldi.contributiCents,
           nodeId: `${saldi.anno}:saldoContributi`,
         })
@@ -328,8 +412,8 @@ export function computeTimeline(inputs: TimelineAnnoInput[], opts: TimelineOpts 
     }
     if (acconti && acconti.contributiRata1 > 0) {
       righeLuglio.push({
-        codice: causale,
-        descrizione: `1ª rata acconto contributi GS ${anno}`,
+        codice: causaleAcconti,
+        descrizione: `1ª rata acconto ${nomeAcconti} ${anno}`,
         importoCents: acconti.contributiRata1,
         nodeId: `${anno}:accontoContributi:rata1`,
       })
@@ -349,10 +433,10 @@ export function computeTimeline(inputs: TimelineAnnoInput[], opts: TimelineOpts 
     }
     if (acconti && acconti.contributiRata2 > 0) {
       righeNovembre.push({
-        codice: causale,
+        codice: causaleAcconti,
         descrizione: acconti.contributiUnica
-          ? `Acconto contributi GS ${anno} (unica rata)`
-          : `2ª rata acconto contributi GS ${anno}`,
+          ? `Acconto ${nomeAcconti} ${anno} (unica rata)`
+          : `2ª rata acconto ${nomeAcconti} ${anno}`,
         importoCents: acconti.contributiRata2,
         nodeId: acconti.contributiUnica ? `${anno}:accontoContributi:unica` : `${anno}:accontoContributi:rata2`,
       })
@@ -388,17 +472,106 @@ export function computeTimeline(inputs: TimelineAnnoInput[], opts: TimelineOpts 
     return { luglio, novembre, versatiContributiCents: versatiContributi }
   }
 
+  /** Emette l'F24 di una rata fissa e ne restituisce l'importo (eventualmente da actual). */
+  const emettiRata = (
+    annoPagamento: number,
+    numero: 1 | 2 | 3 | 4,
+    annoCompetenza: number,
+    importoCents: Cents,
+    dataScadenza: string,
+    causale: string,
+    nomeGestione: GestioneIvsInput['tipo'],
+  ): Cents => {
+    const nodeId: NodeId = `${annoCompetenza}:rataFissa:${numero}`
+    f24.push({
+      anno: annoPagamento,
+      scadenza: `rata-${numero}`,
+      dataScadenza,
+      totaleCents: importoCents,
+      creditiCents: ZERO,
+      righe: [
+        {
+          codice: causale,
+          descrizione: `${numero}ª rata fissa ${nomeGestione} ${annoCompetenza} (include maternità)`,
+          importoCents,
+          nodeId,
+        },
+      ],
+    })
+    return importoCents
+  }
+
   let prev: StatoPrecedente | undefined
+  let rataPendente: RataFissaPendente | undefined
   for (const inputAnno of ordinati) {
     const params = paramsPerAnno(inputAnno.anno)
+    const gestione = gestioneDi(inputAnno)
     const saldi = prev ? buildSaldi(prev) : undefined
     const acconti = accontiPerAnno(inputAnno.anno, prev, saldi, params, inputAnno)
-    const esito = buildF24(inputAnno.anno, params, inputAnno.copertura, saldi, acconti)
+    const esito = buildF24(inputAnno.anno, params, gestione, prev?.gestione ?? gestione, saldi, acconti)
     if (esito.luglio) f24.push(esito.luglio)
     if (esito.novembre) f24.push(esito.novembre)
+    let versati = esito.versatiContributiCents
+
+    // La 4ª rata fissa dell'anno precedente si paga a febbraio di QUESTO anno (cassa).
+    if (rataPendente) {
+      versati += emettiRata(
+        inputAnno.anno,
+        4,
+        rataPendente.annoCompetenza,
+        rataPendente.importoCents,
+        rataPendente.dataScadenza,
+        rataPendente.causale,
+        rataPendente.gestione,
+      )
+      rataPendente = undefined
+    }
+
+    // Gestioni IVS: 4 rate fisse sul minimale — le prime 3 nell'anno, la 4ª a febbraio dopo.
+    if (gestione.tipo !== 'gestione-separata') {
+      const fissi = contributiFissiIvs(gestione, params)
+      const rate = rateFisseAnnue(fissi)
+      const scadenze = params.previdenzaIvs.scadenzeRateFisse.valore
+      const causaleFissi =
+        gestione.tipo === 'artigiani'
+          ? params.previdenzaIvs.causali.valore.fissiArtigiani
+          : params.previdenzaIvs.causali.valore.fissiCommercianti
+      for (const numero of [1, 2, 3] as const) {
+        const importo = explain.nodo(
+          `${inputAnno.anno}:rataFissa:${numero}`,
+          `${numero}ª rata fissa ${gestione.tipo} ${inputAnno.anno}`,
+          'contributi fissi annui sul minimale / 4 (maternità inclusa)',
+          [`${inputAnno.anno}:contributiFissi`],
+          rate[numero - 1]!,
+        )
+        versati += emettiRata(
+          inputAnno.anno,
+          numero,
+          inputAnno.anno,
+          importo,
+          slittaGiornoLavorativo(`${inputAnno.anno}-${scadenze[numero - 1]}`),
+          causaleFissi,
+          gestione.tipo,
+        )
+      }
+      const importoRata4 = explain.nodo(
+        `${inputAnno.anno}:rataFissa:4`,
+        `4ª rata fissa ${gestione.tipo} ${inputAnno.anno}`,
+        'contributi fissi annui sul minimale / 4 (maternità inclusa; scade a febbraio dell’anno dopo)',
+        [`${inputAnno.anno}:contributiFissi`],
+        rate[3]!,
+      )
+      rataPendente = {
+        annoCompetenza: inputAnno.anno,
+        importoCents: importoRata4,
+        dataScadenza: slittaGiornoLavorativo(`${inputAnno.anno + 1}-${scadenze[3]}`),
+        causale: causaleFissi,
+        gestione: gestione.tipo,
+      }
+    }
 
     const result = computeAnnoConExplain(
-      { ...inputAnno, versatiContributiCents: esito.versatiContributiCents },
+      { ...inputAnno, versatiContributiCents: versati },
       params,
       explain,
     )
@@ -407,20 +580,33 @@ export function computeTimeline(inputs: TimelineAnnoInput[], opts: TimelineOpts 
       (f) => !flags.some((g) => g.codice === f.codice && g.messaggio === f.messaggio),
     )
     flags.push(...flagNuovi)
-    prev = { result, acconti }
+    prev = { result, acconti, gestione }
   }
 
-  // Anno di conguaglio dopo l'ultimo anno di input: saldi + acconti (anche previsionali).
+  // Anno di conguaglio dopo l'ultimo anno di input: saldi + acconti (anche previsionali),
+  // più la 4ª rata fissa dell'ultimo anno per le gestioni IVS.
   if (prev) {
     const ultimo = ordinati[ordinati.length - 1]!
     const annoConguaglio = ultimo.anno + 1
     const params = paramsPerAnno(annoConguaglio)
+    const gestioneUltimo = gestioneDi(ultimo)
     const saldi = buildSaldi(prev)
     const inputConguaglio: TimelineAnnoInput = { ...ultimo, anno: annoConguaglio, incassatoCents: 0 }
     const acconti = accontiPerAnno(annoConguaglio, prev, saldi, params, inputConguaglio)
-    const esito = buildF24(annoConguaglio, params, ultimo.copertura, saldi, acconti)
+    const esito = buildF24(annoConguaglio, params, gestioneUltimo, prev.gestione, saldi, acconti)
     if (esito.luglio) f24.push(esito.luglio)
     if (esito.novembre) f24.push(esito.novembre)
+    if (rataPendente) {
+      emettiRata(
+        annoConguaglio,
+        4,
+        rataPendente.annoCompetenza,
+        rataPendente.importoCents,
+        rataPendente.dataScadenza,
+        rataPendente.causale,
+        rataPendente.gestione,
+      )
+    }
   }
 
   assertActualsUsati(explain)

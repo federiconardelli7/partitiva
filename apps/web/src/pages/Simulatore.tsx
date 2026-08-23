@@ -10,6 +10,7 @@ import {
   annoParamsVicini,
   annoUltimoStartup,
   buildTimelineInputs,
+  gestioneDelProfilo,
   numeroAnnoAttivita,
   paramsVicini,
   settoreProfilo,
@@ -56,9 +57,20 @@ export function Simulatore({
   const incassatoCents = parseImportoIt(incassato)
   const versatiCents = primoAnno || versati.trim() === '' ? 0 : (parseImportoIt(versati) ?? 0)
 
+  // La gestione dello scenario segue il profilo (finestra 50% inclusa); senza profilo: GS.
+  const gestioneScenario = profilo ? gestioneDelProfilo(profilo, annoSimulato) : undefined
+  const gestioneSeparata = !gestioneScenario || gestioneScenario.tipo === 'gestione-separata'
+
   const { risultato, avvisi } = useMemo((): { risultato: RisultatoAnno | null; avvisi: Flag[] } => {
     if (incassatoCents === null) return { risultato: null, avvisi: [] }
-    const scenario = { anno: annoSimulato, incassatoCents, coefficiente, startup, copertura }
+    const scenario = {
+      anno: annoSimulato,
+      incassatoCents,
+      coefficiente,
+      startup,
+      copertura,
+      ...(gestioneScenario ? { gestione: gestioneScenario } : {}),
+    }
     if (concatenaAttiva && profilo) {
       // Catena vera: anni reali (fatture + riepiloghi) fino a Y−1, poi lo scenario Y.
       const reali = buildTimelineInputs(profilo, fatture, riepiloghi, spese, annoSimulato - 1)
@@ -80,7 +92,7 @@ export function Simulatore({
       risultato: computeAnno({ ...scenario, versatiContributiCents: versatiCents }, paramsVicini(annoSimulato)),
       avvisi: avvisiManuali,
     }
-  }, [annoSimulato, incassatoCents, coefficiente, startup, copertura, versatiCents, concatenaAttiva, profilo, fatture, riepiloghi, spese])
+  }, [annoSimulato, incassatoCents, coefficiente, startup, copertura, gestioneScenario, versatiCents, concatenaAttiva, profilo, fatture, riepiloghi, spese])
 
   const cambiaAnno = (nuovo: number) => {
     setAnnoSimulato(nuovo)
@@ -211,14 +223,21 @@ export function Simulatore({
             <input type="checkbox" checked={startup} onChange={(e) => setStartup(e.target.checked)} />
             Aliquota startup 5% (primi 5 anni; altrimenti 15%)
           </label>
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={copertura === 'ridotta'}
-              onChange={(e) => setCopertura(e.target.checked ? 'ridotta' : 'piena')}
-            />
-            Pensionato / altra copertura (GS ridotta)
-          </label>
+          {gestioneSeparata ? (
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={copertura === 'ridotta'}
+                onChange={(e) => setCopertura(e.target.checked ? 'ridotta' : 'piena')}
+              />
+              Pensionato / altra copertura (GS ridotta)
+            </label>
+          ) : (
+            <span className="text-xs text-stone-500">
+              Gestione {gestioneScenario.tipo} dal profilo: fissi sul minimale + eccedenza
+              {gestioneScenario.riduzione !== 'nessuna' ? ' (riduzione attiva)' : ''}
+            </span>
+          )}
           {profilo && (
             <button
               type="button"

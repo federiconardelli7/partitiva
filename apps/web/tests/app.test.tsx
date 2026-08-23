@@ -148,6 +148,57 @@ describe('App — settore per nome (i gruppi al 40% non si perdono più)', () =>
   })
 })
 
+describe('App — gestioni IVS (artigiani e commercianti)', () => {
+  const ARTIGIANO = {
+    id: 1,
+    annoApertura: 2025,
+    ateco: '',
+    coefficiente: 0.4,
+    settore: 'Commercio all’ingrosso e al dettaglio',
+    copertura: 'piena' as const,
+    gestione: 'artigiani' as const,
+    riduzioneIvs: 'nessuna' as const,
+  }
+
+  it('il wizard salva la gestione artigiani con la riduzione scelta', async () => {
+    window.history.pushState({}, '', '/dati')
+    render(<App />)
+    const settore = (await screen.findByLabelText(/Settore di attività/i)) as HTMLSelectElement
+    fireEvent.change(settore, { target: { value: 'Altre attività economiche' } })
+    fireEvent.click(screen.getByLabelText(/Artigiani/i))
+    fireEvent.change(screen.getByLabelText(/Riduzione contributiva/i), { target: { value: 'riduzione35' } })
+    fireEvent.click(screen.getByRole('button', { name: /Inizia a tracciare/i }))
+    await expect.poll(async () => (await db.profilo.get(1))?.gestione).toBe('artigiani')
+    expect((await db.profilo.get(1))?.riduzioneIvs).toBe('riduzione35')
+  })
+
+  it('con un profilo artigiano la Panoramica mostra rate fisse e contributi artigiani', async () => {
+    await db.profilo.put(ARTIGIANO)
+    await db.fatture.add({ numero: '1', dataEmissione: `${ANNO}-02-01`, dataIncasso: `${ANNO}-02-10`, importoCents: 6_000_000, bolloCents: 200, descrizione: '' })
+    render(<App />)
+    await screen.findByRole('heading', { name: new RegExp(`Il tuo ${ANNO}`) })
+    expect(screen.getAllByText(/Contributi artigiani dovuti/i).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/rata fissa artigiani/i).length).toBeGreaterThan(0)
+  })
+
+  it('l’hub mostra la gestione del profilo', async () => {
+    await db.profilo.put(ARTIGIANO)
+    window.history.pushState({}, '', '/dati')
+    render(<App />)
+    await screen.findByRole('heading', { name: 'Profilo' })
+    expect(screen.getByText(/Artigiani/)).toBeTruthy()
+  })
+
+  it('un profilo GS con residui IVS (es. da backup) non dichiara riduzioni che non ha', async () => {
+    await db.profilo.put({ ...ARTIGIANO, gestione: 'gestione-separata' as const, riduzioneIvs: 'riduzione35' as const })
+    window.history.pushState({}, '', '/dati')
+    render(<App />)
+    await screen.findByRole('heading', { name: 'Profilo' })
+    expect(screen.getByText(/Gestione Separata — piena/)).toBeTruthy()
+    expect(screen.queryByText(/riduzione 35%/i)).toBeNull()
+  })
+})
+
 describe('App — riepiloghi annuali (pregresso)', () => {
   it('col totale 2025 senza fatture, la Panoramica del 2025 dichiara il pregresso', async () => {
     await db.profilo.put(PROFILO)

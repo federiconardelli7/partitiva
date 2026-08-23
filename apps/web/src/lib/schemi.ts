@@ -20,6 +20,9 @@ export const profiloSchema = z.object({
   /** Facoltativo: i profili salvati prima di S10 non ce l'hanno (backup v3 invariato). */
   settore: z.string().optional(),
   copertura: z.enum(['piena', 'ridotta']),
+  gestione: z.enum(['gestione-separata', 'artigiani', 'commercianti']).optional(),
+  anzianitaAl1995: z.boolean().optional(),
+  riduzioneIvs: z.enum(['nessuna', 'riduzione35', 'riduzione50']).optional(),
 })
 
 export const fatturaRecordSchema = z.object({
@@ -111,8 +114,18 @@ export const profiloFormSchema = z
       .min(1, 'Scegli il settore o inserisci il codice ATECO')
       .refine((s) => gruppoPerSettore(s) !== undefined, 'Scegli uno dei settori dell’allegato 4'),
     copertura: z.enum(['piena', 'ridotta']),
+    gestione: z.enum(['gestione-separata', 'artigiani', 'commercianti']).default('gestione-separata'),
+    anzianitaAl1995: z.boolean().default(false),
+    riduzioneIvs: z.enum(['nessuna', 'riduzione35', 'riduzione50']).default('nessuna'),
   })
-  .transform((valori) => ({ ...valori, coefficiente: gruppoPerSettore(valori.settore)!.coefficiente }))
+  .transform((valori) => ({
+    ...valori,
+    coefficiente: gruppoPerSettore(valori.settore)!.coefficiente,
+    // RHF conserva i campi smontati: un profilo GS non porta con sé stati IVS residui.
+    ...(valori.gestione === 'gestione-separata'
+      ? { anzianitaAl1995: false, riduzioneIvs: 'nessuna' as const }
+      : {}),
+  }))
 
 export const riepilogoFormSchema = z.object({
   anno: z.coerce
