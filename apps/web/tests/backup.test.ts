@@ -9,25 +9,39 @@ const fatture: Fattura[] = [
 
 describe('backup JSON (export/import)', () => {
   it('round-trip senza perdita', () => {
-    const json = serializzaBackup(profilo, fatture, [], '2026-08-22')
+    const json = serializzaBackup(profilo, fatture, [], [], '2026-08-22')
     const letto = deserializzaBackup(json)
     expect(letto.profilo).toEqual(profilo)
     expect(letto.fatture).toEqual(fatture)
-    expect(letto.schemaVersion).toBe(2)
+    expect(letto.schemaVersion).toBe(3)
   })
 
-  it('round-trip v2 coi riepiloghi annuali', () => {
+  it('round-trip v3 con riepiloghi e spese', () => {
     const riepiloghi = [{ anno: 2025, incassatoCents: 2_400_000, bolliCents: 200 }]
-    const letto = deserializzaBackup(serializzaBackup(profilo, fatture, riepiloghi, '2026-08-22'))
+    const spese = [{ id: 1, data: '2026-03-10', importoCents: 12_050, descrizione: 'hosting' }]
+    const letto = deserializzaBackup(serializzaBackup(profilo, fatture, riepiloghi, spese, '2026-08-22'))
     expect(letto.riepiloghi).toEqual(riepiloghi)
+    expect(letto.spese).toEqual(spese)
   })
 
-  it('un file v1 salvato in passato si importa ancora (riepiloghi vuoti)', () => {
+  it('i file v1 e v2 salvati in passato si importano ancora', () => {
     const v1 = JSON.stringify({ schemaVersion: 1, esportatoIl: '2026-08-22', profilo, fatture })
-    const letto = deserializzaBackup(v1)
-    expect(letto.schemaVersion).toBe(2)
-    expect(letto.riepiloghi).toEqual([])
-    expect(letto.fatture).toEqual(fatture)
+    const lettoV1 = deserializzaBackup(v1)
+    expect(lettoV1.schemaVersion).toBe(3)
+    expect(lettoV1.riepiloghi).toEqual([])
+    expect(lettoV1.spese).toEqual([])
+    expect(lettoV1.fatture).toEqual(fatture)
+    const v2 = JSON.stringify({
+      schemaVersion: 2,
+      esportatoIl: '2026-08-22',
+      profilo,
+      fatture,
+      riepiloghi: [{ anno: 2025, incassatoCents: 100, bolliCents: 0 }],
+    })
+    const lettoV2 = deserializzaBackup(v2)
+    expect(lettoV2.schemaVersion).toBe(3)
+    expect(lettoV2.riepiloghi).toHaveLength(1)
+    expect(lettoV2.spese).toEqual([])
   })
 
   it('import di JSON non valido → errore esplicito', () => {
@@ -36,9 +50,9 @@ describe('backup JSON (export/import)', () => {
   })
 
   it('annoApertura fuori dagli anni coperti dai params → import rifiutato (mai pagina bianca)', () => {
-    const passato = serializzaBackup({ ...profilo, annoApertura: 2015 }, [], [], '2026-08-22')
+    const passato = serializzaBackup({ ...profilo, annoApertura: 2015 }, [], [], [], '2026-08-22')
     expect(() => deserializzaBackup(passato)).toThrow(/backup/i)
-    const futuro = serializzaBackup({ ...profilo, annoApertura: new Date().getFullYear() + 1 }, [], [], '2026-08-22')
+    const futuro = serializzaBackup({ ...profilo, annoApertura: new Date().getFullYear() + 1 }, [], [], [], '2026-08-22')
     expect(() => deserializzaBackup(futuro)).toThrow(/backup/i)
   })
 })

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { Card } from '../components/Card'
 import { Flusso } from '../components/Flusso'
 import { IntestazionePagina } from '../components/IntestazionePagina'
-import type { Fattura, Profilo, RiepilogoAnnuale } from '../db'
+import type { Fattura, Profilo, RiepilogoAnnuale, Spesa } from '../db'
 import {
   annoDi,
   annoParamsVicini,
@@ -31,10 +31,12 @@ export function Simulatore({
   profilo,
   fatture,
   riepiloghi,
+  spese,
 }: {
   profilo: Profilo | null
   fatture: Fattura[]
   riepiloghi: RiepilogoAnnuale[]
+  spese: Spesa[]
 }) {
   const annoCorrente = annoDi(oggiIso())
   const [annoSimulato, setAnnoSimulato] = useState(annoCorrente)
@@ -61,7 +63,7 @@ export function Simulatore({
     const scenario = { anno: annoSimulato, incassatoCents, coefficiente, startup, copertura }
     if (concatenaAttiva && profilo) {
       // Catena vera: anni reali (fatture + riepiloghi) fino a Y−1, poi lo scenario Y.
-      const reali = buildTimelineInputs(profilo, fatture, riepiloghi, annoSimulato - 1)
+      const reali = buildTimelineInputs(profilo, fatture, riepiloghi, spese, annoSimulato - 1)
       const timeline = computeTimeline([...reali, { ...scenario, bolliCents: 0 }])
       return { risultato: timeline.anni[annoSimulato] ?? null, avvisi: timeline.flags }
     }
@@ -80,7 +82,7 @@ export function Simulatore({
       risultato: computeAnno({ ...scenario, versatiContributiCents: versatiCents }, paramsVicini(annoSimulato)),
       avvisi: avvisiManuali,
     }
-  }, [annoSimulato, incassatoCents, coefficiente, startup, copertura, versatiCents, concatenaAttiva, profilo, fatture, riepiloghi])
+  }, [annoSimulato, incassatoCents, coefficiente, startup, copertura, versatiCents, concatenaAttiva, profilo, fatture, riepiloghi, spese])
 
   const cambiaAnno = (nuovo: number) => {
     setAnnoSimulato(nuovo)
@@ -89,7 +91,7 @@ export function Simulatore({
 
   const partiDaiTuoiDati = () => {
     if (!profilo) return
-    const reale = computeTimeline(buildTimelineInputs(profilo, fatture, riepiloghi, annoCorrente)).anni[annoCorrente]
+    const reale = computeTimeline(buildTimelineInputs(profilo, fatture, riepiloghi, spese, annoCorrente)).anni[annoCorrente]
     if (!reale) return
     setAnnoSimulato(annoCorrente)
     setConcatena(numeroAnnoAttivita(profilo.annoApertura, annoCorrente) > 1)

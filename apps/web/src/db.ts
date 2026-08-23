@@ -30,10 +30,20 @@ export interface RiepilogoAnnuale {
   bolliCents: number
 }
 
+/** Spesa NON deducibile (il coefficiente le forfetizza): pesa solo sul netto reale. */
+export interface Spesa {
+  id?: number
+  /** ISO yyyy-mm-dd: la spesa appartiene all'anno di questa data (cassa). */
+  data: string
+  importoCents: number
+  descrizione: string
+}
+
 class PartitivaDb extends Dexie {
   profilo!: Table<Profilo, number>
   fatture!: Table<Fattura, number>
   riepiloghi!: Table<RiepilogoAnnuale, number>
+  spese!: Table<Spesa, number>
 
   constructor() {
     super('partitiva')
@@ -43,6 +53,9 @@ class PartitivaDb extends Dexie {
     })
     this.version(2).stores({
       riepiloghi: 'anno',
+    })
+    this.version(3).stores({
+      spese: '++id, data',
     })
   }
 }

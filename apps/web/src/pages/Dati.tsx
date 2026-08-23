@@ -6,10 +6,16 @@ import { BackupMenu } from '../components/Backup'
 import { IntestazionePagina } from '../components/IntestazionePagina'
 import { RegistroEntrate } from '../components/RegistroEntrate'
 import { Wizard } from '../components/Wizard'
-import { db, type Fattura, type Profilo, type RiepilogoAnnuale } from '../db'
-import { settoreProfilo } from '../lib/bilancio'
-import { formatEuro, formatPercento, parseImportoIt } from '../lib/format'
-import { riepilogoFormSchema } from '../lib/schemi'
+import { db, type Fattura, type Profilo, type RiepilogoAnnuale, type Spesa } from '../db'
+import { annoDi, settoreProfilo, spesePerAnno } from '../lib/bilancio'
+import { csvFatture, csvSpese } from '../lib/csv'
+import { formatDataIt, formatEuro, formatPercento, oggiIso, parseImportoIt } from '../lib/format'
+import { scaricaFile } from '../lib/scarica'
+import { riepilogoFormSchema, spesaFormSchema } from '../lib/schemi'
+
+/** BOM in testa: senza, Excel italiano legge male gli accenti dei CSV UTF-8. */
+const esportaCsv = (nome: string, contenuto: string) =>
+  scaricaFile(nome, '﻿' + contenuto, 'text/csv;charset=utf-8')
 
 const card = 'rounded-xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900'
 
@@ -18,10 +24,12 @@ export function Dati({
   profilo,
   fatture,
   riepiloghi,
+  spese,
 }: {
   profilo: Profilo | null
   fatture: Fattura[]
   riepiloghi: RiepilogoAnnuale[]
+  spese: Spesa[]
 }) {
   const [modificaProfilo, setModificaProfilo] = useState(false)
 
@@ -47,8 +55,87 @@ export function Dati({
       </IntestazionePagina>
 
       <section className="space-y-3">
-        <h3 className="text-base font-semibold">Fatture</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-base font-semibold">Fatture</h3>
+          {fatture.length > 0 && (
+            <button
+              type="button"
+              aria-label="Esporta CSV delle fatture"
+              onClick={() => esportaCsv(`partitiva-fatture-${oggiIso()}.csv`, csvFatture(fatture))}
+              className="rounded-md border border-stone-300 px-3 py-1 text-xs font-medium hover:bg-stone-100 dark:border-stone-700 dark:hover:bg-stone-800"
+            >
+              ⬇ CSV
+            </button>
+          )}
+        </div>
         <RegistroEntrate fatture={fatture} />
+      </section>
+
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-base font-semibold">Spese</h3>
+          {spese.length > 0 && (
+            <button
+              type="button"
+              aria-label="Esporta CSV delle spese"
+              onClick={() => esportaCsv(`partitiva-spese-${oggiIso()}.csv`, csvSpese(spese))}
+              className="rounded-md border border-stone-300 px-3 py-1 text-xs font-medium hover:bg-stone-100 dark:border-stone-700 dark:hover:bg-stone-800"
+            >
+              ⬇ CSV
+            </button>
+          )}
+        </div>
+        <FormSpesa />
+        {spese.length > 0 && (
+          <div className="overflow-x-auto rounded-xl border border-stone-200 bg-white shadow-sm dark:border-stone-800 dark:bg-stone-900">
+            <table className="w-full text-sm">
+              <thead className="border-b border-stone-200 text-left text-xs uppercase text-stone-500 dark:border-stone-800">
+                <tr>
+                  <th className="px-3 py-2">Data</th>
+                  <th className="px-3 py-2">Descrizione</th>
+                  <th className="px-3 py-2 text-right">Importo</th>
+                  <th className="px-3 py-2" />
+                </tr>
+              </thead>
+              <tbody>
+                {spese.map((s) => (
+                  <tr key={s.id} className="border-b border-stone-100 last:border-0 dark:border-stone-800/50">
+                    <td className="px-3 py-2">{formatDataIt(s.data)}</td>
+                    <td className="px-3 py-2">{s.descrizione || '—'}</td>
+                    <td className="px-3 py-2 text-right tabular-nums">{formatEuro(s.importoCents)}</td>
+                    <td className="px-3 py-2 text-right">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (window.confirm('Eliminare questa spesa?')) void db.spese.delete(s.id!)
+                        }}
+                        className="text-xs text-stone-400 hover:text-red-600"
+                      >
+                        elimina
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot className="border-t border-stone-200 text-xs text-stone-500 dark:border-stone-800">
+                <tr>
+                  <td className="px-3 py-2" colSpan={2}>
+                    Totale {annoDi(oggiIso())}
+                  </td>
+                  <td className="px-3 py-2 text-right tabular-nums">
+                    {formatEuro(spesePerAnno(spese, annoDi(oggiIso())))}
+                  </td>
+                  <td />
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        )}
+        <p className="text-xs text-stone-500 dark:text-stone-400">
+          Nel forfettario le spese <strong>NON si deducono</strong>: il coefficiente le
+          forfetizza. Le tracciamo solo per dirti quanto ti resta davvero (il netto reale
+          della Panoramica).
+        </p>
       </section>
 
       <section className="space-y-3">
@@ -148,7 +235,7 @@ export function Dati({
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-base font-semibold">Backup</h3>
-          <BackupMenu profilo={profilo} fatture={fatture} riepiloghi={riepiloghi} />
+          <BackupMenu profilo={profilo} fatture={fatture} riepiloghi={riepiloghi} spese={spese} />
         </div>
         <p className="text-xs text-stone-500 dark:text-stone-400">
           Questo browser è l'unica copia dei tuoi dati: esporta un backup ogni tanto.
@@ -156,6 +243,56 @@ export function Dati({
         </p>
       </section>
     </div>
+  )
+}
+
+type SpesaFormValues = z.input<typeof spesaFormSchema>
+
+function FormSpesa() {
+  const campo = 'mt-1 w-full rounded-md border border-stone-300 px-3 py-2 dark:border-stone-700 dark:bg-stone-800'
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<SpesaFormValues>({
+    resolver: zodResolver(spesaFormSchema),
+    defaultValues: { data: oggiIso(), importo: '', descrizione: '' },
+  })
+
+  const onSubmit = handleSubmit(async (values) => {
+    const parsed = spesaFormSchema.parse(values)
+    const importoCents = parseImportoIt(parsed.importo)
+    if (importoCents === null) return
+    await db.spese.add({ data: parsed.data, importoCents, descrizione: parsed.descrizione })
+    reset({ data: values.data, importo: '', descrizione: '' })
+  })
+
+  return (
+    <form
+      onSubmit={onSubmit}
+      className="grid gap-3 rounded-xl border border-stone-200 bg-white p-4 shadow-sm sm:grid-cols-4 dark:border-stone-800 dark:bg-stone-900"
+    >
+      <label className="text-sm">
+        Data
+        <input type="date" {...register('data')} className={campo} />
+      </label>
+      <label className="text-sm">
+        Importo della spesa (€)
+        <input placeholder="123,45" {...register('importo')} className={campo} />
+        {errors.importo && <span className="text-red-600">{errors.importo.message}</span>}
+      </label>
+      <label className="text-sm">
+        Descrizione
+        <input placeholder="hosting, hardware…" {...register('descrizione')} className={campo} />
+      </label>
+      <button
+        type="submit"
+        className="self-end rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800"
+      >
+        Aggiungi spesa
+      </button>
+    </form>
   )
 }
 

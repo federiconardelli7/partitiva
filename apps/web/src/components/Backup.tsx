@@ -1,43 +1,46 @@
 import { useRef } from 'react'
-import { db, type Fattura, type Profilo, type RiepilogoAnnuale } from '../db'
+import { db, type Fattura, type Profilo, type RiepilogoAnnuale, type Spesa } from '../db'
 import { deserializzaBackup, serializzaBackup } from '../lib/backup'
 import { oggiIso } from '../lib/format'
+import { scaricaFile } from '../lib/scarica'
 
 export function BackupMenu({
   profilo,
   fatture,
   riepiloghi,
+  spese,
 }: {
   profilo: Profilo | null
   fatture: Fattura[]
   riepiloghi: RiepilogoAnnuale[]
+  spese: Spesa[]
 }) {
   const fileInput = useRef<HTMLInputElement>(null)
 
   const esporta = () => {
-    const blob = new Blob([serializzaBackup(profilo, fatture, riepiloghi, oggiIso())], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `partitiva-backup-${oggiIso()}.json`
-    link.click()
-    URL.revokeObjectURL(url)
+    scaricaFile(
+      `partitiva-backup-${oggiIso()}.json`,
+      serializzaBackup(profilo, fatture, riepiloghi, spese, oggiIso()),
+      'application/json',
+    )
   }
 
   const importa = async (file: File) => {
     try {
       const backup = deserializzaBackup(await file.text())
       const ok = window.confirm(
-        `Importare il backup del ${backup.esportatoIl} (${backup.fatture.length} fatture, ${backup.riepiloghi.length} riepiloghi)? Sostituisce i dati attuali.`,
+        `Importare il backup del ${backup.esportatoIl} (${backup.fatture.length} fatture, ${backup.riepiloghi.length} riepiloghi, ${backup.spese.length} spese)? Sostituisce i dati attuali.`,
       )
       if (!ok) return
-      await db.transaction('rw', db.profilo, db.fatture, db.riepiloghi, async () => {
+      await db.transaction('rw', db.profilo, db.fatture, db.riepiloghi, db.spese, async () => {
         await db.profilo.clear()
         await db.fatture.clear()
         await db.riepiloghi.clear()
+        await db.spese.clear()
         if (backup.profilo) await db.profilo.put(backup.profilo)
         await db.fatture.bulkPut(backup.fatture)
         await db.riepiloghi.bulkPut(backup.riepiloghi)
+        await db.spese.bulkPut(backup.spese)
       })
     } catch (errore) {
       window.alert(errore instanceof Error ? errore.message : 'Import fallito')

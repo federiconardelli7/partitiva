@@ -3,6 +3,44 @@
 > Una voce per sessione: fatto, decisioni, next steps, blocchi. Le ultime 2 voci si leggono
 > all'inizio di ogni sessione (vedi CLAUDE.md).
 
+## 2026-08-23 — S7 Spese, override bollo ed export CSV
+
+**Fatto**
+- **Registro spese nell'hub** (Dexie v3, `spese: '++id, data'`): form data/importo/
+  descrizione, tabella con elimina e totale dell'anno corrente. Copy senza ambiguità:
+  «nel forfettario le spese NON si deducono, il coefficiente le forfetizza» — pesano solo
+  sul **netto reale**, che il motore già calcolava (`speseCents` per anno di cassa via
+  `spesePerAnno` in lib). Panoramica e Simulatore concatenato le usano da soli.
+- **Override del bollo** sulla fattura manuale: campo «Bollo (€)» vuoto = regola dai params
+  (mostrata live), pieno = forzatura (`fatturaFormSchema.bollo` con default ''). Il
+  percorso XML con `DatiBollo` resta quello di S4.
+- **Export CSV** di fatture e spese per Excel/Numbers italiani (separatore «;», decimali
+  con virgola, date gg/mm/aaaa, campi quotati, BOM UTF-8): funzioni pure in `lib/csv.ts`
+  + helper `lib/scarica.ts` riusato anche dal backup.
+- **Backup `schemaVersion: 3`** (+spese): v1 e v2 si importano ancora (union+transform);
+  chiuso il backlog «riepiloghi duplicati»: anni doppi ora RIFIUTATI all'import (v2 e v3).
+- TDD: 159 test verdi (11 nuovi). Gotcha da verbale: mai sostituire il costruttore
+  `URL` globale nei test jsdom (si aggiungono solo `createObjectURL`/`revokeObjectURL`,
+  con ripristino in finally), e il BOM va in stringa semplice, non in template literal
+  (eslint `no-irregular-whitespace`).
+
+- **Review (code-reviewer): 3 blocchi, corretti in TDD**: (1) **CSV injection** — i campi
+  che iniziano con `= + - @` (le descrizioni arrivano anche da XML di terzi) ora vengono
+  neutralizzati con l'apice, perché Excel valuta le formule anche tra virgolette; (2) il BOM
+  dell'export ora è asserito sui byte grezzi (lezione: `Blob.text()` decodifica via il BOM);
+  (3) coperto il ramo di default del bollo (vuoto → regola dai params). Più due note:
+  niente array condiviso nei transform del backup (immutabilità), convenzione
+  `annoDi(oggiIso())` nel totale spese.
+
+**Decisioni**: spese senza categorie (post-MVP la categorizzazione); niente spese nei
+riepiloghi annuali (il pregresso spese raramente è noto; si riapre se serve); CSV = analisi
+e commercialista, il backup JSON resta l'unico formato di ripristino.
+
+**Next steps (S8)**: parser PDF con form di revisione. Backlog: select settori con value
+duplicati al 40% (Wizard/Simulatore), messaggio import che nomini l'anno, «tra 0 giorni».
+
+**Blocchi/aperture**: invariati (GU DL 89/2026, soglie GS, mapping ATECO 2025, quadro RR).
+
 ## 2026-08-22 — S6 Riepiloghi annuali e simulatore concatenato
 
 **Fatto**

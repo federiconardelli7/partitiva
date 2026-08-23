@@ -11,7 +11,7 @@ import {
   type FiscalParams,
   type TimelineAnnoInput,
 } from '@partitiva/motore-fiscale'
-import type { Fattura, Profilo, RiepilogoAnnuale } from '../db'
+import type { Fattura, Profilo, RiepilogoAnnuale, Spesa } from '../db'
 
 /** Anno dei parametri effettivamente usati per `anno` (l'ultimo disponibile ≤ anno). */
 export function annoParamsVicini(anno: number): number {
@@ -40,10 +40,16 @@ export function riepilogoDi(riepiloghi: readonly RiepilogoAnnuale[], anno: numbe
   return riepiloghi.find((r) => r.anno === anno) ?? null
 }
 
+/** Spese dell'anno (cassa sulla data della spesa): pesano solo sul netto reale. */
+export function spesePerAnno(spese: readonly Spesa[], anno: number): number {
+  return spese.filter((s) => annoDi(s.data) === anno).reduce((somma, s) => somma + s.importoCents, 0)
+}
+
 export function buildTimelineInputs(
   profilo: Pick<Profilo, 'annoApertura' | 'coefficiente' | 'copertura'>,
   fatture: readonly Fattura[],
   riepiloghi: readonly RiepilogoAnnuale[],
+  spese: readonly Spesa[],
   annoFinale: number,
 ): TimelineAnnoInput[] {
   const annoInizio = profilo.annoApertura
@@ -64,6 +70,7 @@ export function buildTimelineInputs(
       startup: anno - profilo.annoApertura < anniStartup,
       copertura: profilo.copertura,
       bolliCents: bolliPerAnno(fatture, anno) + (pregresso?.bolliCents ?? 0),
+      speseCents: spesePerAnno(spese, anno),
     })
   }
   return inputs

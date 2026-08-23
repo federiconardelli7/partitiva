@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { ExplainTree } from '../components/ExplainTree'
 import { Flusso } from '../components/Flusso'
 import { IntestazionePagina } from '../components/IntestazionePagina'
-import type { Fattura, Profilo, RiepilogoAnnuale } from '../db'
+import type { Fattura, Profilo, RiepilogoAnnuale, Spesa } from '../db'
 import {
   annoDi,
   annoUltimoStartup,
@@ -26,10 +26,12 @@ export function Panoramica({
   profilo,
   fatture,
   riepiloghi,
+  spese,
 }: {
   profilo: Profilo
   fatture: Fattura[]
   riepiloghi: RiepilogoAnnuale[]
+  spese: Spesa[]
 }) {
   const oggi = oggiIso()
   const annoCorrente = annoDi(oggi)
@@ -42,8 +44,8 @@ export function Panoramica({
   const [anno, setAnno] = useState(annoCorrente)
   const [nodoAttivo, setNodoAttivo] = useState<NodeId | null>(null)
   const timeline = useMemo(
-    () => computeTimeline(buildTimelineInputs(profilo, fatture, riepiloghi, annoMassimo)),
-    [profilo, fatture, riepiloghi, annoMassimo],
+    () => computeTimeline(buildTimelineInputs(profilo, fatture, riepiloghi, spese, annoMassimo)),
+    [profilo, fatture, riepiloghi, spese, annoMassimo],
   )
   const risultato = timeline.anni[anno]
   if (!risultato) return null

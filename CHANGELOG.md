@@ -7,6 +7,13 @@ Formato: [Keep a Changelog](https://keepachangelog.com/it-IT/1.1.0/); versioning
 
 ### Added
 
+- **Spese, override bollo ed export CSV (S7)**: registro **spese** in «I miei dati» —
+  dichiarate NON deducibili (il coefficiente le forfetizza), pesano solo sul netto reale;
+  campo **Bollo (€)** sulla fattura manuale (vuoto = regola dai params, pieno = override);
+  **export CSV** di fatture e spese per i fogli di calcolo italiani. Backup
+  `schemaVersion: 3` con spese (v1/v2 ancora importabili); backup con riepiloghi ad anni
+  duplicati ora rifiutati.
+
 - **Riepiloghi annuali e simulatore concatenato (S6)**: in «I miei dati» si inserisce il
   **totale incassato di un anno senza ricostruirlo fattura per fattura** («pregresso», si
   somma alle fatture dello stesso anno; bolli facoltativi); la Panoramica lo dichiara con

@@ -21,8 +21,10 @@ function Shell() {
   const profiloQuery = useLiveQuery(() => db.profilo.get(1), [], CARICAMENTO)
   const fatture = useLiveQuery(() => db.fatture.orderBy('dataEmissione').reverse().toArray(), [], CARICAMENTO)
   const riepiloghi = useLiveQuery(() => db.riepiloghi.orderBy('anno').toArray(), [], CARICAMENTO)
+  const spese = useLiveQuery(() => db.spese.orderBy('data').reverse().toArray(), [], CARICAMENTO)
 
-  if (profiloQuery === CARICAMENTO || fatture === CARICAMENTO || riepiloghi === CARICAMENTO) return null
+  if (profiloQuery === CARICAMENTO || fatture === CARICAMENTO || riepiloghi === CARICAMENTO || spese === CARICAMENTO)
+    return null
   const profilo: Profilo | null = profiloQuery ?? null
 
   // Nav profile-aware: senza profilo l'app invita (Simulatore / Inizia), col profilo orienta.
@@ -72,10 +74,22 @@ function Shell() {
         <Routes>
           <Route
             path="/"
-            element={profilo ? <Panoramica profilo={profilo} fatture={fatture} riepiloghi={riepiloghi} /> : <Landing />}
+            element={
+              profilo ? (
+                <Panoramica profilo={profilo} fatture={fatture} riepiloghi={riepiloghi} spese={spese} />
+              ) : (
+                <Landing />
+              )
+            }
           />
-          <Route path="/simulatore" element={<Simulatore profilo={profilo} fatture={fatture} riepiloghi={riepiloghi} />} />
-          <Route path="/dati" element={<Dati profilo={profilo} fatture={fatture} riepiloghi={riepiloghi} />} />
+          <Route
+            path="/simulatore"
+            element={<Simulatore profilo={profilo} fatture={fatture} riepiloghi={riepiloghi} spese={spese} />}
+          />
+          <Route
+            path="/dati"
+            element={<Dati profilo={profilo} fatture={fatture} riepiloghi={riepiloghi} spese={spese} />}
+          />
           <Route path="/registro" element={<Navigate to="/dati" replace />} />
           <Route path="/profilo" element={<Navigate to="/dati" replace />} />
           <Route path="/bilancio" element={<Navigate to="/" replace />} />

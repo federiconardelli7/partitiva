@@ -33,6 +33,20 @@ export const riepilogoRecordSchema = z.object({
   bolliCents: z.number().int().nonnegative(),
 })
 
+export const spesaRecordSchema = z.object({
+  id: z.number().int().optional(),
+  data: z.string().regex(ISO_DATE),
+  importoCents: z.number().int().nonnegative(),
+  descrizione: z.string(),
+})
+
+// Un riepilogo per anno: due voci sullo stesso anno sarebbero risolte in silenzio dall'import.
+const riepiloghiUnici = z.array(riepilogoRecordSchema).superRefine((riepiloghi, ctx) => {
+  if (new Set(riepiloghi.map((r) => r.anno)).size !== riepiloghi.length) {
+    ctx.addIssue({ code: 'custom', message: 'Riepiloghi con anni duplicati' })
+  }
+})
+
 const backupV1Schema = z.object({
   schemaVersion: z.literal(1),
   esportatoIl: z.string(),
@@ -45,16 +59,32 @@ const backupV2Schema = z.object({
   esportatoIl: z.string(),
   profilo: profiloSchema.nullable(),
   fatture: z.array(fatturaRecordSchema),
-  riepiloghi: z.array(riepilogoRecordSchema),
+  riepiloghi: riepiloghiUnici,
 })
 
-/** v2 attuale; i backup v1 (pre-riepiloghi) si importano ancora e diventano v2. */
+const backupV3Schema = z.object({
+  schemaVersion: z.literal(3),
+  esportatoIl: z.string(),
+  profilo: profiloSchema.nullable(),
+  fatture: z.array(fatturaRecordSchema),
+  riepiloghi: riepiloghiUnici,
+  spese: z.array(spesaRecordSchema),
+})
+
+/** v3 attuale; i backup v1 e v2 si importano ancora e diventano v3.
+ *  Array vuoti creati per ogni parse: mai istanze condivise tra risultati. */
 export const backupSchema = z.union([
-  backupV2Schema,
+  backupV3Schema,
+  backupV2Schema.transform((v2) => ({
+    ...v2,
+    schemaVersion: 3 as const,
+    spese: [] as z.infer<typeof spesaRecordSchema>[],
+  })),
   backupV1Schema.transform((v1) => ({
     ...v1,
-    schemaVersion: 2 as const,
+    schemaVersion: 3 as const,
     riepiloghi: [] as z.infer<typeof riepilogoRecordSchema>[],
+    spese: [] as z.infer<typeof spesaRecordSchema>[],
   })),
 ])
 
@@ -85,11 +115,22 @@ export const riepilogoFormSchema = z.object({
   bolli: z.string().refine((v) => v.trim() === '' || parseImportoIt(v) !== null, 'Importo non valido (es. 24,00)'),
 })
 
+export const spesaFormSchema = z.object({
+  data: z.string().regex(ISO_DATE),
+  importo: z.string().refine((v) => parseImportoIt(v) !== null, 'Importo non valido (es. 123,45)'),
+  descrizione: z.string(),
+})
+
 export const fatturaFormSchema = z
   .object({
     numero: z.string().min(1, 'Obbligatorio'),
     dataEmissione: z.string().regex(ISO_DATE),
     importo: z.string().refine((v) => parseImportoIt(v) !== null, 'Importo non valido (es. 1.234,56)'),
+    /** Vuoto = bollo automatico dalla regola dei params; pieno = override manuale. */
+    bollo: z
+      .string()
+      .refine((v) => v.trim() === '' || parseImportoIt(v) !== null, 'Importo non valido (es. 2,00)')
+      .default(''),
     descrizione: z.string(),
     incassata: z.boolean(),
     dataIncasso: z.string().regex(ISO_DATE).or(z.literal('')),

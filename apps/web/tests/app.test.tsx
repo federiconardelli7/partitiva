@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import 'fake-indexeddb/auto'
-import { computeTimeline } from '@partitiva/motore-fiscale'
+import { bolloPerFattura, cents, computeTimeline } from '@partitiva/motore-fiscale'
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { App } from '../src/App'
@@ -15,6 +15,7 @@ beforeEach(async () => {
   await db.profilo.clear()
   await db.fatture.clear()
   await db.riepiloghi.clear()
+  await db.spese.clear()
   window.history.pushState({}, '', '/')
 })
 afterEach(cleanup)
@@ -117,6 +118,81 @@ describe('App — riepiloghi annuali (pregresso)', () => {
   })
 })
 
+describe('App — spese (non deducibili: solo netto reale)', () => {
+  it('da «I miei dati» salvo una spesa; il copy dice che NON si deduce', async () => {
+    await db.profilo.put(PROFILO)
+    window.history.pushState({}, '', '/dati')
+    render(<App />)
+    const importo = (await screen.findByLabelText(/Importo della spesa/i)) as HTMLInputElement
+    fireEvent.change(importo, { target: { value: '100,00' } })
+    fireEvent.click(screen.getByRole('button', { name: /Aggiungi spesa/i }))
+    await expect.poll(async () => db.spese.count()).toBe(1)
+    expect((await db.spese.toArray())[0]?.importoCents).toBe(10_000)
+    expect(screen.getByText(/NON si deducono/i)).toBeTruthy()
+  })
+
+  it('il netto reale della Panoramica scende esattamente della spesa', async () => {
+    await db.profilo.put(PROFILO)
+    await db.fatture.add({ numero: '1', dataEmissione: `${ANNO}-02-01`, dataIncasso: `${ANNO}-02-10`, importoCents: 250_000, bolloCents: 0, descrizione: '' })
+    await db.spese.add({ data: `${ANNO}-03-01`, importoCents: 10_000, descrizione: 'hosting' })
+    render(<App />)
+    await screen.findByRole('heading', { name: new RegExp(`Il tuo ${ANNO}`) })
+    const atteso = computeTimeline(
+      buildTimelineInputs(PROFILO, await db.fatture.toArray(), [], await db.spese.toArray(), ANNO),
+    ).anni[ANNO]!.nettoRealeCents
+    const valore = formatEuro(atteso)
+    const trovati = screen.getAllByText((_, el) => el !== null && el.children.length === 0 && el.textContent === valore)
+    expect(trovati.length).toBeGreaterThan(0)
+  })
+
+  it('il bollo della fattura manuale si può forzare; vuoto = regola', async () => {
+    await db.profilo.put(PROFILO)
+    window.history.pushState({}, '', '/dati')
+    render(<App />)
+    fireEvent.change(await screen.findByLabelText(/^Numero/i), { target: { value: '9' } })
+    fireEvent.change(screen.getByLabelText(/Importo \(€\)/i), { target: { value: '500,00' } })
+    fireEvent.change(screen.getByLabelText(/Bollo \(€\)/i), { target: { value: '3,00' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Aggiungi' }))
+    await expect.poll(async () => db.fatture.count()).toBe(1)
+    expect((await db.fatture.toArray())[0]?.bolloCents).toBe(300)
+    // ramo di default (quello di ogni fattura normale): campo vuoto → regola dai params
+    fireEvent.change(screen.getByLabelText(/^Numero/i), { target: { value: '10' } })
+    fireEvent.change(screen.getByLabelText(/Importo \(€\)/i), { target: { value: '500,00' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Aggiungi' }))
+    await expect.poll(async () => db.fatture.count()).toBe(2)
+    const dieci = (await db.fatture.toArray()).find((f) => f.numero === '10')
+    expect(dieci?.bolloCents).toBe(bolloPerFattura(cents(50_000), paramsVicini(ANNO)))
+  })
+
+  it('il bottone CSV scarica il registro fatture con l’intestazione giusta', async () => {
+    await db.profilo.put(PROFILO)
+    await db.fatture.add({ numero: '1', dataEmissione: `${ANNO}-02-01`, dataIncasso: null, importoCents: 100_000, bolloCents: 200, descrizione: '' })
+    let blobCatturato: Blob | null = null
+    // jsdom non ha createObjectURL: si aggiungono SOLO i metodi, mai sostituire il costruttore URL
+    const originali = { crea: URL.createObjectURL, revoca: URL.revokeObjectURL }
+    URL.createObjectURL = ((blob: Blob) => {
+      blobCatturato = blob
+      return 'blob:finto'
+    }) as typeof URL.createObjectURL
+    URL.revokeObjectURL = (() => {}) as typeof URL.revokeObjectURL
+    try {
+      window.history.pushState({}, '', '/dati')
+      render(<App />)
+      fireEvent.click(await screen.findByRole('button', { name: /CSV delle fatture/i }))
+      expect(blobCatturato).not.toBeNull()
+      // il BOM è il motivo per cui esiste esportaCsv (Excel italiano + UTF-8), ma
+      // Blob.text() lo decodifica via: va verificato sui byte grezzi (EF BB BF)
+      const bytes = new Uint8Array(await (blobCatturato as unknown as Blob).arrayBuffer())
+      expect([bytes[0], bytes[1], bytes[2]]).toEqual([0xef, 0xbb, 0xbf])
+      const testo = await (blobCatturato as unknown as Blob).text()
+      expect(testo).toContain('Numero;Emessa;Incassata;Importo;Bollo;Descrizione')
+    } finally {
+      URL.createObjectURL = originali.crea
+      URL.revokeObjectURL = originali.revoca
+    }
+  })
+})
+
 describe('App — redirect delle rotte vecchie', () => {
   it('/registro → hub I miei dati', async () => {
     await db.profilo.put(PROFILO)
@@ -179,7 +255,7 @@ describe('App — Simulatore sandbox', () => {
     fireEvent.click(screen.getByLabelText(/Concatena i miei dati/i))
     // il valore atteso lo dice il motore, non un numero a mano
     const attesi = computeTimeline([
-      ...buildTimelineInputs(PROFILO, [], [riepilogo], ANNO - 1),
+      ...buildTimelineInputs(PROFILO, [], [riepilogo], [], ANNO - 1),
       {
         anno: ANNO,
         incassatoCents: parseImportoIt('30.000')!,

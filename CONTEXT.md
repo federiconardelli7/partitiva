@@ -21,5 +21,8 @@ vivono in `docs/ADR/`, le regole fiscali (con fonti) in `docs/regole-fiscali.md`
 - **Simulazione concatenata** — nel Simulatore, lo scenario dell'anno Y con i versati
   deducibili DERIVATI dalla catena reale (fatture + riepiloghi) fino a Y−1: saldi e
   acconti che si pagherebbero davvero, calcolati dal motore, non inseriti a mano.
+- **Spese** — uscite NON deducibili (nel forfettario il coefficiente le forfetizza): si
+  registrano solo per il **netto reale** (netto di competenza − bolli − spese), per anno
+  di cassa della loro data. Mai chiamarle «deducibili».
 - **Reale vs simulazione** — l'emerald marca i dati veri, l'indaco la simulazione: un
   colore, un significato, in tutta l'app.

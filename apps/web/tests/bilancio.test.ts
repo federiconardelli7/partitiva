@@ -12,6 +12,7 @@ import {
   prossimoF24,
   riepilogoDi,
   settoreProfilo,
+  spesePerAnno,
 } from '../src/lib/bilancio'
 
 const profilo = { annoApertura: 2025, coefficiente: 0.67, copertura: 'piena' as const }
@@ -27,7 +28,7 @@ const fatture: Fattura[] = [
 
 describe('dal registro fatture agli input del motore', () => {
   it('aggrega gli incassi per anno solare della DATA DI INCASSO', () => {
-    const inputs = buildTimelineInputs(profilo, fatture, [], 2027)
+    const inputs = buildTimelineInputs(profilo, fatture, [], [], 2027)
     expect(inputs.map((i) => i.anno)).toEqual([2025, 2026, 2027])
     expect(inputs[0]?.incassatoCents).toBe(2_400_000)
     expect(inputs[1]?.incassatoCents).toBe(7_500_000) // la n.3 NON conta nel 2026
@@ -36,17 +37,17 @@ describe('dal registro fatture agli input del motore', () => {
 
   it('i bolli seguono l’anno di EMISSIONE, incassata o no', () => {
     expect(bolliPerAnno(fatture, 2026)).toBe(600) // n.2 + n.3 + n.4
-    const inputs = buildTimelineInputs(profilo, fatture, [], 2026)
+    const inputs = buildTimelineInputs(profilo, fatture, [], [], 2026)
     expect(inputs[1]?.bolliCents).toBe(600)
   })
 
   it('startup segue l’anno di apertura e il parametro anniStartup', () => {
-    const inputs = buildTimelineInputs(profilo, fatture, [], 2027)
+    const inputs = buildTimelineInputs(profilo, fatture, [], [], 2027)
     expect(inputs.every((i) => i.startup)).toBe(true) // 2025–2027 nei primi 5 anni
   })
 
   it('gli input alimentano la timeline del motore senza errori e con la catena giusta', () => {
-    const timeline = computeTimeline(buildTimelineInputs(profilo, fatture, [], 2026))
+    const timeline = computeTimeline(buildTimelineInputs(profilo, fatture, [], [], 2026))
     expect(timeline.anni[2026]?.redditoCents).toBe(5_025_000)
     expect(timeline.anni[2026]?.bolliCents).toBe(600)
   })
@@ -59,7 +60,7 @@ describe('helper della Panoramica', () => {
   })
 
   it('prossimoF24 è la prima scadenza non ancora passata; null se non ce ne sono', () => {
-    const { f24 } = computeTimeline(buildTimelineInputs(profilo, fatture, [], 2026))
+    const { f24 } = computeTimeline(buildTimelineInputs(profilo, fatture, [], [], 2026))
     const prossimo = prossimoF24(f24, '2026-08-22')
     expect(prossimo?.anno).toBe(2026)
     expect(prossimo?.scadenza).toBe('novembre')
@@ -107,23 +108,43 @@ describe('riepiloghi annuali (pregresso) negli input della timeline', () => {
   })
 
   it('il pregresso si SOMMA alle fatture dello stesso anno (incassato e bolli)', () => {
-    const inputs = buildTimelineInputs(profilo, fatture, riepiloghi, 2026)
+    const inputs = buildTimelineInputs(profilo, fatture, riepiloghi, [], 2026)
     expect(inputs[0]?.incassatoCents).toBe(2_400_000 + 1_000_000)
     expect(inputs[0]?.bolliCents).toBe(200 + 400)
     expect(inputs[1]?.incassatoCents).toBe(7_500_000) // il 2026 resta invariato
   })
 
   it('un anno con solo riepilogo e zero fatture entra comunque nella catena', () => {
-    const inputs = buildTimelineInputs(profilo, [], riepiloghi, 2025)
+    const inputs = buildTimelineInputs(profilo, [], riepiloghi, [], 2025)
     expect(inputs).toHaveLength(1)
     expect(inputs[0]?.incassatoCents).toBe(1_000_000)
     expect(inputs[0]?.bolliCents).toBe(400)
   })
 
   it('un riepilogo che precede l’anno di apertura è ESCLUSO dalla catena (come promette la UI)', () => {
-    const inputs = buildTimelineInputs(profilo, [], [{ anno: 2024, incassatoCents: 9_999_999, bolliCents: 999 }], 2026)
+    const inputs = buildTimelineInputs(profilo, [], [{ anno: 2024, incassatoCents: 9_999_999, bolliCents: 999 }], [], 2026)
     expect(inputs.map((i) => i.anno)).toEqual([2025, 2026])
     expect(inputs.every((i) => i.incassatoCents === 0 && i.bolliCents === 0)).toBe(true)
+  })
+
+  it('spesePerAnno somma per anno di cassa della spesa', () => {
+    const spese = [
+      { id: 1, data: '2026-03-10', importoCents: 30_000, descrizione: 'hosting' },
+      { id: 2, data: '2025-11-01', importoCents: 10_000, descrizione: 'dominio' },
+    ]
+    expect(spesePerAnno(spese, 2026)).toBe(30_000)
+    expect(spesePerAnno(spese, 2025)).toBe(10_000)
+    expect(spesePerAnno(spese, 2027)).toBe(0)
+  })
+
+  it('le spese entrano nella timeline e abbassano SOLO il netto reale', () => {
+    const spese = [{ id: 1, data: '2026-03-10', importoCents: 30_000, descrizione: 'hosting' }]
+    const inputs = buildTimelineInputs(profilo, fatture, [], spese, 2026)
+    expect(inputs[1]?.speseCents).toBe(30_000)
+    expect(inputs[0]?.speseCents).toBe(0)
+    const r = computeTimeline(inputs).anni[2026]!
+    expect(r.speseCents).toBe(30_000)
+    expect(r.nettoRealeCents).toBe(r.nettoCompetenzaCents - r.bolliCents - r.speseCents)
   })
 
   it('annoParamsVicini dice QUALE anno di parametri viene usato (ripiego incluso)', () => {

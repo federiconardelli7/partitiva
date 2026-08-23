@@ -5,6 +5,8 @@ import {
   profiloFormSchema,
   riepilogoFormSchema,
   riepilogoRecordSchema,
+  spesaFormSchema,
+  spesaRecordSchema,
 } from '../src/lib/schemi'
 
 describe('schema del profilo (wizard) — ATECO facoltativo, settore obbligatorio', () => {
@@ -88,16 +90,17 @@ describe('schema dei riepiloghi annuali (pregresso)', () => {
     expect(riepilogoFormSchema.safeParse({ anno: '2025', incassato: 'abc', bolli: '' }).success).toBe(false)
   })
 
-  it('un backup v1 importato diventa v2 con riepiloghi vuoti', () => {
+  it('un backup v1 importato diventa v3 con riepiloghi e spese vuoti', () => {
     const esito = backupSchema.safeParse({ schemaVersion: 1, esportatoIl: '2026-08-22', profilo: null, fatture: [] })
     expect(esito.success).toBe(true)
     if (esito.success) {
-      expect(esito.data.schemaVersion).toBe(2)
+      expect(esito.data.schemaVersion).toBe(3)
       expect(esito.data.riepiloghi).toEqual([])
+      expect(esito.data.spese).toEqual([])
     }
   })
 
-  it('un backup v2 con riepiloghi passa e li conserva', () => {
+  it('un backup v2 diventa v3: riepiloghi conservati, spese vuote', () => {
     const esito = backupSchema.safeParse({
       schemaVersion: 2,
       esportatoIl: '2026-08-22',
@@ -106,6 +109,36 @@ describe('schema dei riepiloghi annuali (pregresso)', () => {
       riepiloghi: [{ anno: 2025, incassatoCents: 1_000_000, bolliCents: 0 }],
     })
     expect(esito.success).toBe(true)
-    if (esito.success) expect(esito.data.riepiloghi).toHaveLength(1)
+    if (esito.success) {
+      expect(esito.data.schemaVersion).toBe(3)
+      expect(esito.data.riepiloghi).toHaveLength(1)
+      expect(esito.data.spese).toEqual([])
+    }
+  })
+
+  it('riepiloghi con lo stesso anno due volte → backup rifiutato (v2 e v3)', () => {
+    const doppi = [
+      { anno: 2025, incassatoCents: 100, bolliCents: 0 },
+      { anno: 2025, incassatoCents: 200, bolliCents: 0 },
+    ]
+    expect(
+      backupSchema.safeParse({ schemaVersion: 3, esportatoIl: 'x', profilo: null, fatture: [], spese: [], riepiloghi: doppi }).success,
+    ).toBe(false)
+    expect(
+      backupSchema.safeParse({ schemaVersion: 2, esportatoIl: 'x', profilo: null, fatture: [], riepiloghi: doppi }).success,
+    ).toBe(false)
+  })
+})
+
+describe('schema delle spese (non deducibili: solo netto reale)', () => {
+  it('spesa valida; negativi e date non ISO rifiutati', () => {
+    expect(spesaRecordSchema.safeParse({ data: '2026-03-10', importoCents: 5_000, descrizione: 'hosting' }).success).toBe(true)
+    expect(spesaRecordSchema.safeParse({ data: '2026-03-10', importoCents: -1, descrizione: '' }).success).toBe(false)
+    expect(spesaRecordSchema.safeParse({ data: '10/03/2026', importoCents: 100, descrizione: '' }).success).toBe(false)
+  })
+
+  it('il form spese accetta importi italiani e rifiuta il resto', () => {
+    expect(spesaFormSchema.safeParse({ data: '2026-03-10', importo: '1.234,56', descrizione: 'router' }).success).toBe(true)
+    expect(spesaFormSchema.safeParse({ data: '2026-03-10', importo: 'abc', descrizione: '' }).success).toBe(false)
   })
 })

@@ -25,6 +25,7 @@ export function RegistroEntrate({ fatture }: { fatture: Fattura[] }) {
       numero: '',
       dataEmissione: oggiIso(),
       importo: '',
+      bollo: '',
       descrizione: '',
       incassata: true,
       dataIncasso: oggiIso(),
@@ -42,15 +43,17 @@ export function RegistroEntrate({ fatture }: { fatture: Fattura[] }) {
     const parsed = fatturaFormSchema.parse(values)
     const importo = parseImportoIt(parsed.importo)
     if (importo === null) return
+    const bolloRegola = bolloPerFattura(cents(importo), paramsVicini(annoDi(parsed.dataEmissione)))
+    const bolloCents = parsed.bollo.trim() === '' ? bolloRegola : (parseImportoIt(parsed.bollo) ?? bolloRegola)
     await db.fatture.add({
       numero: parsed.numero,
       dataEmissione: parsed.dataEmissione,
       dataIncasso: parsed.incassata ? parsed.dataIncasso : null,
       importoCents: importo,
-      bolloCents: bolloPerFattura(cents(importo), paramsVicini(annoDi(parsed.dataEmissione))),
+      bolloCents,
       descrizione: parsed.descrizione,
     })
-    reset({ ...values, numero: '', importo: '', descrizione: '' })
+    reset({ ...values, numero: '', importo: '', bollo: '', descrizione: '' })
   })
 
   const segnaIncassata = (fattura: Fattura) => db.fatture.update(fattura.id!, { dataIncasso: oggiIso() })
@@ -145,8 +148,13 @@ export function RegistroEntrate({ fatture }: { fatture: Fattura[] }) {
           Importo (€)
           <input placeholder="1.234,56" {...register('importo')} className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2 dark:border-stone-700 dark:bg-stone-800" />
           {errors.importo && <span className="text-red-600">{errors.importo.message}</span>}
+        </label>
+        <label className="text-sm">
+          Bollo (€)
+          <input placeholder="automatico" {...register('bollo')} className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2 dark:border-stone-700 dark:bg-stone-800" />
+          {errors.bollo && <span className="text-red-600">{errors.bollo.message}</span>}
           <span className="mt-1 block text-xs text-stone-500">
-            Bollo automatico: {formatEuro(anteprimaBollo)} {anteprimaBollo > 0 ? '(importo sopra 77,47 €)' : ''}
+            Vuoto = regola: {formatEuro(anteprimaBollo)} per questo importo. Scrivilo solo per forzarlo.
           </span>
         </label>
         <label className="text-sm">

@@ -38,9 +38,12 @@ governa la propria P.IVA — dalla fattura all'F24 spiegato — senza che i dati
   sorgente, con backup `schemaVersion: 2` retro-compatibile; Simulatore con **anno simulato**
   (da apertura a corrente+1) e modalità **concatenata**: versati deducibili derivati dalla
   catena reale via `computeTimeline`, non più inseriti a mano.
-- **S7 — Spese e bollo**: registro spese (non deducibili nel forfettario: il tool lo dice
-  chiaramente); bollo automatico 2,00 € sopra 77,47 € con override e confronto con `DatiBollo`;
-  export/import JSON completo (backup) e export CSV dei registri.
+- ✅ **S7 — Spese e bollo** (23/08/2026): registro spese nell'hub («NON si deducono: il
+  coefficiente le forfetizza» — pesano solo sul netto reale via `speseCents` del motore);
+  override del bollo sulla fattura manuale (vuoto = regola dai params; il confronto con
+  `DatiBollo` era già in S4); export **CSV** di fatture e spese (Excel italiano: «;»,
+  virgola decimale, BOM). Backup `schemaVersion: 3` con spese; v1/v2 ancora importabili;
+  riepiloghi con anni duplicati ora rifiutati.
 - **S8 — Parser PDF**: estrazione testo (pdf.js) + euristiche per layout "foglio di stile SdI" +
   **form di revisione obbligatorio** prima di ogni salvataggio; degradazione a inserimento manuale
   per scansioni.

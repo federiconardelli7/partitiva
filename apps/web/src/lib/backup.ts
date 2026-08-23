@@ -1,22 +1,24 @@
 // Export/import JSON: unico meccanismo di backup, visto che i dati vivono solo in IndexedDB.
-import type { Fattura, Profilo, RiepilogoAnnuale } from '../db'
+import type { Fattura, Profilo, RiepilogoAnnuale, Spesa } from '../db'
 import { backupSchema } from './schemi'
 
 export interface Backup {
-  schemaVersion: 2
+  schemaVersion: 3
   esportatoIl: string
   profilo: Profilo | null
   fatture: Fattura[]
   riepiloghi: RiepilogoAnnuale[]
+  spese: Spesa[]
 }
 
 export function serializzaBackup(
   profilo: Profilo | null,
   fatture: Fattura[],
   riepiloghi: RiepilogoAnnuale[],
+  spese: Spesa[],
   esportatoIl: string,
 ): string {
-  const backup: Backup = { schemaVersion: 2, esportatoIl, profilo, fatture, riepiloghi }
+  const backup: Backup = { schemaVersion: 3, esportatoIl, profilo, fatture, riepiloghi, spese }
   return JSON.stringify(backup, null, 2)
 }
 
