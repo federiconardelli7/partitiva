@@ -107,3 +107,54 @@ describe('estraiCampiPdf — euristiche sul foglio di stile SdI (best effort, ma
     expect(e.avvisi.length).toBeGreaterThan(0)
   })
 })
+
+// Stampa da browser del foglio di stile SdI (fatturapa.gov.it): layout «etichetta: valore»
+// con data in ISO e importi nel formato GREZZO dell'XML (punto decimale, niente migliaia).
+// Righe sintetiche che riproducono la struttura osservata su un PDF reale (valori anonimi),
+// incluse le esche: date di stampa/nome file nell'intestazione, importi EN nella descrizione.
+const LAYOUT_STAMPA_BROWSER = [
+  '14/08/2026, 00:42 Sdi_ fi le_12345678901_27/07/2026',
+  'FATTURA ELETTRONICA',
+  'Identi fi cativo fi scale ai fi ni IVA: IT01234567890',
+  'Nome: MARIO',
+  'Cognome: ROSSI',
+  'Regime fi scale: RF19 (Regime forfettario)',
+  'about:blank 1/3',
+  'Dati generali del documento',
+  'Tipologia documento: TD01 (fattura)',
+  'Valuta importi: EUR',
+  'Data documento: 2026-07-27 (27 Luglio 2026)',
+  'Numero documento: 7',
+  'Importo totale documento: 1234.56',
+  'Bollo virtuale: SI',
+  'Importo bollo: 2.00',
+  'Descrizione bene/servizio: consulenza. USD $1,408.62 convertiti in data 27/07 al cambio 0,877',
+  'Valore totale: 1234.56',
+  'Totale imponibile/importo: 1234.56',
+  'about:blank 3/3',
+]
+
+describe('estraiCampiPdf — stampa browser del foglio di stile (data ISO, importi XML)', () => {
+  it('estrae numero, data ISO e totale col punto decimale; le esche non ingannano', () => {
+    const e = estraiCampiPdf(LAYOUT_STAMPA_BROWSER)
+    expect(e.tipoDocumento).toBe('TD01')
+    expect(e.numero).toBe('7')
+    expect(e.data).toBe('2026-07-27')
+    expect(e.importoTotaleCents).toBe(123_456)
+    expect(e.affidabile).toBe(true)
+  })
+
+  it('una data ISO inesistente sul calendario non passa', () => {
+    const e = estraiCampiPdf(['Numero documento: 5', 'Data documento: 2026-02-31', 'Totale documento 1,00'])
+    expect(e.data).toBeNull()
+    expect(e.avvisi.some((a) => /data documento non trovata/i.test(a))).toBe(true)
+  })
+
+  it('il punto è decimale solo in formato XML (due cifre finali); l’it-IT resta prioritario', () => {
+    const xml = estraiCampiPdf(['Numero documento: 5', 'Data documento: 05/03/2026', 'Importo totale documento: 980.50'])
+    expect(xml.importoTotaleCents).toBe(98_050)
+    // 1.500,00 in it-IT: il punto è delle migliaia, mai 1,50 €
+    const it = estraiCampiPdf(['Numero documento: 5', 'Data documento: 05/03/2026', 'Totale documento 1.500,00'])
+    expect(it.importoTotaleCents).toBe(150_000)
+  })
+})
