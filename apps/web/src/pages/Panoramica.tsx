@@ -16,7 +16,7 @@ import {
   prossimoF24,
   riepilogoDi,
 } from '../lib/bilancio'
-import { formatDataIt, formatEuro, formatEuroIntero, oggiIso } from '../lib/format'
+import { descriviGiorni, formatDataIt, formatEuro, formatEuroIntero, oggiIso } from '../lib/format'
 
 const chip = 'rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-medium text-stone-600 dark:bg-stone-800 dark:text-stone-300'
 const card = 'rounded-xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900'
@@ -130,7 +130,7 @@ export function Panoramica({
           </div>
           <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
             {prossimo
-              ? `${prossimo.scadenza} · tra ${giorniA(prossimo.dataScadenza, oggi)} giorni · ${formatEuro(prossimo.totaleCents)}`
+              ? `${prossimo.scadenza} · ${descriviGiorni(giorniA(prossimo.dataScadenza, oggi))} · ${formatEuro(prossimo.totaleCents)}`
               : 'nessuna scadenza calcolata'}
           </p>
         </div>

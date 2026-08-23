@@ -91,7 +91,15 @@ export function numeroAnnoAttivita(annoApertura: number, anno: number): number {
  * il solo coefficiente basta solo quando è univoco: quattro gruppi condividono il 40%,
  * e nominare quello sbagliato nella "sorgente di verità" sarebbe peggio che tacere.
  */
-export function settoreProfilo(profilo: Pick<Profilo, 'ateco' | 'coefficiente'>): string | null {
+export function settoreProfilo(profilo: Pick<Profilo, 'ateco' | 'coefficiente' | 'settore'>): string | null {
+  // Il nome salvato nel profilo (S10+) vince su ogni euristica, ma solo se è un gruppo
+  // vero E coerente col coefficiente salvato (un backup può portare un nome scombinato).
+  if (profilo.settore !== undefined) {
+    const coerente = GRUPPI_ATECO.some(
+      (g) => g.settore === profilo.settore && g.coefficiente === profilo.coefficiente,
+    )
+    return coerente ? profilo.settore : null
+  }
   const daAteco = coefficientePerAteco(profilo.ateco)
   if (daAteco && daAteco.coefficiente === profilo.coefficiente) return daAteco.settore
   const stessoCoefficiente = GRUPPI_ATECO.filter((g) => g.coefficiente === profilo.coefficiente)

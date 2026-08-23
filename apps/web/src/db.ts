@@ -7,6 +7,9 @@ export interface Profilo {
   annoApertura: number
   ateco: string
   coefficiente: number
+  /** Nome del gruppo dell'allegato 4: quattro gruppi condividono il 40%, il coefficiente
+   *  da solo non basta a ricordare la scelta. Assente nei profili salvati prima di S10. */
+  settore?: string
   copertura: 'piena' | 'ridotta'
 }
 

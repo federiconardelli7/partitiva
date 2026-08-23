@@ -90,7 +90,7 @@ function Shell() {
         </div>
       </header>
 
-      <main id="contenuto" className="mx-auto max-w-4xl px-4 py-6">
+      <main id="contenuto" tabIndex={-1} className="mx-auto max-w-4xl px-4 py-6 focus:outline-none">
         <Routes>
           <Route
             path="/"

@@ -1,6 +1,9 @@
 // Schemi zod condivisi tra form, backup e test.
+import { GRUPPI_ATECO } from '@partitiva/motore-fiscale'
 import { z } from 'zod'
 import { parseImportoIt } from './format'
+
+const gruppoPerSettore = (settore: string) => GRUPPI_ATECO.find((g) => g.settore === settore)
 
 export const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 
@@ -14,6 +17,8 @@ export const profiloSchema = z.object({
   annoApertura: z.number().int().min(ANNO_MINIMO_PARAMS).max(new Date().getFullYear()),
   ateco: z.string(),
   coefficiente: z.number().min(0.01).max(1),
+  /** Facoltativo: i profili salvati prima di S10 non ce l'hanno (backup v3 invariato). */
+  settore: z.string().optional(),
   copertura: z.enum(['piena', 'ridotta']),
 })
 
@@ -88,22 +93,26 @@ export const backupSchema = z.union([
   })),
 ])
 
-export const profiloFormSchema = z.object({
-  annoApertura: z.coerce
-    .number()
-    .int()
-    .min(ANNO_MINIMO_PARAMS, 'I parametri partono dal 2025 (per anni precedenti: contribuisci!)')
-    .max(new Date().getFullYear(), 'Anno nel futuro'),
-  ateco: z
-    .string()
-    .regex(/^\d{2}(\.\d{2}(\.\d{2})?)?$/, 'Formato atteso: 62.02.00')
-    .or(z.literal('')),
-  coefficiente: z.coerce
-    .number()
-    .min(0.01, 'Scegli il settore o inserisci il codice ATECO')
-    .max(1),
-  copertura: z.enum(['piena', 'ridotta']),
-})
+// Il settore si sceglie per NOME (unico), non per coefficiente: quattro gruppi
+// dell'allegato 4 condividono il 40% e un value duplicato perdeva la scelta.
+export const profiloFormSchema = z
+  .object({
+    annoApertura: z.coerce
+      .number()
+      .int()
+      .min(ANNO_MINIMO_PARAMS, 'I parametri partono dal 2025 (per anni precedenti: contribuisci!)')
+      .max(new Date().getFullYear(), 'Anno nel futuro'),
+    ateco: z
+      .string()
+      .regex(/^\d{2}(\.\d{2}(\.\d{2})?)?$/, 'Formato atteso: 62.02.00')
+      .or(z.literal('')),
+    settore: z
+      .string()
+      .min(1, 'Scegli il settore o inserisci il codice ATECO')
+      .refine((s) => gruppoPerSettore(s) !== undefined, 'Scegli uno dei settori dell’allegato 4'),
+    copertura: z.enum(['piena', 'ridotta']),
+  })
+  .transform((valori) => ({ ...valori, coefficiente: gruppoPerSettore(valori.settore)!.coefficiente }))
 
 export const riepilogoFormSchema = z.object({
   anno: z.coerce

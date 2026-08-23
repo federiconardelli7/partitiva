@@ -12,6 +12,7 @@ import {
   buildTimelineInputs,
   numeroAnnoAttivita,
   paramsVicini,
+  settoreProfilo,
 } from '../lib/bilancio'
 import { centsInInput, formatEuro, formatPercento, oggiIso, parseImportoIt } from '../lib/format'
 
@@ -34,7 +35,12 @@ export function Simulatore({
   const [annoSimulato, setAnnoSimulato] = useState(annoCorrente)
   const [concatena, setConcatena] = useState(false)
   const [incassato, setIncassato] = useState('30.000')
-  const [coefficiente, setCoefficiente] = useState(0.67)
+  // Il settore si tiene per NOME: quattro gruppi condividono il 40% e il solo
+  // coefficiente non sa quale opzione era selezionata. L'ultimo gruppo è «Altre attività».
+  const SETTORE_PREDEFINITO = GRUPPI_ATECO[GRUPPI_ATECO.length - 1]!.settore
+  const [settore, setSettore] = useState(SETTORE_PREDEFINITO)
+  // Lo stato può contenere solo nomi validi (opzioni del select o settoreProfilo): find non fallisce.
+  const coefficiente = GRUPPI_ATECO.find((g) => g.settore === settore)!.coefficiente
   const [startup, setStartup] = useState(true)
   const [copertura, setCopertura] = useState<'piena' | 'ridotta'>('piena')
   const [versati, setVersati] = useState('')
@@ -88,7 +94,8 @@ export function Simulatore({
     setAnnoSimulato(annoCorrente)
     setConcatena(numeroAnnoAttivita(profilo.annoApertura, annoCorrente) > 1)
     setIncassato(centsInInput(reale.explain[`${annoCorrente}:incassato`]!.value))
-    setCoefficiente(profilo.coefficiente)
+    // SEMPRE via settoreProfilo: valida il nome salvato e la coerenza col coefficiente.
+    setSettore(settoreProfilo(profilo) ?? SETTORE_PREDEFINITO)
     setCopertura(profilo.copertura)
     setStartup(annoCorrente <= annoUltimoStartup(profilo.annoApertura))
     setPrimoAnno(numeroAnnoAttivita(profilo.annoApertura, annoCorrente) === 1)
@@ -149,13 +156,9 @@ export function Simulatore({
         </label>
         <label className="text-sm">
           Settore (coefficiente di redditività)
-          <select
-            value={coefficiente}
-            onChange={(e) => setCoefficiente(Number(e.target.value))}
-            className={campo}
-          >
+          <select value={settore} onChange={(e) => setSettore(e.target.value)} className={campo}>
             {GRUPPI_ATECO.map((g) => (
-              <option key={g.settore} value={g.coefficiente}>
+              <option key={g.settore} value={g.settore}>
                 {g.settore} — {Math.round(g.coefficiente * 100)}%
               </option>
             ))}

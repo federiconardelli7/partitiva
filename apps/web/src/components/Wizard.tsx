@@ -3,6 +3,7 @@ import { coefficientePerAteco, GRUPPI_ATECO } from '@partitiva/motore-fiscale'
 import { useForm } from 'react-hook-form'
 import type { z } from 'zod'
 import { db, type Profilo } from '../db'
+import { settoreProfilo } from '../lib/bilancio'
 import { profiloFormSchema } from '../lib/schemi'
 
 const ANNO_CORRENTE = new Date().getFullYear()
@@ -22,10 +23,12 @@ export function Wizard({ esistente, onFine }: { esistente?: Profilo; onFine?: ()
       ? {
           annoApertura: esistente.annoApertura,
           ateco: esistente.ateco,
-          coefficiente: esistente.coefficiente,
+          // SEMPRE via settoreProfilo (valida nome e coerenza): i profili al 40% senza
+          // nome certo richiedono una scelta esplicita, mai pre-selezionare il primo.
+          settore: settoreProfilo(esistente) ?? '',
           copertura: esistente.copertura,
         }
-      : { annoApertura: ANNO_CORRENTE, ateco: '', copertura: 'piena' },
+      : { annoApertura: ANNO_CORRENTE, ateco: '', settore: '', copertura: 'piena' },
   })
 
   const gruppo = coefficientePerAteco(watch('ateco') ?? '')
@@ -68,17 +71,17 @@ export function Wizard({ esistente, onFine }: { esistente?: Profilo; onFine?: ()
       <label className="block text-sm">
         <span className="font-medium">Settore di attività (coefficiente di redditività)</span>
         <select
-          {...register('coefficiente')}
+          {...register('settore')}
           className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2 dark:border-stone-700 dark:bg-stone-800"
         >
           <option value="">— scegli il settore —</option>
           {GRUPPI_ATECO.map((g) => (
-            <option key={g.settore} value={g.coefficiente}>
+            <option key={g.settore} value={g.settore}>
               {g.settore} — {Math.round(g.coefficiente * 100)}%
             </option>
           ))}
         </select>
-        {errors.coefficiente && <span className="text-red-600">{errors.coefficiente.message}</span>}
+        {errors.settore && <span className="text-red-600">{errors.settore.message}</span>}
         <span className="mt-1 block text-xs text-stone-500">
           Sono i 9 gruppi ufficiali dell’allegato 4, L. 190/2014: scegli quello che descrive la tua
           attività.
@@ -93,7 +96,7 @@ export function Wizard({ esistente, onFine }: { esistente?: Profilo; onFine?: ()
           {...register('ateco', {
             onChange: (e) => {
               const g = coefficientePerAteco(String(e.target.value))
-              if (g) setValue('coefficiente', g.coefficiente)
+              if (g) setValue('settore', g.settore)
             },
           })}
           className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2 font-mono dark:border-stone-700 dark:bg-stone-800"

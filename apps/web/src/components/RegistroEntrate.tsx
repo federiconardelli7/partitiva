@@ -18,6 +18,7 @@ export function RegistroEntrate({ fatture }: { fatture: Fattura[] }) {
     handleSubmit,
     watch,
     reset,
+    getValues,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(fatturaFormSchema),
@@ -75,6 +76,13 @@ export function RegistroEntrate({ fatture }: { fatture: Fattura[] }) {
       if (estratto.tipoDocumento && estratto.tipoDocumento !== 'TD01') {
         setAvvisoPdf({ titolo: `${file.name}: non importata`, avvisi: estratto.avvisi })
         return
+      }
+      // Mai sovrascrivere in silenzio un form già compilato a mano.
+      const attuale = getValues()
+      if ((attuale.numero ?? '').trim() !== '' || (attuale.importo ?? '').trim() !== '') {
+        if (!window.confirm('Il form «Nuova fattura» contiene dati non salvati: sostituirli coi campi del PDF?')) {
+          return
+        }
       }
       reset({
         numero: estratto.numero ?? '',

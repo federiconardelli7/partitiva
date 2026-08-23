@@ -9,24 +9,43 @@ import {
   spesaRecordSchema,
 } from '../src/lib/schemi'
 
-describe('schema del profilo (wizard) — ATECO facoltativo, settore obbligatorio', () => {
+describe('schema del profilo (wizard) — ATECO facoltativo, settore per NOME', () => {
   const base = { annoApertura: '2025', copertura: 'piena' }
 
-  it('basta il settore/coefficiente, senza codice ATECO', () => {
-    expect(profiloFormSchema.safeParse({ ...base, ateco: '', coefficiente: '0.67' }).success).toBe(true)
+  it('il settore si sceglie per nome (unico anche nei gruppi al 40%) e porta il coefficiente', () => {
+    const esito = profiloFormSchema.safeParse({
+      ...base,
+      ateco: '',
+      settore: 'Attività dei servizi di alloggio e di ristorazione',
+    })
+    expect(esito.success).toBe(true)
+    if (esito.success) {
+      expect(esito.data.coefficiente).toBe(0.4)
+      expect(esito.data.settore).toBe('Attività dei servizi di alloggio e di ristorazione')
+    }
   })
 
   it('con ATECO valido ok; formato sbagliato → errore', () => {
-    expect(profiloFormSchema.safeParse({ ...base, ateco: '62.02.00', coefficiente: '0.67' }).success).toBe(true)
-    expect(profiloFormSchema.safeParse({ ...base, ateco: 'x62', coefficiente: '0.67' }).success).toBe(false)
+    expect(
+      profiloFormSchema.safeParse({ ...base, ateco: '62.02.00', settore: 'Altre attività economiche' }).success,
+    ).toBe(true)
+    expect(profiloFormSchema.safeParse({ ...base, ateco: 'x62', settore: 'Altre attività economiche' }).success).toBe(false)
   })
 
-  it('senza coefficiente → errore (o ATECO riconosciuto o settore scelto)', () => {
-    expect(profiloFormSchema.safeParse({ ...base, ateco: '', coefficiente: '' }).success).toBe(false)
+  it('senza settore o con un nome ignoto → errore', () => {
+    expect(profiloFormSchema.safeParse({ ...base, ateco: '', settore: '' }).success).toBe(false)
+    expect(profiloFormSchema.safeParse({ ...base, ateco: '', settore: 'Gruppo inventato' }).success).toBe(false)
   })
 
   it('anno di apertura prima del 2025 → errore (i parametri partono da lì)', () => {
-    expect(profiloFormSchema.safeParse({ annoApertura: '2019', ateco: '', coefficiente: '0.67', copertura: 'piena' }).success).toBe(false)
+    expect(
+      profiloFormSchema.safeParse({
+        annoApertura: '2019',
+        ateco: '',
+        settore: 'Altre attività economiche',
+        copertura: 'piena',
+      }).success,
+    ).toBe(false)
   })
 })
 

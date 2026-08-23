@@ -52,6 +52,7 @@ describe('backup JSON (export/import)', () => {
   it('annoApertura fuori dagli anni coperti dai params → import rifiutato (mai pagina bianca)', () => {
     const passato = serializzaBackup({ ...profilo, annoApertura: 2015 }, [], [], [], '2026-08-22')
     expect(() => deserializzaBackup(passato)).toThrow(/backup/i)
+    expect(() => deserializzaBackup(passato)).toThrow(/annoApertura 2015/) // l'errore NOMINA la causa
     const futuro = serializzaBackup({ ...profilo, annoApertura: new Date().getFullYear() + 1 }, [], [], [], '2026-08-22')
     expect(() => deserializzaBackup(futuro)).toThrow(/backup/i)
   })

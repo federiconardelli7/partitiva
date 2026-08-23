@@ -3,6 +3,43 @@
 > Una voce per sessione: fatto, decisioni, next steps, blocchi. Le ultime 2 voci si leggono
 > all'inizio di ogni sessione (vedi CLAUDE.md).
 
+## 2026-08-23 — S10 Rifiniture dal backlog (post-v0.1.0)
+
+**Fatto**
+- **Settore per NOME** (il bug più vecchio del backlog): quattro gruppi dell'allegato 4
+  condividono il 40% e i `<select>` con value=coefficiente perdevano la scelta (il DOM
+  torna alla prima opzione col valore duplicato). Ora: `Profilo.settore?` (campo non
+  indicizzato, niente bump Dexie; backup v3 invariato, additivo), `profiloFormSchema` con
+  campo `settore` validato sull'allegato 4 e `transform` che deriva il coefficiente,
+  Wizard e Simulatore con option value=nome, `settoreProfilo` che dà precedenza al nome
+  salvato. I profili pre-S10 al 40% richiedono una scelta esplicita in modifica (mai
+  pre-selezionare il primo). Pin-test sul DOM del Simulatore.
+- **Guardia sul prefill PDF**: se «Nuova fattura» ha numero o importo non salvati, il
+  prefill chiede conferma (annulla = form intatto). Testato con confirm mockato nei due rami.
+- **Micro-fix dalle note dei reviewer**: errore d'import backup che NOMINA l'annoApertura
+  fuori range; `descriviGiorni` (oggi/domani/«tra n giorni») per il countdown F24;
+  ultima riga «Totale documento» nei PDF multi-pagina (con fallback alle precedenti);
+  `tabindex=-1` sul main per lo skip link.
+- TDD: 183 test verdi (5 nuovi netti; contando le riscritture si sbagliava — corretto in
+  review). Verificata anche la **PR #5 di Dependabot** (vitest
+  4.1.10→4.1.11, patch-only, CI verde, niente TS7): mergiabile, decisione a Federico.
+- **Segnalazione infra**: i progetti Vercel `partitiva-calc` e `partitiva-stats` sono
+  ancora collegati al repo e deployano a ogni push sui loro URL (probabili fantasmi di
+  S3). Non toccano partitiva.vercel.app; disconnessione/eliminazione a discrezione di
+  Federico (comandi consegnati in sessione).
+
+- **Review (code-reviewer): 4 blocchi, corretti**: il nome salvato ora passa SEMPRE da
+  `settoreProfilo` (Wizard e Simulatore non lo leggono più direttamente) e l'helper
+  verifica anche la **coerenza col coefficiente** (un backup può portare un nome
+  scombinato: meglio tacere che nominare il gruppo sbagliato); conteggio test in PROGRESS
+  corretto (5 nuovi, non 8); CHANGELOG completato col fix dello skip link.
+
+**Next steps**: post-MVP dalla roadmap (altre gestioni INPS, confronto ordinario) o
+backlog residuo: offline PWA (vite-plugin-pwa), apple-touch-icon PNG, messaggio del
+superRefine riepiloghi che non riaffiora nell'import.
+
+**Blocchi/aperture**: invariati (GU DL 89/2026, soglie GS, mapping ATECO 2025, quadro RR).
+
 ## 2026-08-23 — S9 Hardening: PWA, a11y, onboarding — MVP COMPLETO
 
 **Fatto**

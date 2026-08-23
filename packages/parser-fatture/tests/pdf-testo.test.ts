@@ -90,6 +90,17 @@ describe('estraiCampiPdf — euristiche sul foglio di stile SdI (best effort, ma
     expect(e.affidabile).toBe(true)
   })
 
+  it('con più «Totale documento» vince l’ultimo (il riepilogo finale del documento)', () => {
+    const e = estraiCampiPdf([
+      'Numero documento: 5',
+      'Data documento: 01-03-2026',
+      'Totale documento 100,00',
+      'pagina 2 di 2',
+      'Totale documento 4.385,00',
+    ])
+    expect(e.importoTotaleCents).toBe(438_500)
+  })
+
   it('campi mancanti → avvisi espliciti, mai eccezioni', () => {
     const e = estraiCampiPdf(['Documento commerciale senza etichette note'])
     expect(e.affidabile).toBe(false)

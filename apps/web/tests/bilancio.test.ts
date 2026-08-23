@@ -96,6 +96,15 @@ describe('helper della Panoramica', () => {
       'Attività professionali, scientifiche, tecniche, sanitarie, di istruzione, servizi finanziari e assicurativi',
     )
     expect(settoreProfilo({ ateco: '99', coefficiente: 0.4 })).toBeNull()
+    // il nome salvato nel profilo vince su ogni euristica (se è un gruppo vero E coerente)
+    expect(
+      settoreProfilo({ ateco: '', coefficiente: 0.4, settore: 'Attività dei servizi di alloggio e di ristorazione' }),
+    ).toBe('Attività dei servizi di alloggio e di ristorazione')
+    expect(settoreProfilo({ ateco: '', coefficiente: 0.4, settore: 'Nome inventato' })).toBeNull()
+    // nome vero ma coefficiente che non torna (backup manomesso/incoerente): meglio tacere
+    expect(
+      settoreProfilo({ ateco: '', coefficiente: 0.78, settore: 'Commercio ambulante di prodotti alimentari e bevande' }),
+    ).toBeNull()
   })
 })
 

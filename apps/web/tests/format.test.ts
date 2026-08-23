@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { formatDataIt, formatEuro, formatEuroIntero, oggiIso, parseImportoIt } from '../src/lib/format'
+import {
+  descriviGiorni,
+  formatDataIt,
+  formatEuro,
+  formatEuroIntero,
+  oggiIso,
+  parseImportoIt,
+} from '../src/lib/format'
 
 describe('formati italiani', () => {
   it('parseImportoIt accetta 1.234,56 / 1234,56 / 1234.56 / 1234', () => {
@@ -41,5 +48,11 @@ describe('formati italiani', () => {
 
   it('formatDataIt: ISO → gg/mm/aaaa', () => {
     expect(formatDataIt('2026-08-22')).toBe('22/08/2026')
+  })
+
+  it('descriviGiorni: mai «tra 0 giorni»', () => {
+    expect(descriviGiorni(0)).toBe('oggi')
+    expect(descriviGiorni(1)).toBe('domani')
+    expect(descriviGiorni(100)).toBe('tra 100 giorni')
   })
 })

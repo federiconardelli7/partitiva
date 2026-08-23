@@ -5,7 +5,16 @@ Formato: [Keep a Changelog](https://keepachangelog.com/it-IT/1.1.0/); versioning
 
 ## [Unreleased]
 
-_Nessuna modifica dopo la 0.1.0._
+### Fixed
+
+- **Il settore si sceglie (e si ricorda) per nome**: quattro gruppi dell'allegato 4
+  condividono il coefficiente 40% e la scelta scivolava sul primo, in Wizard e Simulatore;
+  ora il profilo salva il **nome del gruppo** e l'hub lo mostra esattamente.
+- Il prefill da PDF chiede conferma prima di sostituire un form «Nuova fattura» già
+  compilato; con più «Totale documento» nel PDF vince l'ultimo (il riepilogo finale).
+- L'errore d'import del backup nomina l'`annoApertura` fuori range invece del messaggio
+  generico; il countdown F24 non dice più «tra 0 giorni» (oggi/domani); lo skip link ora
+  porta il focus davvero sul contenuto (`tabindex` sul main).
 
 ## [0.1.0] - 2026-08-23
 

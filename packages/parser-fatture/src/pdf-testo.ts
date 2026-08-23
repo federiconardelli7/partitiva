@@ -89,10 +89,13 @@ export function estraiCampiPdf(righe: readonly string[]): EstrazionePdf {
     }
   }
 
+  // In documenti multi-pagina «Totale documento» può ripetersi: l'ULTIMA occorrenza è il
+  // riepilogo finale. Se quella riga non porta un importo, si risale alle precedenti.
   let importoTotaleCents: number | null = null
-  const idxTotale = righe.findIndex((r) => /totale documento/i.test(r))
-  if (idxTotale >= 0) {
-    importoTotaleCents = ultimoImporto(righe[idxTotale] ?? '') ?? ultimoImporto(righe[idxTotale + 1] ?? '')
+  for (let j = righe.length - 1; j >= 0 && importoTotaleCents === null; j--) {
+    if (/totale documento/i.test(righe[j] ?? '')) {
+      importoTotaleCents = ultimoImporto(righe[j] ?? '') ?? ultimoImporto(righe[j + 1] ?? '')
+    }
   }
 
   if (righe.length === 0 || righe.every((r) => r.trim() === '')) {

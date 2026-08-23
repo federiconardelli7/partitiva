@@ -125,6 +125,29 @@ describe('App — I miei dati come hub della sorgente', () => {
   })
 })
 
+describe('App — settore per nome (i gruppi al 40% non si perdono più)', () => {
+  it('il wizard salva il settore scelto e l’hub lo mostra per nome', async () => {
+    window.history.pushState({}, '', '/dati')
+    render(<App />)
+    const select = (await screen.findByLabelText(/Settore di attività/i)) as HTMLSelectElement
+    fireEvent.change(select, { target: { value: 'Attività dei servizi di alloggio e di ristorazione' } })
+    fireEvent.click(screen.getByRole('button', { name: /Inizia a tracciare/i }))
+    await expect.poll(async () => (await db.profilo.get(1))?.settore).toBe(
+      'Attività dei servizi di alloggio e di ristorazione',
+    )
+    expect((await db.profilo.get(1))?.coefficiente).toBe(0.4)
+    expect(await screen.findByText(/alloggio e di ristorazione — 40%/i)).toBeTruthy()
+  })
+
+  it('nel Simulatore la scelta di un gruppo al 40% non scivola sul primo', async () => {
+    window.history.pushState({}, '', '/simulatore')
+    render(<App />)
+    const select = (await screen.findByLabelText(/Settore/i)) as HTMLSelectElement
+    fireEvent.change(select, { target: { value: 'Attività dei servizi di alloggio e di ristorazione' } })
+    expect(select.value).toBe('Attività dei servizi di alloggio e di ristorazione')
+  })
+})
+
 describe('App — riepiloghi annuali (pregresso)', () => {
   it('col totale 2025 senza fatture, la Panoramica del 2025 dichiara il pregresso', async () => {
     await db.profilo.put(PROFILO)
@@ -264,6 +287,32 @@ describe('App — import PDF con revisione obbligatoria', () => {
     expect(await screen.findByText(/scansione/i)).toBeTruthy()
     expect((screen.getByLabelText(/^Numero/i) as HTMLInputElement).value).toBe('')
     expect(await db.fatture.count()).toBe(0)
+  })
+
+  it('il prefill PDF chiede conferma se il form ha già dati non salvati', async () => {
+    await db.profilo.put(PROFILO)
+    vi.mocked(estraiRighePdf).mockResolvedValue([
+      'Numero documento: 7',
+      'Data documento: 15-07-2026',
+      'Totale documento 4.385,00',
+    ])
+    const conferma = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    try {
+      window.history.pushState({}, '', '/dati')
+      render(<App />)
+      await screen.findByText(/Nuova fattura/i)
+      fireEvent.change(screen.getByLabelText(/^Numero/i), { target: { value: '99' } })
+      const input = document.querySelector('input[type="file"][accept=".pdf"]') as HTMLInputElement
+      fireEvent.change(input, { target: { files: [new File(['x'], 'f.pdf', { type: 'application/pdf' })] } })
+      await expect.poll(() => conferma.mock.calls.length).toBe(1)
+      expect((screen.getByLabelText(/^Numero/i) as HTMLInputElement).value).toBe('99') // annullato: intatto
+      conferma.mockReturnValue(true)
+      fireEvent.change(input, { target: { files: [new File(['x'], 'f.pdf', { type: 'application/pdf' })] } })
+      await screen.findByText(/controllali prima di salvare/i)
+      expect((screen.getByLabelText(/^Numero/i) as HTMLInputElement).value).toBe('7')
+    } finally {
+      conferma.mockRestore()
+    }
   })
 
   it('PDF illeggibile (pdfjs lancia) → banner di degradazione e niente scritture', async () => {

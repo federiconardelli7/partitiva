@@ -59,6 +59,13 @@ export function centsInInput(cents: number): string {
   })
 }
 
+/** Countdown umano: mai «tra 0 giorni». */
+export function descriviGiorni(giorni: number): string {
+  if (giorni <= 0) return 'oggi'
+  if (giorni === 1) return 'domani'
+  return `tra ${giorni} giorni`
+}
+
 /** Data LOCALE in ISO (yyyy-mm-dd): mai UTC, o a mezzanotte italiana si scriverebbe ieri. */
 export function oggiIso(adesso: Date = new Date()): string {
   const mese = String(adesso.getMonth() + 1).padStart(2, '0')
