@@ -9,11 +9,25 @@ const fatture: Fattura[] = [
 
 describe('backup JSON (export/import)', () => {
   it('round-trip senza perdita', () => {
-    const json = serializzaBackup(profilo, fatture, '2026-08-22')
+    const json = serializzaBackup(profilo, fatture, [], '2026-08-22')
     const letto = deserializzaBackup(json)
     expect(letto.profilo).toEqual(profilo)
     expect(letto.fatture).toEqual(fatture)
-    expect(letto.schemaVersion).toBe(1)
+    expect(letto.schemaVersion).toBe(2)
+  })
+
+  it('round-trip v2 coi riepiloghi annuali', () => {
+    const riepiloghi = [{ anno: 2025, incassatoCents: 2_400_000, bolliCents: 200 }]
+    const letto = deserializzaBackup(serializzaBackup(profilo, fatture, riepiloghi, '2026-08-22'))
+    expect(letto.riepiloghi).toEqual(riepiloghi)
+  })
+
+  it('un file v1 salvato in passato si importa ancora (riepiloghi vuoti)', () => {
+    const v1 = JSON.stringify({ schemaVersion: 1, esportatoIl: '2026-08-22', profilo, fatture })
+    const letto = deserializzaBackup(v1)
+    expect(letto.schemaVersion).toBe(2)
+    expect(letto.riepiloghi).toEqual([])
+    expect(letto.fatture).toEqual(fatture)
   })
 
   it('import di JSON non valido → errore esplicito', () => {
@@ -22,9 +36,9 @@ describe('backup JSON (export/import)', () => {
   })
 
   it('annoApertura fuori dagli anni coperti dai params → import rifiutato (mai pagina bianca)', () => {
-    const passato = serializzaBackup({ ...profilo, annoApertura: 2015 }, [], '2026-08-22')
+    const passato = serializzaBackup({ ...profilo, annoApertura: 2015 }, [], [], '2026-08-22')
     expect(() => deserializzaBackup(passato)).toThrow(/backup/i)
-    const futuro = serializzaBackup({ ...profilo, annoApertura: new Date().getFullYear() + 1 }, [], '2026-08-22')
+    const futuro = serializzaBackup({ ...profilo, annoApertura: new Date().getFullYear() + 1 }, [], [], '2026-08-22')
     expect(() => deserializzaBackup(futuro)).toThrow(/backup/i)
   })
 })

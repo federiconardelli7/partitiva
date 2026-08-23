@@ -11,14 +11,19 @@ import {
   type FiscalParams,
   type TimelineAnnoInput,
 } from '@partitiva/motore-fiscale'
-import type { Fattura, Profilo } from '../db'
+import type { Fattura, Profilo, RiepilogoAnnuale } from '../db'
 
-/** Params dell'anno più vicino disponibile (≤ anno, altrimenti il primo supportato). */
-export function paramsVicini(anno: number): FiscalParams {
+/** Anno dei parametri effettivamente usati per `anno` (l'ultimo disponibile ≤ anno). */
+export function annoParamsVicini(anno: number): number {
   const precedenti = SUPPORTED_YEARS.filter((a) => a <= anno)
   const scelto = precedenti[precedenti.length - 1] ?? SUPPORTED_YEARS[0]
   if (scelto === undefined) throw new Error('Nessun anno di parametri disponibile')
-  return getParams(scelto)
+  return scelto
+}
+
+/** Params dell'anno più vicino disponibile (≤ anno, altrimenti il primo supportato). */
+export function paramsVicini(anno: number): FiscalParams {
+  return getParams(annoParamsVicini(anno))
 }
 
 export const annoDi = (iso: string): number => Number(iso.slice(0, 4))
@@ -30,9 +35,15 @@ export function bolliPerAnno(fatture: readonly Fattura[], anno: number): number 
     .reduce((somma, f) => somma + f.bolloCents, 0)
 }
 
+/** Riepilogo dell'anno («pregresso»: totale non tracciato a fatture), null se assente. */
+export function riepilogoDi(riepiloghi: readonly RiepilogoAnnuale[], anno: number): RiepilogoAnnuale | null {
+  return riepiloghi.find((r) => r.anno === anno) ?? null
+}
+
 export function buildTimelineInputs(
   profilo: Pick<Profilo, 'annoApertura' | 'coefficiente' | 'copertura'>,
   fatture: readonly Fattura[],
+  riepiloghi: readonly RiepilogoAnnuale[],
   annoFinale: number,
 ): TimelineAnnoInput[] {
   const annoInizio = profilo.annoApertura
@@ -44,13 +55,15 @@ export function buildTimelineInputs(
 
   const inputs: TimelineAnnoInput[] = []
   for (let anno = annoInizio; anno <= annoFinale; anno++) {
+    // Il pregresso si SOMMA alle fatture dell'anno: adattamento dati, non regola fiscale.
+    const pregresso = riepilogoDi(riepiloghi, anno)
     inputs.push({
       anno,
-      incassatoCents: aggregaIncassato(pagamenti, anno),
+      incassatoCents: aggregaIncassato(pagamenti, anno) + (pregresso?.incassatoCents ?? 0),
       coefficiente: profilo.coefficiente,
       startup: anno - profilo.annoApertura < anniStartup,
       copertura: profilo.copertura,
-      bolliCents: bolliPerAnno(fatture, anno),
+      bolliCents: bolliPerAnno(fatture, anno) + (pregresso?.bolliCents ?? 0),
     })
   }
   return inputs

@@ -7,6 +7,14 @@ Formato: [Keep a Changelog](https://keepachangelog.com/it-IT/1.1.0/); versioning
 
 ### Added
 
+- **Riepiloghi annuali e simulatore concatenato (S6)**: in «I miei dati» si inserisce il
+  **totale incassato di un anno senza ricostruirlo fattura per fattura** («pregresso», si
+  somma alle fatture dello stesso anno; bolli facoltativi); la Panoramica lo dichiara con
+  «include pregresso». Il **Simulatore** guadagna l'anno simulato (da apertura a corrente+1)
+  e la modalità **«Concatena i miei dati»**: i contributi deducibili dello scenario sono
+  derivati dalla catena reale (saldi + acconti da `computeTimeline`), non più a mano.
+  Backup `schemaVersion: 2` (con riepiloghi); i backup v1 si importano ancora.
+
 - **Redesign IA (S5)**: `/` è la **Panoramica** — vista d'insieme read-only che si aggiorna
   da «I miei dati», col nuovo componente **Flusso** (la catena del motore come diagramma
   year-aware: primo anno senza deduzione, poi ramo «F24 → contributi deducibili»; nodi

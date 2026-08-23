@@ -14,5 +14,12 @@ vivono in `docs/ADR/`, le regole fiscali (con fonti) in `docs/regole-fiscali.md`
   nessuna logica fiscale nella UI.
 - **Primo anno** — anno senza contributi versati da dedurre: imponibile pieno («nulla da
   dedurre»). Dagli anni successivi compare il ramo «F24 pagati → di cui contributi deducibili».
+- **Riepilogo annuale («pregresso»)** — il totale incassato di un anno NON tracciato a
+  fatture (+ bolli, facoltativi). Si **somma** alle fatture dello stesso anno e alimenta
+  Panoramica, scadenze e Simulatore. Anni ammessi: da apertura all'anno corrente — il
+  futuro si simula, non si registra. Un riepilogo per anno (risalvare sostituisce).
+- **Simulazione concatenata** — nel Simulatore, lo scenario dell'anno Y con i versati
+  deducibili DERIVATI dalla catena reale (fatture + riepiloghi) fino a Y−1: saldi e
+  acconti che si pagherebbero davvero, calcolati dal motore, non inseriti a mano.
 - **Reale vs simulazione** — l'emerald marca i dati veri, l'indaco la simulazione: un
   colore, un significato, in tutta l'app.

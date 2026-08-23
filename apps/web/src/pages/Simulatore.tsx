@@ -1,11 +1,18 @@
-import { computeAnno, computeTimeline, GRUPPI_ATECO } from '@partitiva/motore-fiscale'
+import { computeAnno, computeTimeline, GRUPPI_ATECO, type Flag, type RisultatoAnno } from '@partitiva/motore-fiscale'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Card } from '../components/Card'
 import { Flusso } from '../components/Flusso'
 import { IntestazionePagina } from '../components/IntestazionePagina'
-import type { Fattura, Profilo } from '../db'
-import { annoDi, annoUltimoStartup, buildTimelineInputs, numeroAnnoAttivita, paramsVicini } from '../lib/bilancio'
+import type { Fattura, Profilo, RiepilogoAnnuale } from '../db'
+import {
+  annoDi,
+  annoParamsVicini,
+  annoUltimoStartup,
+  buildTimelineInputs,
+  numeroAnnoAttivita,
+  paramsVicini,
+} from '../lib/bilancio'
 import { formatEuro, formatPercento, oggiIso, parseImportoIt } from '../lib/format'
 
 const campo =
@@ -20,8 +27,18 @@ const centsInInput = (cents: number): string =>
   })
 
 /** Sandbox: uno scenario alla volta, mai scritture su Dexie. */
-export function Simulatore({ profilo, fatture }: { profilo: Profilo | null; fatture: Fattura[] }) {
-  const anno = annoDi(oggiIso())
+export function Simulatore({
+  profilo,
+  fatture,
+  riepiloghi,
+}: {
+  profilo: Profilo | null
+  fatture: Fattura[]
+  riepiloghi: RiepilogoAnnuale[]
+}) {
+  const annoCorrente = annoDi(oggiIso())
+  const [annoSimulato, setAnnoSimulato] = useState(annoCorrente)
+  const [concatena, setConcatena] = useState(false)
   const [incassato, setIncassato] = useState('30.000')
   const [coefficiente, setCoefficiente] = useState(0.67)
   const [startup, setStartup] = useState(true)
@@ -29,27 +46,59 @@ export function Simulatore({ profilo, fatture }: { profilo: Profilo | null; fatt
   const [versati, setVersati] = useState('')
   const [primoAnno, setPrimoAnno] = useState(false)
 
+  // Anni simulabili: da apertura a corrente+1 (il pregresso si registra, il futuro si simula).
+  const anni = profilo
+    ? Array.from({ length: annoCorrente + 2 - profilo.annoApertura }, (_, i) => profilo.annoApertura + i)
+    : [annoCorrente]
+  const concatenabile = profilo !== null && annoSimulato > profilo.annoApertura
+  const concatenaAttiva = concatenabile && concatena
+
   const incassatoCents = parseImportoIt(incassato)
   const versatiCents = primoAnno || versati.trim() === '' ? 0 : (parseImportoIt(versati) ?? 0)
 
-  const risultato = useMemo(() => {
-    if (incassatoCents === null) return null
-    return computeAnno(
-      { anno, incassatoCents, coefficiente, startup, copertura, versatiContributiCents: versatiCents },
-      paramsVicini(anno),
-    )
-  }, [anno, incassatoCents, coefficiente, startup, copertura, versatiCents])
+  const { risultato, avvisi } = useMemo((): { risultato: RisultatoAnno | null; avvisi: Flag[] } => {
+    if (incassatoCents === null) return { risultato: null, avvisi: [] }
+    const scenario = { anno: annoSimulato, incassatoCents, coefficiente, startup, copertura }
+    if (concatenaAttiva && profilo) {
+      // Catena vera: anni reali (fatture + riepiloghi) fino a Y−1, poi lo scenario Y.
+      const reali = buildTimelineInputs(profilo, fatture, riepiloghi, annoSimulato - 1)
+      const timeline = computeTimeline([...reali, { ...scenario, bolliCents: 0 }])
+      return { risultato: timeline.anni[annoSimulato] ?? null, avvisi: timeline.flags }
+    }
+    // Nel ramo manuale paramsVicini ripiega in silenzio: l'avviso va detto qui.
+    const annoParams = annoParamsVicini(annoSimulato)
+    const avvisiManuali: Flag[] =
+      annoParams !== annoSimulato
+        ? [
+            {
+              codice: 'params-fallback',
+              messaggio: `Parametri ${annoSimulato} non ancora disponibili: uso quelli del ${annoParams} (da riverificare a inizio anno).`,
+            },
+          ]
+        : []
+    return {
+      risultato: computeAnno({ ...scenario, versatiContributiCents: versatiCents }, paramsVicini(annoSimulato)),
+      avvisi: avvisiManuali,
+    }
+  }, [annoSimulato, incassatoCents, coefficiente, startup, copertura, versatiCents, concatenaAttiva, profilo, fatture, riepiloghi])
+
+  const cambiaAnno = (nuovo: number) => {
+    setAnnoSimulato(nuovo)
+    if (profilo) setStartup(nuovo <= annoUltimoStartup(profilo.annoApertura))
+  }
 
   const partiDaiTuoiDati = () => {
     if (!profilo) return
-    const reale = computeTimeline(buildTimelineInputs(profilo, fatture, anno)).anni[anno]
+    const reale = computeTimeline(buildTimelineInputs(profilo, fatture, riepiloghi, annoCorrente)).anni[annoCorrente]
     if (!reale) return
-    setIncassato(centsInInput(reale.explain[`${anno}:incassato`]!.value))
+    setAnnoSimulato(annoCorrente)
+    setConcatena(numeroAnnoAttivita(profilo.annoApertura, annoCorrente) > 1)
+    setIncassato(centsInInput(reale.explain[`${annoCorrente}:incassato`]!.value))
     setCoefficiente(profilo.coefficiente)
     setCopertura(profilo.copertura)
-    setStartup(anno <= annoUltimoStartup(profilo.annoApertura))
-    setPrimoAnno(numeroAnnoAttivita(profilo.annoApertura, anno) === 1)
-    setVersati(reale.versatiContributiCents > 0 ? centsInInput(reale.versatiContributiCents) : '')
+    setStartup(annoCorrente <= annoUltimoStartup(profilo.annoApertura))
+    setPrimoAnno(numeroAnnoAttivita(profilo.annoApertura, annoCorrente) === 1)
+    setVersati('')
   }
 
   return (
@@ -59,7 +108,7 @@ export function Simulatore({ profilo, fatture }: { profilo: Profilo | null; fatt
       </div>
 
       <IntestazionePagina
-        titolo={`Simulatore forfettario ${anno}`}
+        titolo={`Simulatore forfettario ${annoSimulato}`}
         extra={
           <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
             ⏈ Sandbox
@@ -87,6 +136,19 @@ export function Simulatore({ profilo, fatture }: { profilo: Profilo | null; fatt
       </IntestazionePagina>
 
       <div className="grid gap-3 rounded-xl border border-indigo-200/70 bg-white p-4 shadow-sm sm:grid-cols-2 dark:border-indigo-900/70 dark:bg-stone-900">
+        {profilo && (
+          <label className="text-sm">
+            Anno simulato
+            <select value={annoSimulato} onChange={(e) => cambiaAnno(Number(e.target.value))} className={campo}>
+              {anni.map((a) => (
+                <option key={a} value={a}>
+                  {a}
+                  {a === annoCorrente ? ' (in corso)' : a > annoCorrente ? ' (futuro)' : ''}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <label className="text-sm">
           Incassato nell'anno (€)
           <input value={incassato} onChange={(e) => setIncassato(e.target.value)} className={campo} />
@@ -105,24 +167,49 @@ export function Simulatore({ profilo, fatture }: { profilo: Profilo | null; fatt
             ))}
           </select>
         </label>
-        <label className="text-sm">
-          Contributi versati nell'anno (€, facoltativo)
-          <input
-            value={primoAnno ? '' : versati}
-            onChange={(e) => setVersati(e.target.value)}
-            placeholder="0"
-            disabled={primoAnno}
-            className={`${campo} disabled:opacity-50`}
-          />
-          <span className="mt-1 block text-xs text-stone-500">
-            Vuoto = niente da dedurre: è lo scenario più prudente.
-          </span>
-        </label>
-        <div className="flex flex-col justify-center gap-2 text-sm">
-          <label className="flex items-center gap-2">
-            <input type="checkbox" checked={primoAnno} onChange={(e) => setPrimoAnno(e.target.checked)} />
-            Primo anno di attività (nulla da dedurre)
+        {concatenaAttiva ? (
+          <div className="text-sm">
+            Contributi versati nell'anno (derivati)
+            <div className={`${campo} bg-stone-100 tabular-nums dark:bg-stone-800`}>
+              {risultato ? formatEuro(risultato.versatiContributiCents) : '—'}
+            </div>
+            <span className="mt-1 block text-xs text-stone-500">
+              Saldi e acconti che pagheresti davvero, dalla catena reale fino al {annoSimulato - 1}.
+            </span>
+          </div>
+        ) : (
+          <label className="text-sm">
+            Contributi versati nell'anno (€, facoltativo)
+            <input
+              value={primoAnno ? '' : versati}
+              onChange={(e) => setVersati(e.target.value)}
+              placeholder="0"
+              disabled={primoAnno}
+              className={`${campo} disabled:opacity-50`}
+            />
+            <span className="mt-1 block text-xs text-stone-500">
+              Vuoto = niente da dedurre: è lo scenario più prudente.
+            </span>
           </label>
+        )}
+        <div className="flex flex-col justify-center gap-2 text-sm">
+          {concatenabile && (
+            <label className="flex items-center gap-2">
+              <input type="checkbox" checked={concatena} onChange={(e) => setConcatena(e.target.checked)} />
+              Concatena i miei dati fino al {annoSimulato - 1}
+            </label>
+          )}
+          {concatenaAttiva && annoSimulato === annoCorrente + 1 && (
+            <span className="text-xs text-stone-500">
+              La catena usa il {annoCorrente} così com'è oggi (anno in corso).
+            </span>
+          )}
+          {!concatenaAttiva && (
+            <label className="flex items-center gap-2">
+              <input type="checkbox" checked={primoAnno} onChange={(e) => setPrimoAnno(e.target.checked)} />
+              Primo anno di attività (nulla da dedurre)
+            </label>
+          )}
           <label className="flex items-center gap-2">
             <input type="checkbox" checked={startup} onChange={(e) => setStartup(e.target.checked)} />
             Aliquota startup 5% (primi 5 anni; altrimenti 15%)
@@ -151,6 +238,14 @@ export function Simulatore({ profilo, fatture }: { profilo: Profilo | null; fatt
         <p className="text-sm text-red-600">Importo non valido: usa il formato 1.234,56</p>
       )}
 
+      {avvisi.length > 0 && (
+        <ul className="space-y-1 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
+          {avvisi.map((avviso) => (
+            <li key={avviso.codice + avviso.messaggio}>⚠️ {avviso.messaggio}</li>
+          ))}
+        </ul>
+      )}
+
       {risultato && (
         <>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -173,7 +268,7 @@ export function Simulatore({ profilo, fatture }: { profilo: Profilo | null; fatt
                 Flusso dello scenario — non è il tuo registro
               </span>
             </p>
-            <Flusso explain={risultato.explain} anno={anno} livrea="sim" />
+            <Flusso explain={risultato.explain} anno={annoSimulato} livrea="sim" />
           </section>
         </>
       )}

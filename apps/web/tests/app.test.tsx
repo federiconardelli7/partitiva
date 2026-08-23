@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
 import 'fake-indexeddb/auto'
+import { computeTimeline } from '@partitiva/motore-fiscale'
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { App } from '../src/App'
 import { db } from '../src/db'
-import { paramsVicini } from '../src/lib/bilancio'
-import { formatEuroIntero, oggiIso } from '../src/lib/format'
+import { buildTimelineInputs, paramsVicini } from '../src/lib/bilancio'
+import { formatEuro, formatEuroIntero, oggiIso, parseImportoIt } from '../src/lib/format'
 
 const PROFILO = { id: 1, annoApertura: 2025, ateco: '62.02.00', coefficiente: 0.67, copertura: 'piena' as const }
 const ANNO = Number(oggiIso().slice(0, 4))
@@ -13,6 +14,7 @@ const ANNO = Number(oggiIso().slice(0, 4))
 beforeEach(async () => {
   await db.profilo.clear()
   await db.fatture.clear()
+  await db.riepiloghi.clear()
   window.history.pushState({}, '', '/')
 })
 afterEach(cleanup)
@@ -93,6 +95,28 @@ describe('App — I miei dati come hub della sorgente', () => {
   })
 })
 
+describe('App — riepiloghi annuali (pregresso)', () => {
+  it('col totale 2025 senza fatture, la Panoramica del 2025 dichiara il pregresso', async () => {
+    await db.profilo.put(PROFILO)
+    await db.riepiloghi.put({ anno: 2025, incassatoCents: 1_000_000, bolliCents: 0 })
+    render(<App />)
+    fireEvent.click(await screen.findByRole('button', { name: '2025' }))
+    expect(await screen.findByText(/include pregresso/i)).toBeTruthy()
+  })
+
+  it('da «I miei dati» salvo un riepilogo annuale senza toccare le fatture', async () => {
+    await db.profilo.put(PROFILO)
+    window.history.pushState({}, '', '/dati')
+    render(<App />)
+    const incassato = (await screen.findByLabelText(/Totale incassato/i)) as HTMLInputElement
+    fireEvent.change(incassato, { target: { value: '12.000,00' } })
+    fireEvent.click(screen.getByRole('button', { name: /Salva riepilogo/i }))
+    await expect.poll(async () => (await db.riepiloghi.toArray()).length).toBe(1)
+    expect((await db.riepiloghi.get(2025))?.incassatoCents).toBe(1_200_000)
+    expect(await db.fatture.count()).toBe(0)
+  })
+})
+
 describe('App — redirect delle rotte vecchie', () => {
   it('/registro → hub I miei dati', async () => {
     await db.profilo.put(PROFILO)
@@ -142,6 +166,75 @@ describe('App — Simulatore sandbox', () => {
     render(<App />)
     fireEvent.click(await screen.findByText(/Parti dai tuoi dati/i))
     expect((screen.getByLabelText(/Incassato nell/i) as HTMLInputElement).value).toBe('2.500,00')
+  })
+
+  it('concatena: i versati escono dalla catena reale, senza campo manuale', async () => {
+    await db.profilo.put(PROFILO)
+    const riepilogo = { anno: 2025, incassatoCents: 3_000_000, bolliCents: 0 }
+    await db.riepiloghi.put(riepilogo)
+    window.history.pushState({}, '', '/simulatore')
+    render(<App />)
+    const anno = (await screen.findByLabelText(/Anno simulato/i)) as HTMLSelectElement
+    fireEvent.change(anno, { target: { value: String(ANNO) } })
+    fireEvent.click(screen.getByLabelText(/Concatena i miei dati/i))
+    // il valore atteso lo dice il motore, non un numero a mano
+    const attesi = computeTimeline([
+      ...buildTimelineInputs(PROFILO, [], [riepilogo], ANNO - 1),
+      {
+        anno: ANNO,
+        incassatoCents: parseImportoIt('30.000')!,
+        coefficiente: 0.67,
+        startup: true,
+        copertura: 'piena',
+        bolliCents: 0,
+      },
+    ]).anni[ANNO]!.versatiContributiCents
+    expect(attesi).toBeGreaterThan(0)
+    const valore = formatEuro(attesi)
+    const conValore = (await screen.findAllByText(
+      (_, el) => el !== null && el.children.length === 0 && el.textContent === valore,
+    )) as HTMLElement[]
+    expect(conValore.length).toBeGreaterThan(0)
+    expect(screen.getByText(/deducibili/i)).toBeTruthy()
+    expect(screen.queryByLabelText(/Contributi versati nell/i)).toBeNull()
+    expect(screen.queryByLabelText(/Primo anno/i)).toBeNull()
+  })
+
+  it('l’anno simulato arriva a corrente+1 e la catena avvisa che usa l’anno in corso', async () => {
+    await db.profilo.put(PROFILO)
+    window.history.pushState({}, '', '/simulatore')
+    render(<App />)
+    const anno = (await screen.findByLabelText(/Anno simulato/i)) as HTMLSelectElement
+    expect(Array.from(anno.options).map((o) => o.value)).toContain(String(ANNO + 1))
+    fireEvent.change(anno, { target: { value: String(ANNO + 1) } })
+    fireEvent.click(screen.getByLabelText(/Concatena i miei dati/i))
+    expect(await screen.findByText(new RegExp(`usa il ${ANNO} così com'è oggi`, 'i'))).toBeTruthy()
+  })
+
+  it('un anno senza params dichiara il ripiego, in catena E in manuale', async () => {
+    await db.profilo.put(PROFILO)
+    window.history.pushState({}, '', '/simulatore')
+    render(<App />)
+    const anno = (await screen.findByLabelText(/Anno simulato/i)) as HTMLSelectElement
+    fireEvent.change(anno, { target: { value: String(ANNO + 1) } })
+    // ramo manuale (concatena spenta): l'avviso deve esserci comunque
+    expect((await screen.findAllByText(/non ancora disponibili/i)).length).toBeGreaterThan(0)
+    // ramo concatenato: i flag arrivano dal motore e non vanno buttati
+    // (possono essere più d'uno: la timeline compone anche l'F24 dell'anno dopo)
+    fireEvent.click(screen.getByLabelText(/Concatena i miei dati/i))
+    expect((await screen.findAllByText(/non ancora disponibili/i)).length).toBeGreaterThan(0)
+    // manuale sull'anno corrente: nessun avviso fantasma
+    fireEvent.click(screen.getByLabelText(/Concatena i miei dati/i))
+    fireEvent.change(screen.getByLabelText(/Anno simulato/i), { target: { value: String(ANNO) } })
+    expect(screen.queryAllByText(/non ancora disponibili/i)).toHaveLength(0)
+  })
+
+  it('senza profilo niente anno simulato né concatena', async () => {
+    window.history.pushState({}, '', '/simulatore')
+    render(<App />)
+    await screen.findByText(/qui non si salva niente/i)
+    expect(screen.queryByLabelText(/Anno simulato/i)).toBeNull()
+    expect(screen.queryByLabelText(/Concatena/i)).toBeNull()
   })
 
   it('il Simulatore non scrive mai su Dexie', async () => {

@@ -27,12 +27,36 @@ export const fatturaRecordSchema = z.object({
   descrizione: z.string(),
 })
 
-export const backupSchema = z.object({
+export const riepilogoRecordSchema = z.object({
+  anno: z.number().int().min(ANNO_MINIMO_PARAMS).max(new Date().getFullYear()),
+  incassatoCents: z.number().int().nonnegative(),
+  bolliCents: z.number().int().nonnegative(),
+})
+
+const backupV1Schema = z.object({
   schemaVersion: z.literal(1),
   esportatoIl: z.string(),
   profilo: profiloSchema.nullable(),
   fatture: z.array(fatturaRecordSchema),
 })
+
+const backupV2Schema = z.object({
+  schemaVersion: z.literal(2),
+  esportatoIl: z.string(),
+  profilo: profiloSchema.nullable(),
+  fatture: z.array(fatturaRecordSchema),
+  riepiloghi: z.array(riepilogoRecordSchema),
+})
+
+/** v2 attuale; i backup v1 (pre-riepiloghi) si importano ancora e diventano v2. */
+export const backupSchema = z.union([
+  backupV2Schema,
+  backupV1Schema.transform((v1) => ({
+    ...v1,
+    schemaVersion: 2 as const,
+    riepiloghi: [] as z.infer<typeof riepilogoRecordSchema>[],
+  })),
+])
 
 export const profiloFormSchema = z.object({
   annoApertura: z.coerce
@@ -49,6 +73,16 @@ export const profiloFormSchema = z.object({
     .min(0.01, 'Scegli il settore o inserisci il codice ATECO')
     .max(1),
   copertura: z.enum(['piena', 'ridotta']),
+})
+
+export const riepilogoFormSchema = z.object({
+  anno: z.coerce
+    .number()
+    .int()
+    .min(ANNO_MINIMO_PARAMS)
+    .max(new Date().getFullYear(), 'Il futuro si simula, non si registra'),
+  incassato: z.string().refine((v) => parseImportoIt(v) !== null, 'Importo non valido (es. 10.000,00)'),
+  bolli: z.string().refine((v) => v.trim() === '' || parseImportoIt(v) !== null, 'Importo non valido (es. 24,00)'),
 })
 
 export const fatturaFormSchema = z

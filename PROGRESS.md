@@ -3,6 +3,41 @@
 > Una voce per sessione: fatto, decisioni, next steps, blocchi. Le ultime 2 voci si leggono
 > all'inizio di ogni sessione (vedi CLAUDE.md).
 
+## 2026-08-22 — S6 Riepiloghi annuali e simulatore concatenato
+
+**Fatto**
+- **Riepiloghi annuali («pregresso»)** su richiesta di Federico ("non voglio ricostruire il
+  2025 fattura per fattura"): nuova tabella Dexie v2 `riepiloghi` (chiave `anno`), sezione
+  dedicata in «I miei dati» (form RHF+zod, anni da apertura a corrente, elimina con
+  conferma, avviso sui riepiloghi orfani pre-apertura). Il pregresso si **SOMMA** alle
+  fatture dell'anno in `buildTimelineInputs` (solo adattamento dati: le regole restano nel
+  motore); la Panoramica mostra «include pregresso X» e le pillole coprono anche gli anni
+  solo-riepilogo. Backup `schemaVersion: 2` con riepiloghi; i v1 si importano ancora
+  (union+transform zod, testato).
+- **Simulatore concatenato**: select «anno simulato» (apertura → corrente+1, solo col
+  profilo) e spunta «Concatena i miei dati fino a Y−1»: lo scenario passa da `computeAnno`
+  a `computeTimeline([anni reali, scenario])` e i **versati deducibili diventano derivati**
+  (campo sola-lettura coi saldi+acconti veri della catena, riepiloghi inclusi); nota
+  esplicita quando la catena usa l'anno in corso. «Parti dai tuoi dati» ora attiva la
+  concatenazione. Senza profilo tutto invariato (sandbox manuale).
+- TDD: 148 test verdi (18 nuovi: schemi/backup v1→v2, somma pregresso, mount riepiloghi,
+  catena derivata col valore atteso calcolato dal motore nel test). `pnpm verify` verde.
+- **Review (code-reviewer): 2 blocchi, corretti in TDD**: (1) simulando un anno senza params
+  il ripiego era silenzioso — ora il Simulatore mostra i flag del motore nel ramo concatenato
+  (anche più d'uno: la timeline compone l'F24 dell'anno dopo) e sintetizza lo stesso avviso
+  nel ramo manuale (`annoParamsVicini` estratto in lib); (2) l'esclusione dei riepiloghi
+  orfani (anno < apertura) promessa dalla UI ora è inchiodata da un test dedicato.
+
+**Decisioni**: pregresso = somma (mai sostituzione) così l'anno ibrido "aggregato + fatture
+nuove" funziona; anni registrabili solo fino al corrente (il futuro si simula); un riepilogo
+per anno, risalvare sovrascrive.
+
+**Next steps (S7)**: spese + export CSV (ex S6); poi S8 parser PDF. Backlog: select settori
+con value duplicati al 40% (Wizard/Simulatore), messaggio import backup che nomini l'anno,
+«tra 0 giorni» sull'F24 odierno.
+
+**Blocchi/aperture**: invariati (GU DL 89/2026, soglie GS, mapping ATECO 2025, quadro RR).
+
 ## 2026-08-22 — S5 Redesign IA: Panoramica, Simulatore, I miei dati
 
 **Fatto**

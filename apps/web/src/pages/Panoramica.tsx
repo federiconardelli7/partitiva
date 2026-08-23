@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { ExplainTree } from '../components/ExplainTree'
 import { Flusso } from '../components/Flusso'
 import { IntestazionePagina } from '../components/IntestazionePagina'
-import type { Fattura, Profilo } from '../db'
+import type { Fattura, Profilo, RiepilogoAnnuale } from '../db'
 import {
   annoDi,
   annoUltimoStartup,
@@ -14,26 +14,36 @@ import {
   numeroAnnoAttivita,
   paramsVicini,
   prossimoF24,
+  riepilogoDi,
 } from '../lib/bilancio'
 import { formatDataIt, formatEuro, formatEuroIntero, oggiIso } from '../lib/format'
 
 const chip = 'rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-medium text-stone-600 dark:bg-stone-800 dark:text-stone-300'
 const card = 'rounded-xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900'
 
-/** La vista d'insieme: SOLO dati derivati dal registro, niente input. */
-export function Panoramica({ profilo, fatture }: { profilo: Profilo; fatture: Fattura[] }) {
+/** La vista d'insieme: SOLO dati derivati dalla sorgente, niente input. */
+export function Panoramica({
+  profilo,
+  fatture,
+  riepiloghi,
+}: {
+  profilo: Profilo
+  fatture: Fattura[]
+  riepiloghi: RiepilogoAnnuale[]
+}) {
   const oggi = oggiIso()
   const annoCorrente = annoDi(oggi)
   const annoMassimo = Math.max(
     annoCorrente,
     ...fatture.map((f) => annoDi(f.dataEmissione)),
     ...fatture.filter((f) => f.dataIncasso !== null).map((f) => annoDi(f.dataIncasso!)),
+    ...riepiloghi.map((r) => r.anno),
   )
   const [anno, setAnno] = useState(annoCorrente)
   const [nodoAttivo, setNodoAttivo] = useState<NodeId | null>(null)
   const timeline = useMemo(
-    () => computeTimeline(buildTimelineInputs(profilo, fatture, annoMassimo)),
-    [profilo, fatture, annoMassimo],
+    () => computeTimeline(buildTimelineInputs(profilo, fatture, riepiloghi, annoMassimo)),
+    [profilo, fatture, riepiloghi, annoMassimo],
   )
   const risultato = timeline.anni[anno]
   if (!risultato) return null
@@ -149,7 +159,14 @@ export function Panoramica({ profilo, fatture }: { profilo: Profilo; fatture: Fa
 
       <section className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm sm:p-7 dark:border-stone-800 dark:bg-stone-900">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <h3 className="text-sm font-semibold">Il flusso del tuo anno</h3>
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-sm font-semibold">Il flusso del tuo anno</h3>
+            {riepilogoDi(riepiloghi, anno) && (
+              <span className={chip}>
+                include pregresso {formatEuro(riepilogoDi(riepiloghi, anno)!.incassatoCents)}
+              </span>
+            )}
+          </div>
           <div className="flex gap-2">
             {anni.map((a) => (
               <button

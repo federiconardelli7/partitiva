@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { backupSchema, fatturaFormSchema, profiloFormSchema } from '../src/lib/schemi'
+import {
+  backupSchema,
+  fatturaFormSchema,
+  profiloFormSchema,
+  riepilogoFormSchema,
+  riepilogoRecordSchema,
+} from '../src/lib/schemi'
 
 describe('schema del profilo (wizard) — ATECO facoltativo, settore obbligatorio', () => {
   const base = { annoApertura: '2025', copertura: 'piena' }
@@ -57,8 +63,49 @@ describe('schema del backup JSON', () => {
     expect(esito.success).toBe(true)
   })
 
-  it('rifiuta schemaVersion sconosciute e strutture arbitrarie', () => {
+  it('rifiuta schemaVersion sconosciute, v2 malformate e strutture arbitrarie', () => {
+    expect(backupSchema.safeParse({ schemaVersion: 3, fatture: [] }).success).toBe(false)
     expect(backupSchema.safeParse({ schemaVersion: 2, fatture: [] }).success).toBe(false)
     expect(backupSchema.safeParse({ qualcosa: 'altro' }).success).toBe(false)
+  })
+})
+
+describe('schema dei riepiloghi annuali (pregresso)', () => {
+  const ANNO_CORRENTE = new Date().getFullYear()
+
+  it('riepilogo valido: anno coperto dai params e importi non negativi', () => {
+    expect(riepilogoRecordSchema.safeParse({ anno: 2025, incassatoCents: 1_000_000, bolliCents: 400 }).success).toBe(true)
+  })
+
+  it('anno futuro o pre-params → errore (il futuro si simula, non si registra)', () => {
+    expect(riepilogoRecordSchema.safeParse({ anno: ANNO_CORRENTE + 1, incassatoCents: 0, bolliCents: 0 }).success).toBe(false)
+    expect(riepilogoRecordSchema.safeParse({ anno: 2019, incassatoCents: 0, bolliCents: 0 }).success).toBe(false)
+  })
+
+  it('importi negativi rifiutati; il form accetta importi italiani e bolli facoltativi', () => {
+    expect(riepilogoRecordSchema.safeParse({ anno: 2025, incassatoCents: -1, bolliCents: 0 }).success).toBe(false)
+    expect(riepilogoFormSchema.safeParse({ anno: '2025', incassato: '10.000,00', bolli: '' }).success).toBe(true)
+    expect(riepilogoFormSchema.safeParse({ anno: '2025', incassato: 'abc', bolli: '' }).success).toBe(false)
+  })
+
+  it('un backup v1 importato diventa v2 con riepiloghi vuoti', () => {
+    const esito = backupSchema.safeParse({ schemaVersion: 1, esportatoIl: '2026-08-22', profilo: null, fatture: [] })
+    expect(esito.success).toBe(true)
+    if (esito.success) {
+      expect(esito.data.schemaVersion).toBe(2)
+      expect(esito.data.riepiloghi).toEqual([])
+    }
+  })
+
+  it('un backup v2 con riepiloghi passa e li conserva', () => {
+    const esito = backupSchema.safeParse({
+      schemaVersion: 2,
+      esportatoIl: '2026-08-22',
+      profilo: null,
+      fatture: [],
+      riepiloghi: [{ anno: 2025, incassatoCents: 1_000_000, bolliCents: 0 }],
+    })
+    expect(esito.success).toBe(true)
+    if (esito.success) expect(esito.data.riepiloghi).toHaveLength(1)
   })
 })

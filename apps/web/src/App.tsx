@@ -20,8 +20,9 @@ export function App() {
 function Shell() {
   const profiloQuery = useLiveQuery(() => db.profilo.get(1), [], CARICAMENTO)
   const fatture = useLiveQuery(() => db.fatture.orderBy('dataEmissione').reverse().toArray(), [], CARICAMENTO)
+  const riepiloghi = useLiveQuery(() => db.riepiloghi.orderBy('anno').toArray(), [], CARICAMENTO)
 
-  if (profiloQuery === CARICAMENTO || fatture === CARICAMENTO) return null
+  if (profiloQuery === CARICAMENTO || fatture === CARICAMENTO || riepiloghi === CARICAMENTO) return null
   const profilo: Profilo | null = profiloQuery ?? null
 
   // Nav profile-aware: senza profilo l'app invita (Simulatore / Inizia), col profilo orienta.
@@ -69,9 +70,12 @@ function Shell() {
 
       <main className="mx-auto max-w-4xl px-4 py-6">
         <Routes>
-          <Route path="/" element={profilo ? <Panoramica profilo={profilo} fatture={fatture} /> : <Landing />} />
-          <Route path="/simulatore" element={<Simulatore profilo={profilo} fatture={fatture} />} />
-          <Route path="/dati" element={<Dati profilo={profilo} fatture={fatture} />} />
+          <Route
+            path="/"
+            element={profilo ? <Panoramica profilo={profilo} fatture={fatture} riepiloghi={riepiloghi} /> : <Landing />}
+          />
+          <Route path="/simulatore" element={<Simulatore profilo={profilo} fatture={fatture} riepiloghi={riepiloghi} />} />
+          <Route path="/dati" element={<Dati profilo={profilo} fatture={fatture} riepiloghi={riepiloghi} />} />
           <Route path="/registro" element={<Navigate to="/dati" replace />} />
           <Route path="/profilo" element={<Navigate to="/dati" replace />} />
           <Route path="/bilancio" element={<Navigate to="/" replace />} />

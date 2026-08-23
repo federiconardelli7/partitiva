@@ -22,15 +22,27 @@ export interface Fattura {
   descrizione: string
 }
 
+/** Totale annuo NON tracciato a fatture («pregresso»): si somma alle fatture dell'anno. */
+export interface RiepilogoAnnuale {
+  /** Chiave primaria: un riepilogo per anno. */
+  anno: number
+  incassatoCents: number
+  bolliCents: number
+}
+
 class PartitivaDb extends Dexie {
   profilo!: Table<Profilo, number>
   fatture!: Table<Fattura, number>
+  riepiloghi!: Table<RiepilogoAnnuale, number>
 
   constructor() {
     super('partitiva')
     this.version(1).stores({
       profilo: 'id',
       fatture: '++id, dataEmissione, dataIncasso',
+    })
+    this.version(2).stores({
+      riepiloghi: 'anno',
     })
   }
 }

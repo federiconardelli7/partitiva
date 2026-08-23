@@ -33,13 +33,18 @@ governa la propria P.IVA — dalla fattura all'F24 spiegato — senza che i dati
   e prefill esplicito, hub **«I miei dati»** (fatture + import XML, profilo, backup). Landing
   di presentazione per chi non ha profilo; redirect dalle rotte vecchie; glossario in
   `CONTEXT.md`.
-- **S6 — Spese e bollo**: registro spese (non deducibili nel forfettario: il tool lo dice
+- ✅ **S6 — Riepiloghi annuali e simulatore concatenato** (22/08/2026): totale annuo senza
+  fatture («pregresso», sommato alle fatture dello stesso anno) come nuova voce della
+  sorgente, con backup `schemaVersion: 2` retro-compatibile; Simulatore con **anno simulato**
+  (da apertura a corrente+1) e modalità **concatenata**: versati deducibili derivati dalla
+  catena reale via `computeTimeline`, non più inseriti a mano.
+- **S7 — Spese e bollo**: registro spese (non deducibili nel forfettario: il tool lo dice
   chiaramente); bollo automatico 2,00 € sopra 77,47 € con override e confronto con `DatiBollo`;
   export/import JSON completo (backup) e export CSV dei registri.
-- **S7 — Parser PDF**: estrazione testo (pdf.js) + euristiche per layout "foglio di stile SdI" +
+- **S8 — Parser PDF**: estrazione testo (pdf.js) + euristiche per layout "foglio di stile SdI" +
   **form di revisione obbligatorio** prima di ogni salvataggio; degradazione a inserimento manuale
   per scansioni.
-- **S8 — Hardening**: mobile/a11y, PWA installabile, deploy Vercel, onboarding documentato.
+- **S9 — Hardening**: mobile/a11y, PWA installabile, deploy Vercel, onboarding documentato.
 
 ## Post-MVP
 
