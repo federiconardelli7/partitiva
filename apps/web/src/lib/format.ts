@@ -50,6 +50,15 @@ export function parseImportoIt(testo: string): number | null {
   return Math.round(valore * 100)
 }
 
+/** Da centesimi a testo per gli input (1.234,56): il percorso inverso è parseImportoIt. */
+export function centsInInput(cents: number): string {
+  return (cents / 100).toLocaleString('it-IT', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+    useGrouping: 'always',
+  })
+}
+
 /** Data LOCALE in ISO (yyyy-mm-dd): mai UTC, o a mezzanotte italiana si scriverebbe ieri. */
 export function oggiIso(adesso: Date = new Date()): string {
   const mese = String(adesso.getMonth() + 1).padStart(2, '0')

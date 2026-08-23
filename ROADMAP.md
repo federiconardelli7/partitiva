@@ -44,9 +44,11 @@ governa la propria P.IVA — dalla fattura all'F24 spiegato — senza che i dati
   `DatiBollo` era già in S4); export **CSV** di fatture e spese (Excel italiano: «;»,
   virgola decimale, BOM). Backup `schemaVersion: 3` con spese; v1/v2 ancora importabili;
   riepiloghi con anni duplicati ora rifiutati.
-- **S8 — Parser PDF**: estrazione testo (pdf.js) + euristiche per layout "foglio di stile SdI" +
-  **form di revisione obbligatorio** prima di ogni salvataggio; degradazione a inserimento manuale
-  per scansioni.
+- ✅ **S8 — Parser PDF** (23/08/2026): euristiche pure sul testo del foglio di stile SdI in
+  `parser-fatture` (`estraiCampiPdf`: numero/data/totale/tipologia, best effort);
+  estrazione testo con pdf.js nell'app (glue browser-only, caricato al click); **revisione
+  obbligatoria per costruzione**: il PDF precompila il form «Nuova fattura», mai Dexie;
+  scansioni senza testo → avviso e inserimento manuale; TD ≠ TD01 → mai come ricavo.
 - **S9 — Hardening**: mobile/a11y, PWA installabile, deploy Vercel, onboarding documentato.
 
 ## Post-MVP

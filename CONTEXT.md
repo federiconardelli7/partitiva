@@ -24,5 +24,8 @@ vivono in `docs/ADR/`, le regole fiscali (con fonti) in `docs/regole-fiscali.md`
 - **Spese** — uscite NON deducibili (nel forfettario il coefficiente le forfetizza): si
   registrano solo per il **netto reale** (netto di competenza − bolli − spese), per anno
   di cassa della loro data. Mai chiamarle «deducibili».
+- **Revisione PDF** — l'import da PDF è un *suggerimento*, mai un salvataggio: le
+  euristiche precompilano il form «Nuova fattura» e l'utente controlla e salva. Un PDF
+  senza testo (scansione) degrada a inserimento manuale con avviso.
 - **Reale vs simulazione** — l'emerald marca i dati veri, l'indaco la simulazione: un
   colore, un significato, in tutta l'app.

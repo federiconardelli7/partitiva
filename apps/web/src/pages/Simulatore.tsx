@@ -13,18 +13,10 @@ import {
   numeroAnnoAttivita,
   paramsVicini,
 } from '../lib/bilancio'
-import { formatEuro, formatPercento, oggiIso, parseImportoIt } from '../lib/format'
+import { centsInInput, formatEuro, formatPercento, oggiIso, parseImportoIt } from '../lib/format'
 
 const campo =
   'mt-1 w-full rounded-md border border-stone-300 px-3 py-2 dark:border-stone-700 dark:bg-stone-800'
-
-/** Da centesimi a testo per gli input (1.234,56): il percorso inverso è parseImportoIt. */
-const centsInInput = (cents: number): string =>
-  (cents / 100).toLocaleString('it-IT', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-    useGrouping: 'always',
-  })
 
 /** Sandbox: uno scenario alla volta, mai scritture su Dexie. */
 export function Simulatore({

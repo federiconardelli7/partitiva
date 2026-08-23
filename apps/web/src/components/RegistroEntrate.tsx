@@ -1,12 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { bolloPerFattura, cents } from '@partitiva/motore-fiscale'
-import { parseFatturaFile } from '@partitiva/parser-fatture'
-import { useRef } from 'react'
+import { estraiCampiPdf, parseFatturaFile } from '@partitiva/parser-fatture'
+import { useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { db, type Fattura } from '../db'
 import { annoDi, paramsVicini } from '../lib/bilancio'
-import { formatDataIt, formatEuro, oggiIso, parseImportoIt } from '../lib/format'
+import { centsInInput, formatDataIt, formatEuro, oggiIso, parseImportoIt } from '../lib/format'
 
 import { fatturaFormSchema } from '../lib/schemi'
 
@@ -54,6 +54,7 @@ export function RegistroEntrate({ fatture }: { fatture: Fattura[] }) {
       descrizione: parsed.descrizione,
     })
     reset({ ...values, numero: '', importo: '', bollo: '', descrizione: '' })
+    setAvvisoPdf(null)
   })
 
   const segnaIncassata = (fattura: Fattura) => db.fatture.update(fattura.id!, { dataIncasso: oggiIso() })
@@ -62,6 +63,42 @@ export function RegistroEntrate({ fatture }: { fatture: Fattura[] }) {
   }
 
   const inputFile = useRef<HTMLInputElement>(null)
+  const inputPdf = useRef<HTMLInputElement>(null)
+  const [avvisoPdf, setAvvisoPdf] = useState<{ titolo: string; avvisi: string[] } | null>(null)
+
+  // Il PDF non salva MAI da solo: precompila il form e l'utente rivede prima di «Aggiungi».
+  const importaPdf = async (file: File) => {
+    try {
+      const { estraiRighePdf } = await import('../lib/pdf')
+      const righe = await estraiRighePdf(new Uint8Array(await file.arrayBuffer()))
+      const estratto = estraiCampiPdf(righe)
+      if (estratto.tipoDocumento && estratto.tipoDocumento !== 'TD01') {
+        setAvvisoPdf({ titolo: `${file.name}: non importata`, avvisi: estratto.avvisi })
+        return
+      }
+      reset({
+        numero: estratto.numero ?? '',
+        dataEmissione: estratto.data ?? oggiIso(),
+        importo: estratto.importoTotaleCents !== null ? centsInInput(estratto.importoTotaleCents) : '',
+        bollo: '',
+        descrizione: '',
+        incassata: false,
+        dataIncasso: oggiIso(),
+      })
+      setAvvisoPdf({
+        titolo: estratto.affidabile
+          ? `${file.name}: campi estratti — controllali prima di salvare`
+          : `${file.name}: estrazione parziale — completa i campi e controllali prima di salvare`,
+        avvisi: estratto.avvisi,
+      })
+    } catch {
+      setAvvisoPdf({
+        titolo: `${file.name}: PDF non leggibile — inserisci i dati a mano`,
+        avvisi: ['Il file non è un PDF valido o non contiene testo estraibile.'],
+      })
+    }
+  }
+
   const importaFile = async (files: FileList) => {
     const esiti: string[] = []
     const esistenti = new Set(fatture.map((f) => `${annoDi(f.dataEmissione)}:${f.numero}`))
@@ -113,16 +150,26 @@ export function RegistroEntrate({ fatture }: { fatture: Fattura[] }) {
         onSubmit={onSubmit}
         className="grid gap-3 rounded-xl border border-stone-200 bg-white p-4 shadow-sm sm:grid-cols-2 dark:border-stone-800 dark:bg-stone-900"
       >
-        <div className="flex items-center justify-between sm:col-span-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 sm:col-span-2">
           <h2 className="text-sm font-semibold">Nuova fattura</h2>
-          <button
-            type="button"
-            onClick={() => inputFile.current?.click()}
-            className="rounded-md border border-emerald-700 px-3 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950"
-            title="Carica fatture elettroniche XML FatturaPA, anche in busta .p7m"
-          >
-            ⬆ Importa XML / p7m
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => inputPdf.current?.click()}
+              className="rounded-md border border-stone-300 px-3 py-1 text-xs font-medium text-stone-600 hover:bg-stone-100 dark:border-stone-700 dark:text-stone-300 dark:hover:bg-stone-800"
+              title="Estrae numero, data e totale dal PDF: tu controlli e salvi"
+            >
+              ⬆ Importa PDF (con revisione)
+            </button>
+            <button
+              type="button"
+              onClick={() => inputFile.current?.click()}
+              className="rounded-md border border-emerald-700 px-3 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950"
+              title="Carica fatture elettroniche XML FatturaPA, anche in busta .p7m"
+            >
+              ⬆ Importa XML / p7m
+            </button>
+          </div>
           <input
             ref={inputFile}
             type="file"
@@ -134,6 +181,29 @@ export function RegistroEntrate({ fatture }: { fatture: Fattura[] }) {
               e.target.value = ''
             }}
           />
+          <input
+            ref={inputPdf}
+            type="file"
+            accept=".pdf"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (file) void importaPdf(file)
+              e.target.value = ''
+            }}
+          />
+          {avvisoPdf && (
+            <div className="w-full rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 sm:col-span-2 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
+              <p className="font-semibold">📄 {avvisoPdf.titolo}</p>
+              {avvisoPdf.avvisi.length > 0 && (
+                <ul className="mt-1 list-inside list-disc">
+                  {avvisoPdf.avvisi.map((avviso) => (
+                    <li key={avviso}>{avviso}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
         </div>
         <label className="text-sm">
           Numero

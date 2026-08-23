@@ -3,6 +3,45 @@
 > Una voce per sessione: fatto, decisioni, next steps, blocchi. Le ultime 2 voci si leggono
 > all'inizio di ogni sessione (vedi CLAUDE.md).
 
+## 2026-08-23 — S8 Parser PDF con revisione obbligatoria
+
+**Fatto**
+- **Euristiche pure nel package** (`parser-fatture/src/pdf-testo.ts`, `estraiCampiPdf`):
+  dal testo del foglio di stile SdI a numero/data ISO/totale/tipologia — riga-intestazione
+  («Numero documento»+«Data documento») → riga valori (numero = ultimo token utile prima
+  della data), variante «etichetta: valore», totale come ultimo importo it sulla riga (o
+  successiva), TDxx dal primo match. Best effort, mai throw; 7 test su fixture sintetiche,
+  incluse la data-esca e la scansione vuota.
+- **Deviazione dichiarata da docs/architettura.md**: pdfjs-dist NON sta nel package ma in
+  `apps/web` (`lib/pdf.ts`, glue browser-only con worker via `?url`, caricato con `import()`
+  dinamico al click → code-splitting): il package resta puro e testabile in Node, il glue
+  (25 righe senza logica) si mocka nei mount test e si verifica in produzione.
+- **Revisione obbligatoria per costruzione**: «⬆ Importa PDF (con revisione)» precompila il
+  form «Nuova fattura» (`reset()` RHF: numero, data, importo; incassata deselezionata) con
+  banner ambra e avvisi; il salvataggio resta solo il click su «Aggiungi». Scansione senza
+  testo → banner degradazione e form vuoto; **TD ≠ TD01 → nessun prefill** («non importata»).
+  Nuova dipendenza `pdfjs-dist` (prevista dall'architettura): lockfile aggiornato.
+- `centsInInput` promosso in `lib/format` (terzo uso). TDD: 170 test verdi (10 nuovi).
+
+- **Review (code-reviewer): 4 blocchi, tutti con repro, corretti in TDD**: (1) `dataIso`
+  ora valida il calendario (round-trip `Date.UTC`) — un 07/15/2026 US o un 31-02-2026 non
+  arrivano più a Dexie, scatta l'avviso; (2) intestazione con data sulla STESSA riga
+  (colonne fuse) → ramo inline ancorato alle etichette, mai pescare le date-esca dalle
+  righe dopo; (3) coperto con test il catch «PDF non leggibile»; (4) `await promise` del
+  loading task dentro il try: sul PDF illeggibile il finally spegne il worker (prima
+  restava vivo). Nota applicata: il banner si azzera dopo «Aggiungi». Il reviewer ha anche
+  verificato `vite build` (worker come asset, chunk pdf separato dal dynamic import).
+
+**Decisioni**: un PDF per volta (la revisione è per-file, l'import multiplo resta all'XML);
+niente estrazione della descrizione dal PDF (troppo rumorosa: la scrive l'utente).
+Backlog nuovo dalla review: prefill che sovrascrive un form già compilato senza avviso;
+prima riga «Totale documento» (non l'ultima) in layout multipli.
+
+**Next steps (S9)**: hardening — mobile/a11y, PWA installabile, onboarding documentato.
+Backlog: select settori al 40%, messaggio import backup con l'anno, «tra 0 giorni».
+
+**Blocchi/aperture**: invariati (GU DL 89/2026, soglie GS, mapping ATECO 2025, quadro RR).
+
 ## 2026-08-23 — S7 Spese, override bollo ed export CSV
 
 **Fatto**

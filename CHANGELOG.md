@@ -7,6 +7,12 @@ Formato: [Keep a Changelog](https://keepachangelog.com/it-IT/1.1.0/); versioning
 
 ### Added
 
+- **Import da PDF con revisione obbligatoria (S8)**: le fatture in PDF (foglio di stile
+  SdI) si importano dal registro — le euristiche del parser estraggono numero, data e
+  totale e **precompilano il form**, che l'utente rivede e salva (un PDF non scrive mai
+  nulla da solo). Le scansioni senza testo degradano a inserimento manuale con avviso;
+  le note di credito (TD ≠ TD01) non vengono mai proposte come ricavo.
+
 - **Spese, override bollo ed export CSV (S7)**: registro **spese** in «I miei dati» —
   dichiarate NON deducibili (il coefficiente le forfetizza), pesano solo sul netto reale;
   campo **Bollo (€)** sulla fattura manuale (vuoto = regola dai params, pieno = override);

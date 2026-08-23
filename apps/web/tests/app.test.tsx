@@ -2,9 +2,13 @@
 import 'fake-indexeddb/auto'
 import { bolloPerFattura, cents, computeTimeline } from '@partitiva/motore-fiscale'
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from '../src/App'
 import { db } from '../src/db'
+import { estraiRighePdf } from '../src/lib/pdf'
+
+// L'estrazione pdf.js è glue browser-only: qui si mocka, il contratto UI è ciò che conta.
+vi.mock('../src/lib/pdf', () => ({ estraiRighePdf: vi.fn() }))
 import { buildTimelineInputs, paramsVicini } from '../src/lib/bilancio'
 import { formatEuro, formatEuroIntero, oggiIso, parseImportoIt } from '../src/lib/format'
 
@@ -190,6 +194,72 @@ describe('App — spese (non deducibili: solo netto reale)', () => {
       URL.createObjectURL = originali.crea
       URL.revokeObjectURL = originali.revoca
     }
+  })
+})
+
+describe('App — import PDF con revisione obbligatoria', () => {
+  const caricaPdf = async () => {
+    window.history.pushState({}, '', '/dati')
+    render(<App />)
+    await screen.findByText(/Nuova fattura/i)
+    const input = document.querySelector('input[type="file"][accept=".pdf"]')
+    if (!(input instanceof HTMLInputElement)) throw new Error('input PDF non trovato')
+    fireEvent.change(input, {
+      target: { files: [new File(['finto'], 'fattura.pdf', { type: 'application/pdf' })] },
+    })
+  }
+
+  it('PDF leggibile → form precompilato, banner di revisione, NIENTE salvataggio automatico', async () => {
+    await db.profilo.put(PROFILO)
+    vi.mocked(estraiRighePdf).mockResolvedValue([
+      'Tipologia documento Art. 73 Numero documento Data documento Codice destinatario',
+      'TD01 (fattura) 7 15-07-2026 0000000',
+      'Totale documento 4.385,00',
+    ])
+    await caricaPdf()
+    expect(await screen.findByText(/controllali prima di salvare/i)).toBeTruthy()
+    expect((screen.getByLabelText(/^Numero/i) as HTMLInputElement).value).toBe('7')
+    expect((screen.getByLabelText(/Data emissione/i) as HTMLInputElement).value).toBe('2026-07-15')
+    expect((screen.getByLabelText(/Importo \(€\)/i) as HTMLInputElement).value).toBe('4.385,00')
+    expect((screen.getByLabelText(/Già incassata/i) as HTMLInputElement).checked).toBe(false)
+    expect(await db.fatture.count()).toBe(0) // la revisione è OBBLIGATORIA
+    fireEvent.click(screen.getByRole('button', { name: 'Aggiungi' }))
+    await expect.poll(async () => db.fatture.count()).toBe(1)
+    const salvata = (await db.fatture.toArray())[0]!
+    expect(salvata.numero).toBe('7')
+    expect(salvata.importoCents).toBe(438_500)
+    expect(salvata.dataIncasso).toBeNull()
+  })
+
+  it('scansione senza testo → banner di degradazione e form vuoto', async () => {
+    await db.profilo.put(PROFILO)
+    vi.mocked(estraiRighePdf).mockResolvedValue([])
+    await caricaPdf()
+    expect(await screen.findByText(/scansione/i)).toBeTruthy()
+    expect((screen.getByLabelText(/^Numero/i) as HTMLInputElement).value).toBe('')
+    expect(await db.fatture.count()).toBe(0)
+  })
+
+  it('PDF illeggibile (pdfjs lancia) → banner di degradazione e niente scritture', async () => {
+    await db.profilo.put(PROFILO)
+    vi.mocked(estraiRighePdf).mockRejectedValue(new Error('PDF corrotto'))
+    await caricaPdf()
+    expect(await screen.findByText(/non leggibile/i)).toBeTruthy()
+    expect(await db.fatture.count()).toBe(0)
+  })
+
+  it('TD04 → avviso e nessun prefill: mai una nota di credito come ricavo', async () => {
+    await db.profilo.put(PROFILO)
+    vi.mocked(estraiRighePdf).mockResolvedValue([
+      'Tipologia documento Numero documento Data documento',
+      'TD04 (nota di credito) 3 01-06-2026',
+      'Totale documento 500,00',
+    ])
+    await caricaPdf()
+    expect(await screen.findByText(/non importata/i)).toBeTruthy()
+    expect(screen.getByText(/TD04/)).toBeTruthy()
+    expect((screen.getByLabelText(/^Numero/i) as HTMLInputElement).value).toBe('')
+    expect(await db.fatture.count()).toBe(0)
   })
 })
 
