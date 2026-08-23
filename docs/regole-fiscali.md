@@ -137,7 +137,9 @@ modulo di gestione del regime ordinario.
 | Tetto oneri detraibili (dal 2025) | RC > 75.000: spese ammesse ≤ 14.000 (fino a 100.000) / 8.000 (oltre) × coefficiente figli 0,50/0,70/0,85/1 — è un cap sulle **SPESE**; la detrazione art. 13 ne è FUORI | art. 16-ter, c. 1-3, TUIR (L. 207/2024, c. 10); circ. AdE 6/E/2025, pp. 7-9 | ✅ 23/08/2026 |
 | Degressione detrazioni art. 15 | RC 120.000–240.000: × (240.000−RC)/120.000, zero oltre; salve le sanitarie e gli interessi sui mutui | art. 15, c. 3-bis, 3-ter e 3-quater, TUIR | ✅ 23/08/2026 |
 | Taglio alti redditi (dal 2026) | −440 € se RC > 200.000, SOLO sul monte detrazioni degli oneri 19% (escluse sanitarie) + partiti + premi calamità, a valle di tetto e degressione; clamp a zero | art. 16-ter, c. 5-bis (L. 199/2025, art. 1, c. 4) | ✅ 23/08/2026 (clamp: interpretazione dichiarata) |
-| Addizionale regionale | base 1,23%, max 3,33%; su RC al netto degli oneri deducibili; dovuta solo se l'IRPEF netta è dovuta; **unica soluzione a saldo** (niente acconto) | D.Lgs. 68/2011, art. 6; D.Lgs. 446/1997, art. 50, c. 2 e 5 | ✅ 23/08/2026 — aliquota = input utente |
+| Addizionale regionale | base 1,23%, max 3,33%; su RC al netto degli oneri deducibili; **unica soluzione a saldo** (niente acconto) | D.Lgs. 68/2011, art. 6; D.Lgs. 446/1997, art. 50, c. 2 e 5 | ✅ 23/08/2026 |
+| Addizionale regionale — **dataset per residenza** (19 regioni + Trento e Bolzano, 2025 e 2026) | struttura UFFICIALE per entità: aliquota unica o scaglioni progressivi (anche sulla griglia previgente 15k/28k/50k, lecita 2025-2028 ex art. 1, c. 727, L. 207/2024 mod. c. 649 L. 199/2025); regimi condizionali sull'**intero** importo (FVG 0,70/1,23; Lazio e Umbria sotto 28k); esenzioni a scalino (VdA ≤15k; Trento ≤30k); detrazione fissa con cliff (Bolzano 430,50 ≤90k) e a fascia (Lazio 60 €, Umbria 150 €); fuori dal 2025/2026 vale il **carry-over** dell'anno più vicino (c. 728 cit.) | portale MEF del federalismo fiscale, una pagina per entità/anno (canale legale ex art. 50, c. 3, D.Lgs. 446/1997); cross-check AdE Allegato C 730/2026 sull'intero 2025; leggi provinciali per Trento (LP 13/2019 mod. LP 5/2025 e 11/2025) e Bolzano (art. 21-sexiesdecies LP 9/1998) — fonte per entità in `params/addizionali-regionali.ts` | ✅ 23/08/2026 |
+| Debenza delle addizionali | dovute solo se l'IRPEF netta supera **10 €** | AdE, Allegato C circ. di liquidazione 730/2026 («un importo maggiore di euro 10») | ✅ 23/08/2026 |
 | Addizionale comunale | max 0,8% (+0,4 Roma Capitale); eventuale soglia di esenzione **a scalino**; acconto 30% su imponibile, aliquota e soglia dell'anno precedente | D.Lgs. 360/1998, art. 1; DL 78/2010, art. 14, c. 14; DL 138/2011, art. 1, c. 11 | ✅ 23/08/2026 — aliquota = input utente |
 | Acconti IRPEF | 100% del rigo «differenza»; non dovuti ≤ 51,65 €; **50/50 anche per l'ex-forfettario** (attività con ISA approvato, a prescindere dall'applicarlo); 40/60 solo senza ISA (1ª rata se > 103 €) | DL 76/2013, art. 11, c. 18; L. 97/1977, art. 1; DL 124/2019, art. 58 + DL 34/2019, art. 12-quinquies; ris. AdE 93/E/2019; DPR 435/2001, art. 17, c. 3 | ✅ 23/08/2026 (informativo: il confronto è di competenza) |
 | IRAP persone fisiche | mai dovuta (dal 2022) | L. 234/2021, art. 1, c. 8 | ✅ 23/08/2026 |
@@ -148,11 +150,20 @@ contributi DOVUTI dell'anno fanno da deduzione (nel regime vero si deducono i ve
 cassa) e non si modellano acconti/cassa (alla lettera, il primo anno di ordinario col metodo
 storico nascerebbe senza acconti IRPEF e con l'acconto di sostitutiva a credito); l'input
 «oneri 19%» raccoglie SOLO gli oneri soggetti a tetto/degressione/taglio (sanitarie e
-interessi sui mutui, salvati per legge, restano fuori dall'input); aliquote delle addizionali
-come input unico (le regioni possono articolare per scaglioni e oltre +0,5 punti la
-maggiorazione non tocca il 1º scaglione); RC al lordo dell'abitazione principale (l'app non
-ha redditi immobiliari); perdite non modellate (reddito clampato a zero, con avviso); IVA
-neutra sui clienti B2B e adempimenti fuori dal confronto.
+interessi sui mutui, salvati per legge, restano fuori dall'input); RC al lordo
+dell'abitazione principale (l'app non ha redditi immobiliari); perdite non modellate
+(reddito clampato a zero, con avviso); IVA neutra sui clienti B2B e adempimenti fuori dal
+confronto. **Addizionale regionale dal dataset**: le detrazioni regionali per figli a
+carico/disabilità (9 enti, tra cui i 246 €/figlio di Trento e i 340 di Bolzano) NON sono
+modellate — senza carichi di famiglia il calcolo è esatto, con carichi l'addizionale reale
+può essere più bassa; **Trento**, la «deduzione di 30.000 se l'imponibile non supera
+30.000» è modellata come esenzione a scalino, identica per costruzione (algoritmo AdE:
+base zero sotto, base piena sopra); **Bolzano**, la detrazione a rampa min(125, (RC −
+50.000) × 125/25.000) equivale ESATTAMENTE allo scaglione 1,23 esteso fino a 75.000 (su
+ogni fascia il carico coincide: 1,23·RC−430,50 fino a 75k, 1,73·RC−375−430,50 tra 75k e
+90k, 1,73·RC−375 oltre), ed è modellata così con la detrazione fissa 430,50 fino a 90.000;
+l'aliquota come input unico resta solo nel ramo manuale della regionale e per la comunale
+(che le articolazioni per scaglioni possono avere anche lì: semplificazione dichiarata).
 
 ## Parametri per moduli futuri (roadmap)
 

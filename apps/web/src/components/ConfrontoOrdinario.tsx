@@ -1,5 +1,7 @@
 import {
   computeOrdinario,
+  ENTITA_REGIONALI,
+  type EntitaRegionale,
   type FigliACarico,
   type GestioneInput,
   type RisultatoAnno,
@@ -29,6 +31,7 @@ export function ConfrontoOrdinario({
   gestione,
   spese,
   forfettario,
+  regionePredefinita,
 }: {
   anno: number
   incassatoCents: number
@@ -36,11 +39,14 @@ export function ConfrontoOrdinario({
   gestione: GestioneInput | undefined
   spese: Spesa[]
   forfettario: RisultatoAnno
+  regionePredefinita: EntitaRegionale | undefined
 }) {
   const [aperto, setAperto] = useState(false)
   const [altriCosti, setAltriCosti] = useState('')
   const [oneri, setOneri] = useState('')
   const [figli, setFigli] = useState<FigliACarico>('nessuno')
+  // '' = aliquota a mano; altrimenti la struttura ufficiale MEF dell'entità scelta.
+  const [regione, setRegione] = useState<EntitaRegionale | ''>(regionePredefinita ?? '')
   const [regionale, setRegionale] = useState('1,23')
   const [comunale, setComunale] = useState('0')
   const [soglia, setSoglia] = useState('')
@@ -60,10 +66,12 @@ export function ConfrontoOrdinario({
   if (altriCostiCents === null) errori.push('Altri costi: importo non valido (formato 1.234,56).')
   if (oneriCents === null) errori.push('Oneri detraibili: importo non valido (formato 1.234,56).')
   if (!sogliaVuota && sogliaCents === null) errori.push('Soglia di esenzione: importo non valido.')
-  if (rateRegionale === null) {
-    errori.push('Addizionale regionale: percentuale non valida (es. 1,23).')
-  } else if (rateRegionale > limiti.regionaleMax) {
-    errori.push(`Addizionale regionale oltre il massimo di legge (${formatPercento(limiti.regionaleMax)}).`)
+  if (regione === '') {
+    if (rateRegionale === null) {
+      errori.push('Addizionale regionale: percentuale non valida (es. 1,23).')
+    } else if (rateRegionale > limiti.regionaleMax) {
+      errori.push(`Addizionale regionale oltre il massimo di legge (${formatPercento(limiti.regionaleMax)}).`)
+    }
   }
   if (rateComunale === null) {
     errori.push('Addizionale comunale: percentuale non valida (es. 0,80).')
@@ -88,6 +96,7 @@ export function ConfrontoOrdinario({
             sogliaEsenzioneComunaleCents: sogliaCents,
             copertura,
             ...(gestione ? { gestione } : {}),
+            ...(regione !== '' ? { regione } : {}),
           },
           params,
         )
@@ -144,10 +153,32 @@ export function ConfrontoOrdinario({
               </select>
             </label>
             <label className="text-sm">
-              Addizionale regionale (%)
-              <input value={regionale} onChange={(e) => setRegionale(e.target.value)} className={campo} />
-              <span className="mt-1 block text-xs text-stone-500">Base di legge 1,23: verifica l'aliquota della tua regione.</span>
+              Regione o provincia autonoma (residenza al 1º gennaio)
+              <select
+                value={regione}
+                onChange={(e) => setRegione(ENTITA_REGIONALI.find((x) => x.id === e.target.value)?.id ?? '')}
+                className={campo}
+              >
+                <option value="">— inserisco l'aliquota a mano —</option>
+                {ENTITA_REGIONALI.map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.nome}
+                  </option>
+                ))}
+              </select>
+              <span className="mt-1 block text-xs text-stone-500">
+                {regione !== ''
+                  ? 'Struttura ufficiale MEF applicata (scaglioni, esenzioni e soglie della tua regione; eventuali detrazioni per figli non considerate).'
+                  : 'Scegli la regione per l’addizionale automatica, o inserisci l’aliquota qui sotto.'}
+              </span>
             </label>
+            {regione === '' && (
+              <label className="text-sm">
+                Addizionale regionale (%)
+                <input value={regionale} onChange={(e) => setRegionale(e.target.value)} className={campo} />
+                <span className="mt-1 block text-xs text-stone-500">Base di legge 1,23: verifica l'aliquota della tua regione.</span>
+              </label>
+            )}
             <label className="text-sm">
               Addizionale comunale (%)
               <input value={comunale} onChange={(e) => setComunale(e.target.value)} className={campo} />

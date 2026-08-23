@@ -87,8 +87,14 @@ export interface FiscalParams {
       degressione: { daCents: number; aCents: number }
       taglioAltiRedditi: { sogliaCents: number; importoCents: number } | null
     }>
-    /** Limiti di legge per le aliquote delle addizionali (le aliquote vere sono input utente). */
-    addizionali: ParamAnnuale<{ regionaleBase: Rate; regionaleMax: Rate; comunaleMax: Rate }>
+    /** Limiti di legge per le aliquote delle addizionali (le aliquote vere sono input utente
+     *  o dataset regionale) e soglia di debenza: dovute solo se l'IRPEF netta la supera. */
+    addizionali: ParamAnnuale<{
+      regionaleBase: Rate
+      regionaleMax: Rate
+      comunaleMax: Rate
+      minimoIrpefDovutaCents: number
+    }>
   }
   acconti: {
     quotaImposta: ParamAnnuale<Rate>
@@ -195,7 +201,9 @@ const fiscalParamsSchema = z.object({
         taglioAltiRedditi: z.object({ sogliaCents: centsSchema, importoCents: centsSchema }).nullable(),
       }),
     ),
-    addizionali: param(z.object({ regionaleBase: rate, regionaleMax: rate, comunaleMax: rate })),
+    addizionali: param(
+      z.object({ regionaleBase: rate, regionaleMax: rate, comunaleMax: rate, minimoIrpefDovutaCents: centsSchema }),
+    ),
   }),
   acconti: z.object({
     quotaImposta: param(rate),

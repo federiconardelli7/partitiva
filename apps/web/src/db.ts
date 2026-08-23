@@ -1,5 +1,5 @@
 // Storage locale (IndexedDB via Dexie): i dati fiscali non lasciano mai il dispositivo.
-import type { RiduzioneIvs } from '@partitiva/motore-fiscale'
+import type { EntitaRegionale, RiduzioneIvs } from '@partitiva/motore-fiscale'
 import Dexie, { type Table } from 'dexie'
 
 export interface Profilo {
@@ -18,6 +18,8 @@ export interface Profilo {
   anzianitaAl1995?: boolean
   /** Solo gestioni IVS: agevolazione richiesta all'INPS (la finestra della 50% la deriva l'app). */
   riduzioneIvs?: RiduzioneIvs
+  /** Residenza al 1º gennaio (facoltativa): addizionale regionale automatica nel confronto. */
+  regione?: EntitaRegionale
 }
 
 export interface Fattura {

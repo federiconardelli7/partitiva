@@ -1,5 +1,5 @@
 // Schemi zod condivisi tra form, backup e test.
-import { GRUPPI_ATECO } from '@partitiva/motore-fiscale'
+import { ENTITA_REGIONALI, GRUPPI_ATECO } from '@partitiva/motore-fiscale'
 import { z } from 'zod'
 import { parseImportoIt } from './format'
 
@@ -117,10 +117,16 @@ export const profiloFormSchema = z
     gestione: z.enum(['gestione-separata', 'artigiani', 'commercianti']).default('gestione-separata'),
     anzianitaAl1995: z.boolean().default(false),
     riduzioneIvs: z.enum(['nessuna', 'riduzione35', 'riduzione50']).default('nessuna'),
+    regione: z
+      .string()
+      .default('')
+      .refine((v) => v === '' || ENTITA_REGIONALI.some((e) => e.id === v), 'Regione non riconosciuta'),
   })
-  .transform((valori) => ({
+  .transform(({ regione, ...valori }) => ({
     ...valori,
     coefficiente: gruppoPerSettore(valori.settore)!.coefficiente,
+    // Vuoto = non indicata: la chiave sparisce dal profilo (find restituisce l'id tipizzato).
+    ...(regione !== '' ? { regione: ENTITA_REGIONALI.find((e) => e.id === regione)!.id } : {}),
     // RHF conserva i campi smontati: un profilo GS non porta con sé stati IVS residui.
     ...(valori.gestione === 'gestione-separata'
       ? { anzianitaAl1995: false, riduzioneIvs: 'nessuna' as const }

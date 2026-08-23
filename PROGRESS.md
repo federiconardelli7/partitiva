@@ -3,6 +3,54 @@
 > Una voce per sessione: fatto, decisioni, next steps, blocchi. Le ultime 2 voci si leggono
 > all'inizio di ogni sessione (vedi CLAUDE.md).
 
+## 2026-08-23 — S15 Addizionale regionale automatica per residenza (Fase 1)
+
+**Fatto**
+- **Ricerca su fonti primarie** (subagent, findings in
+  `.scratch/confronto-ordinario/research/addizionali-regionali.md`): TUTTE le 21 entità
+  (19 regioni + Trento/Bolzano) per 2025 E 2026 dal portale MEF (canale legale ex art. 50
+  c. 3 D.Lgs. 446/1997, 42 pagine lette), cross-check integrale AdE Allegato C 730/2026
+  sul 2025, leggi provinciali per TN/BZ. Sorprese chiave: 11 enti sulla griglia
+  previgente 15k/28k/50k (lecita 2025-2028), FVG/Lazio/Umbria con aliquote condizionali
+  sull'INTERO importo, fallback legale = carry-over dell'anno prima (c. 728, NON 1,23%),
+  debenza solo se IRPEF netta > 10 € (Allegato C).
+- **Motore in TDD** (RED 9 → GREEN, 87 test nel package): dataset
+  `params/addizionali-regionali.ts` (21 entità × 2 anni, fonte per entità) con 4 forme —
+  unica, scaglioni a confini arbitrari (`impostaPerScaglioni` estratta in `scaglioni.ts`
+  e riusata dall'IRPEF), regimi condizionali, esenzione a scalino + detrazioni
+  fissa/a fascia; `calcolaAddizionaleRegionale` in `addizionali.ts`;
+  `computeOrdinario` accetta `regione` (ignora l'aliquota manuale) e applica il gate
+  dei 10 € (nuovo param `minimoIrpefDovutaCents` con fonte). **Equivalenze dimostrate e
+  dichiarate**: Trento deduzione-30k-cliff ≡ esenzione a scalino (algoritmo AdE);
+  Bolzano rampa min(125, …) ≡ scaglione 1,23 fino a 75k (verificato su ogni fascia,
+  golden 60k: 615+173−50−430,50 = 307,50 ✓). Golden a mano anche su FVG (369 a 30k,
+  esempio AdE testuale), Lazio 2025 vs 2026 (fascia 35k→30k), VdA, Piemonte 2026,
+  Calabria, carry-over 2027/2024, gate a netta 9,27 €.
+- **App**: select «Regione o provincia autonoma» nel confronto (pre-selezionata dal
+  profilo; scegliendola sparisce l'aliquota manuale, hint sulla struttura applicata);
+  campo facoltativo nel Wizard (`Profilo.regione`, additivo: niente bump Dexie, backup
+  invariati, transform che spoglia il vuoto); dd «Regione» nell'hub. 6 test confronto
+  (select Trento → totale 22.887,59 dal dataset; pre-selezione; wizard persiste) +
+  gotcha: il bottone «Inizia a tracciare» collide col link della nav → getByRole.
+- **Docs**: righe dataset + debenza 10 € nella sezione «Regime ordinario» di
+  regole-fiscali.md, equivalenze TN/BZ e figli-non-modellati nelle semplificazioni
+  dichiarate; CHANGELOG.
+- `pnpm verify` verde: **244 test** (12 nuovi: 9 motore + 3 app).
+
+**Decisioni**: detrazioni regionali per figli/disabilità (9 enti) NON modellate — senza
+carichi il calcolo è esatto, con carichi l'addizionale reale può solo scendere
+(dichiarato); comunale resta input manuale (Fase 2 eventuale: dataset MEF dei ~7.900
+comuni); fallback anni fuori dataset = carry-over (regola legale, non l'1,23%).
+
+**Next steps**: collaudo di Federico (il suo caso: Trento, sotto i 30k di imponibile
+l'addizionale sparisce); refresh annuale del dataset dentro la procedura di manutenzione
+(5 enti cambiati nel 2026: ER, Piemonte, Puglia, Lazio, Liguria); poi §1b casse
+professionali o §3 simulatore dipendente.
+
+**Blocchi/aperture**: invariati + i caveat della ricerca: 2026 a fonte singola MEF
+(il 730/2027 non esiste ancora); le regioni commissariate possono rideterminare
+infra-anno (ricontrollare il MEF a inizio stagione dichiarativa).
+
 ## 2026-08-23 — S14 Confronto con l'ordinario (post-MVP §2)
 
 **Fatto**

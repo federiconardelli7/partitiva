@@ -296,6 +296,7 @@ export function Simulatore({
               gestione={gestioneScenario}
               spese={spese}
               forfettario={risultato}
+              regionePredefinita={profilo?.regione}
             />
           )}
         </>

@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { coefficientePerAteco, GRUPPI_ATECO } from '@partitiva/motore-fiscale'
+import { coefficientePerAteco, ENTITA_REGIONALI, GRUPPI_ATECO } from '@partitiva/motore-fiscale'
 import { useForm } from 'react-hook-form'
 import type { z } from 'zod'
 import { db, type Profilo } from '../db'
@@ -30,6 +30,7 @@ export function Wizard({ esistente, onFine }: { esistente?: Profilo; onFine?: ()
           gestione: esistente.gestione ?? 'gestione-separata',
           anzianitaAl1995: esistente.anzianitaAl1995 ?? false,
           riduzioneIvs: esistente.riduzioneIvs ?? 'nessuna',
+          regione: esistente.regione ?? '',
         }
       : {
           annoApertura: ANNO_CORRENTE,
@@ -39,6 +40,7 @@ export function Wizard({ esistente, onFine }: { esistente?: Profilo; onFine?: ()
           gestione: 'gestione-separata',
           anzianitaAl1995: false,
           riduzioneIvs: 'nessuna',
+          regione: '',
         },
   })
 
@@ -181,6 +183,25 @@ export function Wizard({ esistente, onFine }: { esistente?: Profilo; onFine?: ()
           </label>
         </div>
       )}
+
+      <label className="block text-sm">
+        <span className="font-medium">Regione o provincia autonoma di residenza (facoltativa)</span>
+        <select
+          {...register('regione')}
+          className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2 dark:border-stone-700 dark:bg-stone-800"
+        >
+          <option value="">— non indicata —</option>
+          {ENTITA_REGIONALI.map((e) => (
+            <option key={e.id} value={e.id}>
+              {e.nome}
+            </option>
+          ))}
+        </select>
+        <span className="mt-1 block text-xs text-stone-500">
+          Serve solo al confronto con l’ordinario: applica da sola l’addizionale regionale
+          ufficiale (scaglioni ed esenzioni della tua regione). Resta sul dispositivo.
+        </span>
+      </label>
 
       <button
         type="submit"

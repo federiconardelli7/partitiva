@@ -141,10 +141,10 @@ export const params2025 = defineParams({
       },
     },
     addizionali: {
-      valore: { regionaleBase: 0.0123, regionaleMax: 0.0333, comunaleMax: 0.009 },
+      valore: { regionaleBase: 0.0123, regionaleMax: 0.0333, comunaleMax: 0.009, minimoIrpefDovutaCents: 1_000 },
       fonte: {
         riferimento:
-          'Regionale: aliquota di base 1,23%, maggiorazione max 2,1 punti (D.Lgs. 68/2011, art. 6, c. 1); comunale: max 0,8 punti + 0,4 Roma Capitale (D.Lgs. 360/1998, art. 1, c. 3; DL 78/2010, art. 14, c. 14, lett. b). Aliquota unica in input = semplificazione dichiarata (le regioni possono articolare per scaglioni IRPEF)',
+          'Regionale: aliquota di base 1,23%, maggiorazione max 2,1 punti (D.Lgs. 68/2011, art. 6, c. 1); comunale: max 0,8 punti + 0,4 Roma Capitale (D.Lgs. 360/1998, art. 1, c. 3; DL 78/2010, art. 14, c. 14, lett. b). Dovute solo se l’IRPEF netta supera 10 € (AdE, Allegato C circ. di liquidazione 730/2026: «un importo maggiore di euro 10»). Regionale dal dataset ufficiale MEF per residenza (params/addizionali-regionali) o aliquota in input; comunale in input',
         url: 'https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2011-05-06;68~art6!vig=',
         verificatoIl: '2026-08-23',
       },

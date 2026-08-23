@@ -7,6 +7,15 @@ Formato: [Keep a Changelog](https://keepachangelog.com/it-IT/1.1.0/); versioning
 
 ### Added
 
+- **Addizionale regionale automatica per residenza**: nel confronto con l'ordinario si
+  sceglie la regione o provincia autonoma (salvabile nel profilo, campo facoltativo del
+  wizard) e il motore applica la **struttura ufficiale MEF** dell'anno — scaglioni anche
+  sulla griglia previgente, aliquote condizionali sull'intero importo (FVG, Lazio, Umbria),
+  esenzioni a scalino (Valle d'Aosta; Trento con la deduzione fino a 30.000), detrazioni
+  fisse e a fascia (Bolzano 430,50; Lazio 60; Umbria 150) — per tutte le 21 entità, 2025 e
+  2026, con fonte per entità. L'aliquota a mano resta come ramo manuale; le addizionali ora
+  scattano solo se l'IRPEF netta supera 10 € (regola AdE). Detrazioni regionali per figli
+  non modellate (dichiarato in regole-fiscali).
 - **Confronto con l'ordinario nel Simulatore** («E se uscissi dal forfettario?»): IRPEF a
   scaglioni sul reddito effettivo (2026: 23/33/43; 2025: 23/35/43), detrazione da lavoro
   autonomo/impresa minore con le formule vigenti (1.265/500, +50, troncamento a 4

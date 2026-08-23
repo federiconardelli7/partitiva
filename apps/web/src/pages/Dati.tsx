@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { ENTITA_REGIONALI } from '@partitiva/motore-fiscale'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import type { z } from 'zod'
@@ -236,6 +237,14 @@ export function Dati({
                 )}
               </dd>
             </div>
+            {profilo.regione && (
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-stone-500">Regione</dt>
+                <dd className="mt-0.5 font-semibold">
+                  {ENTITA_REGIONALI.find((e) => e.id === profilo.regione)?.nome ?? profilo.regione}
+                </dd>
+              </div>
+            )}
           </dl>
         )}
         <p className="text-xs text-stone-500 dark:text-stone-400">

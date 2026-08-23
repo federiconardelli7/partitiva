@@ -16,6 +16,13 @@ export { computeTimeline } from './timeline'
 export type { F24, F24Riga, Timeline, TimelineAnnoInput, TimelineOpts } from './timeline'
 export { computeOrdinario } from './ordinario'
 export type { FigliACarico, OrdinarioInput, RisultatoOrdinario } from './ordinario'
+export { calcolaAddizionaleRegionale } from './addizionali'
+export {
+  ENTITA_REGIONALI,
+  fonteAddizionaleRegionale,
+  strutturaAddizionaleRegionale,
+} from './params/addizionali-regionali'
+export type { EntitaRegionale, StrutturaAddizionaleRegionale } from './params/addizionali-regionali'
 export { aggregaIncassato } from './cassa'
 export type { Pagamento } from './cassa'
 export { bolloPerFattura } from './bollo'

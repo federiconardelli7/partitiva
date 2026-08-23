@@ -3,6 +3,7 @@
 // autonomo/impresa minore, oneri 19% coi loro meccanismi, addizionali parametriche.
 // Confronto «a regime»: i contributi DOVUTI dell'anno fanno da deduzione (nel regime
 // vero si deducono i versati per cassa) — semplificazione dichiarata in regole-fiscali.md.
+import { calcolaAddizionaleRegionale } from './addizionali'
 import {
   contributiEccedenzaIvs,
   contributiFissiIvs,
@@ -11,7 +12,9 @@ import {
   type GestioneInput,
 } from './compute-anno'
 import { cents, mulRate, roundEuroToCents, type Cents } from './money'
+import { strutturaAddizionaleRegionale, type EntitaRegionale } from './params/addizionali-regionali'
 import type { FiscalParams } from './params/types'
+import { impostaPerScaglioni } from './scaglioni'
 
 export type FigliACarico = 'nessuno' | 'uno' | 'due' | 'oltreODisabilita'
 
@@ -31,6 +34,9 @@ export interface OrdinarioInput {
   copertura: Copertura
   /** Gestione previdenziale: assente = Gestione Separata con la `copertura`. */
   gestione?: GestioneInput
+  /** Regione/provincia autonoma di residenza: se presente, la regionale usa la struttura
+   *  ufficiale MEF dell'anno (scaglioni/esenzioni compresi) e ignora `addizionaleRegionale`. */
+  regione?: EntitaRegionale
 }
 
 export interface RisultatoOrdinario {
@@ -63,18 +69,6 @@ const quotaLineare = (importo: Cents, numeratore: number, denominatore: number):
   return cents(resto * 2 >= denominatore ? intPart + 1 : intPart)
 }
 
-const irpefLorda = (imponibile: Cents, scaglioni: FiscalParams['irpef']['scaglioni']['valore']): Cents => {
-  let totale = 0
-  let precedente = 0
-  for (const scaglione of scaglioni) {
-    const tetto = scaglione.finoACents ?? imponibile
-    const quota = Math.min(imponibile, tetto) - precedente
-    if (quota > 0) totale += mulRate(cents(quota), scaglione.aliquota)
-    precedente = tetto
-    if (imponibile <= precedente) break
-  }
-  return cents(totale)
-}
 
 const detrazioneLavoroAutonomo = (
   rc: Cents,
@@ -161,7 +155,7 @@ export function computeOrdinario(input: OrdinarioInput, params: FiscalParams): R
   }
 
   const imponibileIrpef = roundEuroToCents(cents(Math.max(0, reddito - contributi)))
-  const lorda = irpefLorda(imponibileIrpef, params.irpef.scaglioni.valore)
+  const lorda = impostaPerScaglioni(imponibileIrpef, params.irpef.scaglioni.valore)
   const detrazioneLA = detrazioneLavoroAutonomo(imponibileIrpef, params.irpef.detrazioneLavoroAutonomo.valore)
   const detrazioneOneri19 = detrazioneOneri(
     imponibileIrpef,
@@ -171,9 +165,14 @@ export function computeOrdinario(input: OrdinarioInput, params: FiscalParams): R
   )
   const netta = cents(Math.max(0, lorda - detrazioneLA - detrazioneOneri19))
 
-  // Addizionali: dovute solo se l'IRPEF, al netto delle detrazioni, risulta dovuta.
-  const dovute = netta > 0
-  const regionale = dovute ? mulRate(imponibileIrpef, input.addizionaleRegionale) : cents(0)
+  // Addizionali: dovute solo se l'IRPEF netta risulta dovuta — operativamente, se supera
+  // 10 € (AdE, Allegato C circolare di liquidazione: parametro nei params).
+  const dovute = netta > params.irpef.addizionali.valore.minimoIrpefDovutaCents
+  const regionale = dovute
+    ? input.regione
+      ? calcolaAddizionaleRegionale(imponibileIrpef, strutturaAddizionaleRegionale(input.regione, params.anno))
+      : mulRate(imponibileIrpef, input.addizionaleRegionale)
+    : cents(0)
   const sopraSoglia =
     input.sogliaEsenzioneComunaleCents === null || imponibileIrpef > input.sogliaEsenzioneComunaleCents
   const comunale = dovute && sopraSoglia ? mulRate(imponibileIrpef, input.addizionaleComunale) : cents(0)
