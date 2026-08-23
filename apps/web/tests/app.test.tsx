@@ -71,6 +71,31 @@ describe('App — landing condizionale su /', () => {
   })
 })
 
+describe('App — orientamento: titoli per rotta e skip link', () => {
+  it('ogni pagina aggiorna il titolo del documento', async () => {
+    await db.profilo.put(PROFILO)
+    render(<App />)
+    await screen.findByText(/Dati reali/i)
+    expect(document.title).toBe('Panoramica · Partitiva')
+    const nav = screen.getByRole('navigation')
+    fireEvent.click(within(nav).getByText('Simulatore'))
+    await screen.findByText(/qui non si salva niente/i)
+    expect(document.title).toBe('Simulatore · Partitiva')
+    fireEvent.click(within(nav).getByText('I miei dati'))
+    await screen.findByText(/Nuova fattura/i)
+    expect(document.title).toBe('I miei dati · Partitiva')
+  })
+
+  it('senza profilo il titolo presenta l’app; «Salta al contenuto» punta al main', async () => {
+    render(<App />)
+    await screen.findByRole('heading', { name: /La tua P\.IVA forfettaria/i })
+    expect(document.title).toBe('Partitiva — la tua P.IVA forfettaria, spiegata')
+    const salto = screen.getByText(/Salta al contenuto/i)
+    expect(salto.getAttribute('href')).toBe('#contenuto')
+    expect(document.querySelector('main#contenuto')).not.toBeNull()
+  })
+})
+
 describe('App — I miei dati come hub della sorgente', () => {
   it('senza profilo, /dati mostra il wizard (mai pagina bianca)', async () => {
     window.history.pushState({}, '', '/dati')
@@ -218,6 +243,7 @@ describe('App — import PDF con revisione obbligatoria', () => {
     ])
     await caricaPdf()
     expect(await screen.findByText(/controllali prima di salvare/i)).toBeTruthy()
+    expect(screen.getByRole('status')).toBeTruthy() // il banner si annuncia anche allo screen reader
     expect((screen.getByLabelText(/^Numero/i) as HTMLInputElement).value).toBe('7')
     expect((screen.getByLabelText(/Data emissione/i) as HTMLInputElement).value).toBe('2026-07-15')
     expect((screen.getByLabelText(/Importo \(€\)/i) as HTMLInputElement).value).toBe('4.385,00')

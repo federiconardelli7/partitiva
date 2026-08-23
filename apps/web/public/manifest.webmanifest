@@ -1,0 +1,15 @@
+{
+  "name": "Partitiva",
+  "short_name": "Partitiva",
+  "description": "Gestione open source e privacy-first della Partita IVA in regime forfettario: i dati restano nel tuo browser.",
+  "lang": "it",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fafaf9",
+  "theme_color": "#047857",
+  "icons": [
+    { "src": "/icona.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icona.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

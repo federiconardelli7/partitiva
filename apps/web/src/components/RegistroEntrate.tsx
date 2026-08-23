@@ -193,7 +193,10 @@ export function RegistroEntrate({ fatture }: { fatture: Fattura[] }) {
             }}
           />
           {avvisoPdf && (
-            <div className="w-full rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 sm:col-span-2 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
+            <div
+              role="status"
+              className="w-full rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200"
+            >
               <p className="font-semibold">📄 {avvisoPdf.titolo}</p>
               {avvisoPdf.avvisi.length > 0 && (
                 <ul className="mt-1 list-inside list-disc">
@@ -297,7 +300,7 @@ export function RegistroEntrate({ fatture }: { fatture: Fattura[] }) {
                   {f.bolloCents > 0 ? formatEuro(f.bolloCents) : '—'}
                 </td>
                 <td className="px-3 py-2 text-right">
-                  <button onClick={() => elimina(f)} className="text-xs text-stone-400 hover:text-red-600">
+                  <button onClick={() => elimina(f)} className="text-xs text-stone-500 hover:text-red-600">
                     elimina
                   </button>
                 </td>

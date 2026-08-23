@@ -7,6 +7,11 @@ Formato: [Keep a Changelog](https://keepachangelog.com/it-IT/1.1.0/); versioning
 
 ### Added
 
+- **PWA, accessibilità e onboarding (S9)**: l'app è **installabile** (manifest + icona,
+  senza service worker: scelta documentata); titolo del documento per pagina, skip link,
+  banner annunciati agli screen reader, contrasti ritoccati; README con lo stato reale e
+  la guida «Come si usa». Con S9 l'MVP della roadmap è completo.
+
 - **Import da PDF con revisione obbligatoria (S8)**: le fatture in PDF (foglio di stile
   SdI) si importano dal registro — le euristiche del parser estraggono numero, data e
   totale e **precompilano il form**, che l'utente rivede e salva (un PDF non scrive mai

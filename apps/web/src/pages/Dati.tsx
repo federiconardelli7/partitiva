@@ -109,7 +109,7 @@ export function Dati({
                         onClick={() => {
                           if (window.confirm('Eliminare questa spesa?')) void db.spese.delete(s.id!)
                         }}
-                        className="text-xs text-stone-400 hover:text-red-600"
+                        className="text-xs text-stone-500 hover:text-red-600"
                       >
                         elimina
                       </button>
@@ -171,7 +171,7 @@ export function Dati({
                         onClick={() => {
                           if (window.confirm(`Eliminare il riepilogo del ${r.anno}?`)) void db.riepiloghi.delete(r.anno)
                         }}
-                        className="text-xs text-stone-400 hover:text-red-600"
+                        className="text-xs text-stone-500 hover:text-red-600"
                       >
                         elimina
                       </button>

@@ -138,7 +138,7 @@ export function Panoramica({
         <div className={card}>
           <h3 className="text-xs uppercase tracking-wide text-stone-500">Verso gli {formatEuroIntero(soglia85)}</h3>
           <div className="mt-1 text-xl font-semibold tabular-nums">{formatEuro(incassato)}</div>
-          <div className="relative mt-2 h-2.5 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-800">
+          <div aria-hidden="true" className="relative mt-2 h-2.5 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-800">
             <div
               className={`h-full rounded-full transition-all ${
                 incassato > soglia100 ? 'bg-red-600' : incassato > soglia85 ? 'bg-amber-500' : 'bg-emerald-600'

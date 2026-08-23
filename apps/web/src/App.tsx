@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { BrowserRouter, Link, Navigate, NavLink, Route, Routes } from 'react-router-dom'
+import { useEffect } from 'react'
+import { BrowserRouter, Link, Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { db, type Profilo } from './db'
 import { Dati } from './pages/Dati'
 import { Landing } from './pages/Landing'
@@ -8,6 +9,11 @@ import { Simulatore } from './pages/Simulatore'
 
 // Sentinella per distinguere "Dexie sta caricando" da "riga assente" (get → undefined).
 const CARICAMENTO = 'caricamento' as const
+
+const TITOLI_ROTTE: Record<string, string> = {
+  '/simulatore': 'Simulatore',
+  '/dati': 'I miei dati',
+}
 
 export function App() {
   return (
@@ -22,6 +28,14 @@ function Shell() {
   const fatture = useLiveQuery(() => db.fatture.orderBy('dataEmissione').reverse().toArray(), [], CARICAMENTO)
   const riepiloghi = useLiveQuery(() => db.riepiloghi.orderBy('anno').toArray(), [], CARICAMENTO)
   const spese = useLiveQuery(() => db.spese.orderBy('data').reverse().toArray(), [], CARICAMENTO)
+  const location = useLocation()
+
+  // Orientamento: il titolo del documento segue la pagina (prima dell'early return: regola hooks).
+  useEffect(() => {
+    if (profiloQuery === CARICAMENTO) return
+    const nome = TITOLI_ROTTE[location.pathname] ?? (profiloQuery ? 'Panoramica' : null)
+    document.title = nome ? `${nome} · Partitiva` : 'Partitiva — la tua P.IVA forfettaria, spiegata'
+  }, [location.pathname, profiloQuery])
 
   if (profiloQuery === CARICAMENTO || fatture === CARICAMENTO || riepiloghi === CARICAMENTO || spese === CARICAMENTO)
     return null
@@ -48,6 +62,12 @@ function Shell() {
 
   return (
     <div className="min-h-dvh bg-stone-50 text-stone-900 dark:bg-stone-950 dark:text-stone-100">
+      <a
+        href="#contenuto"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-emerald-700 focus:px-3 focus:py-2 focus:text-white"
+      >
+        Salta al contenuto
+      </a>
       <header className="border-b border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900">
         <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-2 px-4 py-3">
           <h1 className="text-xl font-bold tracking-tight">
@@ -70,7 +90,7 @@ function Shell() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-4 py-6">
+      <main id="contenuto" className="mx-auto max-w-4xl px-4 py-6">
         <Routes>
           <Route
             path="/"

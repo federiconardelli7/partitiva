@@ -3,6 +3,37 @@
 > Una voce per sessione: fatto, decisioni, next steps, blocchi. Le ultime 2 voci si leggono
 > all'inizio di ogni sessione (vedi CLAUDE.md).
 
+## 2026-08-23 — S9 Hardening: PWA, a11y, onboarding — MVP COMPLETO
+
+**Fatto**
+- **PWA installabile**: `manifest.webmanifest` (standalone, lang it, theme emerald) +
+  `icona.svg` (P a tracciato, niente font: any+maskable) + favicon e doppio `theme-color`
+  (light/dark) in index.html. **Scelta dichiarata: niente service worker** — l'installabilità
+  moderna non lo richiede più e un SW mal invecchiato è la trappola-404 in salsa cache;
+  l'offline completo (vite-plugin-pwa) va in backlog come decisione, non dimenticanza.
+  Pin-test su file statici (`tests/pwa.test.ts`).
+- **Orientamento e a11y**: `document.title` per rotta (Panoramica/Simulatore/I miei dati ·
+  Partitiva; titolo di presentazione senza profilo) con l'effect PRIMA dell'early return
+  (regola hooks); skip link «Salta al contenuto» → `main#contenuto`; banner PDF con
+  `role="status"`; barra soglie `aria-hidden` (l'informazione è nel testo); contrasto dei
+  bottoni «elimina» (stone-400→500). La base mobile c'era già (Flusso che impila, tabelle
+  in overflow, form a colonna).
+- **Onboarding nel README**: via il blocco «pre-alpha» di S1 → stato reale (MVP in
+  produzione), sezione «Come si usa» (le tre pagine, riepiloghi, spese, import XML/PDF,
+  backup e CSV, installazione), struttura del monorepo corretta.
+- TDD: 178 test verdi (5 nuovi). **Con questa sessione l'MVP della roadmap è completo.**
+
+**Decisioni**: PWA senza SW (sopra); apple-touch-icon PNG in backlog (iOS installa comunque,
+con icona di ripiego).
+
+**Next steps**: post-MVP dalla roadmap (altre gestioni INPS, confronto ordinario, calcolo
+inverso…) o rifiniture dal backlog: select settori al 40%, prefill PDF che sovrascrive senza
+avviso, offline/vite-plugin-pwa, messaggio import backup con l'anno, «tra 0 giorni».
+Valutare il tag v0.1.0 (CHANGELOG «Unreleased» → release).
+
+**Blocchi/aperture**: invariati (GU DL 89/2026, soglie GS, mapping ATECO 2025, quadro RR).
+NOTA: il push di S8 (`a27e243`) non risulta su origin (main ahead 1 anche dopo fetch).
+
 ## 2026-08-23 — S8 Parser PDF con revisione obbligatoria
 
 **Fatto**

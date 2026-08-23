@@ -49,7 +49,11 @@ governa la propria P.IVA — dalla fattura all'F24 spiegato — senza che i dati
   estrazione testo con pdf.js nell'app (glue browser-only, caricato al click); **revisione
   obbligatoria per costruzione**: il PDF precompila il form «Nuova fattura», mai Dexie;
   scansioni senza testo → avviso e inserimento manuale; TD ≠ TD01 → mai come ricavo.
-- **S9 — Hardening**: mobile/a11y, PWA installabile, deploy Vercel, onboarding documentato.
+- ✅ **S9 — Hardening** (23/08/2026): **PWA installabile** (manifest + icona SVG maskable +
+  theme-color; service worker/offline rimandato con motivazione — la base responsive c'era
+  già); a11y: titoli del documento per rotta, skip link, banner annunciati (`role=status`),
+  barra soglie decorativa, contrasti; **onboarding nel README** («Come si usa», stato reale
+  del progetto). Deploy Vercel già attivo dalla S3. **→ MVP completo.**
 
 ## Post-MVP
 
