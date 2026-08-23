@@ -55,6 +55,7 @@ export type FlagCodice =
   | 'massimale-ivs'
   | 'sotto-minimale-ivs'
   | 'accredito-ridotto'
+  | 'ordinario-perdita'
 
 export interface Flag {
   codice: FlagCodice

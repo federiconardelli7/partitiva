@@ -7,6 +7,16 @@ Formato: [Keep a Changelog](https://keepachangelog.com/it-IT/1.1.0/); versioning
 
 ### Added
 
+- **Confronto con l'ordinario nel Simulatore** («E se uscissi dal forfettario?»): IRPEF a
+  scaglioni sul reddito effettivo (2026: 23/33/43; 2025: 23/35/43), detrazione da lavoro
+  autonomo/impresa minore con le formule vigenti (1.265/500, +50, troncamento a 4
+  decimali), oneri detraibili 19% con tetto per redditi alti (coefficiente figli),
+  degressione 120-240k e taglio −440 oltre 200k (dal 2026), addizionali regionale e
+  comunale parametriche (con soglia di esenzione a scalino), contributi GS/IVS sulla
+  base effettiva. Costi reali = registro spese + campo «altri costi»; verdetto in una
+  riga col delta annuo. Confronto a regime e di competenza, semplificazioni e fonti
+  primarie dichiarate in `docs/regole-fiscali.md` (sezione «Regime ordinario»);
+  8 golden test quadrati a mano.
 - **Tema chiaro / scuro / sistema**: toggle nell'header (un click per ciclare; default
   «come il dispositivo»). La preferenza resta sul dispositivo (localStorage, mai nei
   backup), niente flash al caricamento e barra del browser/PWA coerente col tema scelto.

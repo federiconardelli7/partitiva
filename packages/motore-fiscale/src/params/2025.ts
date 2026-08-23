@@ -93,6 +93,63 @@ export const params2025 = defineParams({
     ordinaria: { valore: 0.15, fonte: L190_IMPOSTA },
     anniStartup: { valore: 5, fonte: L190_IMPOSTA },
   },
+  irpef: {
+    scaglioni: {
+      valore: [
+        { finoACents: 2_800_000, aliquota: 0.23 },
+        { finoACents: 5_000_000, aliquota: 0.35 },
+        { finoACents: null, aliquota: 0.43 },
+      ],
+      fonte: {
+        riferimento:
+          'Art. 11, c. 1, TUIR vigente al 30/06/2025 (multivigente Normattiva): 23% fino a 28.000, 35% da 28.000 a 50.000, 43% oltre (a regime dal 2025: L. 207/2024, art. 1, c. 2, lett. a). Imposta a 50.000 = 14.140',
+        url: 'https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.del.presidente.della.repubblica:1986-12-22;917~art11!vig=2025-06-30',
+        verificatoIl: '2026-08-23',
+      },
+    },
+    detrazioneLavoroAutonomo: {
+      valore: {
+        bassa: { finoACents: 550_000, importoCents: 126_500 },
+        media: { finoACents: 2_800_000, baseCents: 50_000, extraCents: 76_500, divisoreCents: 2_250_000 },
+        alta: { finoACents: 5_000_000, baseCents: 50_000, divisoreCents: 2_200_000 },
+        bonus: { oltreCents: 1_100_000, finoACents: 1_700_000, importoCents: 5_000 },
+      },
+      fonte: {
+        riferimento:
+          'Art. 13, c. 5, 5-ter e 6, TUIR vigente (riscrittura L. 234/2021, invariata 2025/2026): 1.265 fino a 5.500; 500 + 765 × (28.000 − RC)/22.500 fino a 28.000; 500 × (50.000 − RC)/22.000 fino a 50.000; +50 tra 11.000 e 17.000; rapporti alle prime 4 cifre decimali (troncamento). RC al netto dell’abitazione principale: non modellata, l’app non ha redditi immobiliari',
+        url: 'https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.del.presidente.della.repubblica:1986-12-22;917~art13!vig=',
+        verificatoIl: '2026-08-23',
+      },
+    },
+    oneriDetraibili: {
+      valore: {
+        aliquota: 0.19,
+        tetto: {
+          daCents: 7_500_000,
+          sogliaBase100kCents: 10_000_000,
+          importoBaseCents: { fino100k: 1_400_000, oltre100k: 800_000 },
+          coefficientiFigli: { nessuno: 0.5, uno: 0.7, due: 0.85, oltreODisabilita: 1 },
+        },
+        degressione: { daCents: 12_000_000, aCents: 24_000_000 },
+        taglioAltiRedditi: null,
+      },
+      fonte: {
+        riferimento:
+          'Oneri 19% SOGGETTI ai meccanismi (sanitarie e interessi mutui ne sono fuori per legge, quindi fuori dall’input): tetto di spesa oltre 75.000 = 14.000/8.000 × coefficiente figli (art. 16-ter, c. 1-3, TUIR, dal 2025; circ. AdE 6/E/2025: è un cap sulle SPESE); degressione × (240.000 − RC)/120.000 tra 120.000 e 240.000 (art. 15, c. 3-bis). Il taglio −440 oltre 200.000 decorre dal 2026: assente nel 2025',
+        url: 'https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.del.presidente.della.repubblica:1986-12-22;917~art16ter!vig=',
+        verificatoIl: '2026-08-23',
+      },
+    },
+    addizionali: {
+      valore: { regionaleBase: 0.0123, regionaleMax: 0.0333, comunaleMax: 0.009 },
+      fonte: {
+        riferimento:
+          'Regionale: aliquota di base 1,23%, maggiorazione max 2,1 punti (D.Lgs. 68/2011, art. 6, c. 1); comunale: max 0,8 punti + 0,4 Roma Capitale (D.Lgs. 360/1998, art. 1, c. 3; DL 78/2010, art. 14, c. 14, lett. b). Aliquota unica in input = semplificazione dichiarata (le regioni possono articolare per scaglioni IRPEF)',
+        url: 'https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2011-05-06;68~art6!vig=',
+        verificatoIl: '2026-08-23',
+      },
+    },
+  },
   acconti: {
     quotaImposta: {
       valore: 1,

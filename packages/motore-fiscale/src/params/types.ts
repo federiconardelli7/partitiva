@@ -62,6 +62,34 @@ export interface FiscalParams {
     ordinaria: ParamAnnuale<Rate>
     anniStartup: ParamAnnuale<number>
   }
+  /** Regime ordinario, per il confronto «quando conviene uscire»: IRPEF e addizionali. */
+  irpef: {
+    /** Scaglioni in ordine crescente; l'ultimo ha finoACents = null (oltre). */
+    scaglioni: ParamAnnuale<{ finoACents: number | null; aliquota: Rate }[]>
+    /** Art. 13 c. 5/5-ter/6 TUIR: detrazione per redditi di lavoro autonomo e impresa minore.
+     *  I «rapporti» si assumono alle prime QUATTRO cifre decimali (c. 6): troncamento, non round. */
+    detrazioneLavoroAutonomo: ParamAnnuale<{
+      bassa: { finoACents: number; importoCents: number }
+      media: { finoACents: number; baseCents: number; extraCents: number; divisoreCents: number }
+      alta: { finoACents: number; baseCents: number; divisoreCents: number }
+      bonus: { oltreCents: number; finoACents: number; importoCents: number }
+    }>
+    /** Oneri detraibili al 19% SOGGETTI ai meccanismi (esclusi sanitarie e mutui, che ne sono
+     *  fuori per legge): tetto di spesa 16-ter, degressione 15 c. 3-bis, taglio oltre 200k. */
+    oneriDetraibili: ParamAnnuale<{
+      aliquota: Rate
+      tetto: {
+        daCents: number
+        sogliaBase100kCents: number
+        importoBaseCents: { fino100k: number; oltre100k: number }
+        coefficientiFigli: { nessuno: Rate; uno: Rate; due: Rate; oltreODisabilita: Rate }
+      }
+      degressione: { daCents: number; aCents: number }
+      taglioAltiRedditi: { sogliaCents: number; importoCents: number } | null
+    }>
+    /** Limiti di legge per le aliquote delle addizionali (le aliquote vere sono input utente). */
+    addizionali: ParamAnnuale<{ regionaleBase: Rate; regionaleMax: Rate; comunaleMax: Rate }>
+  }
   acconti: {
     quotaImposta: ParamAnnuale<Rate>
     quotaContributi: ParamAnnuale<Rate>
@@ -138,6 +166,36 @@ const fiscalParamsSchema = z.object({
     startup: param(rate),
     ordinaria: param(rate),
     anniStartup: param(z.number().int().positive()),
+  }),
+  irpef: z.object({
+    scaglioni: param(
+      z
+        .array(z.object({ finoACents: z.number().int().positive().nullable(), aliquota: rate }))
+        .min(2)
+        .refine((s) => s[s.length - 1]!.finoACents === null, 'l’ultimo scaglione deve essere aperto (finoACents null)'),
+    ),
+    detrazioneLavoroAutonomo: param(
+      z.object({
+        bassa: z.object({ finoACents: centsSchema, importoCents: centsSchema }),
+        media: z.object({ finoACents: centsSchema, baseCents: centsSchema, extraCents: centsSchema, divisoreCents: centsSchema }),
+        alta: z.object({ finoACents: centsSchema, baseCents: centsSchema, divisoreCents: centsSchema }),
+        bonus: z.object({ oltreCents: centsSchema, finoACents: centsSchema, importoCents: centsSchema }),
+      }),
+    ),
+    oneriDetraibili: param(
+      z.object({
+        aliquota: rate,
+        tetto: z.object({
+          daCents: centsSchema,
+          sogliaBase100kCents: centsSchema,
+          importoBaseCents: z.object({ fino100k: centsSchema, oltre100k: centsSchema }),
+          coefficientiFigli: z.object({ nessuno: rate, uno: rate, due: rate, oltreODisabilita: rate }),
+        }),
+        degressione: z.object({ daCents: centsSchema, aCents: centsSchema }),
+        taglioAltiRedditi: z.object({ sogliaCents: centsSchema, importoCents: centsSchema }).nullable(),
+      }),
+    ),
+    addizionali: param(z.object({ regionaleBase: rate, regionaleMax: rate, comunaleMax: rate })),
   }),
   acconti: z.object({
     quotaImposta: param(rate),

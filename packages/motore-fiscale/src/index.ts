@@ -14,6 +14,8 @@ export type {
 } from './compute-anno'
 export { computeTimeline } from './timeline'
 export type { F24, F24Riga, Timeline, TimelineAnnoInput, TimelineOpts } from './timeline'
+export { computeOrdinario } from './ordinario'
+export type { FigliACarico, OrdinarioInput, RisultatoOrdinario } from './ordinario'
 export { aggregaIncassato } from './cassa'
 export type { Pagamento } from './cassa'
 export { bolloPerFattura } from './bollo'

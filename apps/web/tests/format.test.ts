@@ -6,6 +6,7 @@ import {
   formatEuroIntero,
   oggiIso,
   parseImportoIt,
+  parsePercentoIt,
   propostaDataIncasso,
 } from '../src/lib/format'
 
@@ -55,6 +56,18 @@ describe('formati italiani', () => {
     expect(descriviGiorni(0)).toBe('oggi')
     expect(descriviGiorni(1)).toBe('domani')
     expect(descriviGiorni(100)).toBe('tra 100 giorni')
+  })
+
+  it('parsePercentoIt: percento italiano → aliquota, arrotondata a 2 decimali di percento', () => {
+    expect(parsePercentoIt('1,23')).toBe(0.0123)
+    expect(parsePercentoIt('0,80')).toBe(0.008)
+    expect(parsePercentoIt('3')).toBe(0.03)
+    expect(parsePercentoIt('0')).toBe(0)
+    // più di 2 decimali: arrotondati (il motore vuole aliquote a 4 decimali esatti)
+    expect(parsePercentoIt('1,234')).toBe(0.0123)
+    expect(parsePercentoIt('abc')).toBeNull()
+    expect(parsePercentoIt('')).toBeNull()
+    expect(parsePercentoIt('-1')).toBeNull()
   })
 
   it('propostaDataIncasso: oggi solo per le fatture del mese corrente, altrimenti la data della fattura', () => {

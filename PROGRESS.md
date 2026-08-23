@@ -3,6 +3,60 @@
 > Una voce per sessione: fatto, decisioni, next steps, blocchi. Le ultime 2 voci si leggono
 > all'inizio di ogni sessione (vedi CLAUDE.md).
 
+## 2026-08-23 — S14 Confronto con l'ordinario (post-MVP §2)
+
+**Fatto**
+- **Ricerca su fonti primarie COMPLETA** (2 subagent, findings in
+  `.scratch/confronto-ordinario/research/irpef-2026.md`, 9 sezioni con citazioni verbatim):
+  testi vigenti su Normattiva (TUIR artt. 11, 13, 15, 16-ter, 54, 66; L. 199/2025;
+  L. 207/2024; D.Lgs. 68/2011; D.Lgs. 360/1998; DPR 600/1973), circ. AdE 6/E/2025 e
+  ris. 93/E/2019 in PDF. Zero smentite del documentato; UNA correzione allo scoping
+  (detrazione LA vigente 1.265/500+formule, non il 1.104 ante-2022). Trovato anche:
+  50/50 degli acconti vale per l'ex-forfettario (ris. 93/E: basta l'ISA approvato),
+  IRAP mai per le persone fisiche, −440 solo sul monte oneri 19%/partiti/calamità.
+- **Design gate con Federico** (2 domande): costi reali = **registro spese + campo
+  «altri costi»**; oneri 19% **SÌ, campo aggregato** (⇒ input figli a carico per il
+  coefficiente del tetto 16-ter).
+- **Motore in TDD** (RED verificato: 8 failure attese → GREEN): `computeOrdinario` in
+  `src/ordinario.ts` — reddito effettivo (clamp a zero con flag `ordinario-perdita`),
+  contributi GS/IVS su base effettiva (riuso `contributiFissiIvs`/`contributiEccedenzaIvs`
+  coi massimali e relativi flag), IRPEF a scaglioni dai params, detrazione LA con
+  troncamento a 4 decimali (art. 13 c. 6: `rapportoTroncato4`, aritmetica intera),
+  oneri 19% (tetto sulle spese × coefficiente figli → 19% → degressione con
+  `quotaLineare` half-up dichiarato → −440 con clamp), addizionali dovute solo con
+  IRPEF netta > 0 e soglia comunale a scalino. Nuovo blocco `irpef` nei params
+  2025/2026 (zod + fonte per valore, incluso il 35% del 2025 e taglio −440 null nel
+  2025). **8 golden quadrati a mano** in `tests/golden/caso-ordinario.ts` (checkpoint
+  13.700/14.140 a 50k dalla scheda AdE; clamp del −440 esercitato; bonus +50; cliff
+  comunale; perdita con fissi IVS dovuti; 2025 vs 2026).
+- **UI nel Simulatore**: sezione richiudibile «E se uscissi dal forfettario?»
+  (`ConfrontoOrdinario.tsx`) — costi dal registro spese dell'anno + altri costi, oneri
+  19% (copy: sanitarie e mutui esclusi per legge), figli a carico, addizionali in %
+  con validazione sui massimi di legge (`parsePercentoIt`, 2 decimali di percento per
+  l'aritmetica del motore), soglia esenzione; tabella di confronto col «Totale
+  ordinario» vs forfettario (contributi+imposta) e verdetto col delta annuo; footer con
+  le assunzioni («a regime», competenza). 3 mount test + unit sul parse.
+- **Docs**: nuova sezione «Regime ordinario» in regole-fiscali.md (tabella completa con
+  fonti primarie + semplificazioni dichiarate); righe roadmap IRPEF/plafond promosse a
+  primarie (23/08); CHANGELOG.
+- `pnpm verify` verde: **232 test** (78 nel motore; 12 nuovi: 8 golden ordinario, 1 unit
+  su `parsePercentoIt`, 3 mount del confronto).
+
+**Decisioni**: confronto **a regime e di competenza** (contributi dovuti come deduzione,
+niente acconti/cassa nel confronto: alla lettera il primo anno d'ordinario nascerebbe
+senza acconti IRPEF — documentato, non modellato); input oneri = solo quelli soggetti ai
+meccanismi; aliquote addizionali come input unico (articolazione regionale per scaglioni
+= semplificazione dichiarata); perdite non modellate (clamp+flag).
+
+**Next steps**: collaudo di Federico sul confronto in produzione; poi §1b casse
+professionali o §3 simulatore dipendente; backlog invariato (offline PWA,
+apple-touch-icon, superRefine riepiloghi).
+
+**Blocchi/aperture**: invariati (GU DL 89/2026, soglie GS, mapping ATECO 2025, quadro RR
+arrotondamenti, daVerificare 0,48). Nuovo, informativo: nessuna circolare AdE «primi
+chiarimenti» sulla L. 199/2025 ancora agganciata (la scheda AdE 13/01/2026 fa da
+riscontro); clamp a zero del −440 = interpretazione dichiarata.
+
 ## 2026-08-23 — S13 Tema chiaro/scuro, pulizia Vercel e kickoff §2
 
 **Fatto**

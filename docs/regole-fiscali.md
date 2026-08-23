@@ -121,12 +121,45 @@ implementato: minimale e massimali cambiano ogni anno);
 codice sede e code-line 17 cifre degli F24 INPS non calcolabili
 (in UI: rimando al Cassetto previdenziale).
 
+## Regime ordinario — per il confronto «quando conviene uscire»
+
+Verifica del 23/08/2026 su fonti primarie: testi VIGENTI su Normattiva (TUIR artt. 11, 13,
+15, 16-ter, 54, 66; L. 199/2025; L. 207/2024; D.Lgs. 68/2011; D.Lgs. 360/1998; DPR 600/1973),
+circ. AdE 6/E/2025 e ris. AdE 93/E/2019 lette in PDF, scheda AdE agg. 13/01/2026 come
+riscontro di prassi. Alimenta il confronto del Simulatore (`computeOrdinario`): non è un
+modulo di gestione del regime ordinario.
+
+| Regola | Valore | Fonte | Stato |
+|---|---|---|---|
+| Scaglioni IRPEF 2026 | 23% ≤ 28.000 · **33%** 28.000–50.000 · 43% oltre (imposta a 50.000 = 13.700) | art. 11, c. 1, TUIR vigente; L. 199/2025, art. 1, c. 3 (in vigore 1/1/2026, art. 21) | ✅ 23/08/2026 |
+| Scaglioni IRPEF 2025 | 23% · **35%** · 43% (imposta a 50.000 = 14.140) | art. 11 TUIR vigente al 30/06/2025; L. 207/2024, art. 1, c. 2, lett. a | ✅ 23/08/2026 |
+| Detrazione lavoro autonomo / impresa minore (2025 = 2026) | 1.265 € (RC ≤ 5.500) · 500 + 765 × (28.000−RC)/22.500 (≤ 28.000) · 500 × (50.000−RC)/22.000 (≤ 50.000) · zero oltre; **+50 €** se 11.000 < RC ≤ 17.000; rapporti alle prime **4 cifre decimali** (troncamento) | art. 13, c. 5, 5-ter e 6, TUIR (riscrittura L. 234/2021) | ✅ 23/08/2026 |
+| Tetto oneri detraibili (dal 2025) | RC > 75.000: spese ammesse ≤ 14.000 (fino a 100.000) / 8.000 (oltre) × coefficiente figli 0,50/0,70/0,85/1 — è un cap sulle **SPESE**; la detrazione art. 13 ne è FUORI | art. 16-ter, c. 1-3, TUIR (L. 207/2024, c. 10); circ. AdE 6/E/2025, pp. 7-9 | ✅ 23/08/2026 |
+| Degressione detrazioni art. 15 | RC 120.000–240.000: × (240.000−RC)/120.000, zero oltre; salve le sanitarie e gli interessi sui mutui | art. 15, c. 3-bis, 3-ter e 3-quater, TUIR | ✅ 23/08/2026 |
+| Taglio alti redditi (dal 2026) | −440 € se RC > 200.000, SOLO sul monte detrazioni degli oneri 19% (escluse sanitarie) + partiti + premi calamità, a valle di tetto e degressione; clamp a zero | art. 16-ter, c. 5-bis (L. 199/2025, art. 1, c. 4) | ✅ 23/08/2026 (clamp: interpretazione dichiarata) |
+| Addizionale regionale | base 1,23%, max 3,33%; su RC al netto degli oneri deducibili; dovuta solo se l'IRPEF netta è dovuta; **unica soluzione a saldo** (niente acconto) | D.Lgs. 68/2011, art. 6; D.Lgs. 446/1997, art. 50, c. 2 e 5 | ✅ 23/08/2026 — aliquota = input utente |
+| Addizionale comunale | max 0,8% (+0,4 Roma Capitale); eventuale soglia di esenzione **a scalino**; acconto 30% su imponibile, aliquota e soglia dell'anno precedente | D.Lgs. 360/1998, art. 1; DL 78/2010, art. 14, c. 14; DL 138/2011, art. 1, c. 11 | ✅ 23/08/2026 — aliquota = input utente |
+| Acconti IRPEF | 100% del rigo «differenza»; non dovuti ≤ 51,65 €; **50/50 anche per l'ex-forfettario** (attività con ISA approvato, a prescindere dall'applicarlo); 40/60 solo senza ISA (1ª rata se > 103 €) | DL 76/2013, art. 11, c. 18; L. 97/1977, art. 1; DL 124/2019, art. 58 + DL 34/2019, art. 12-quinquies; ris. AdE 93/E/2019; DPR 435/2001, art. 17, c. 3 | ✅ 23/08/2026 (informativo: il confronto è di competenza) |
+| IRAP persone fisiche | mai dovuta (dal 2022) | L. 234/2021, art. 1, c. 8 | ✅ 23/08/2026 |
+| Regime di atterraggio all'uscita | impresa: contabilità semplificata naturale sotto 500.000/800.000 (reddito per cassa impropria, art. 66); professionista: art. 54, cassa pura — la timeline incassi resta valida | DPR 600/1973, art. 18; TUIR, artt. 54 e 66 | ✅ 23/08/2026 |
+
+Semplificazioni del confronto, dichiarate: il confronto è **a regime e di competenza** — i
+contributi DOVUTI dell'anno fanno da deduzione (nel regime vero si deducono i versati per
+cassa) e non si modellano acconti/cassa (alla lettera, il primo anno di ordinario col metodo
+storico nascerebbe senza acconti IRPEF e con l'acconto di sostitutiva a credito); l'input
+«oneri 19%» raccoglie SOLO gli oneri soggetti a tetto/degressione/taglio (sanitarie e
+interessi sui mutui, salvati per legge, restano fuori dall'input); aliquote delle addizionali
+come input unico (le regioni possono articolare per scaglioni e oltre +0,5 punti la
+maggiorazione non tocca il 1º scaglione); RC al lordo dell'abitazione principale (l'app non
+ha redditi immobiliari); perdite non modellate (reddito clampato a zero, con avviso); IVA
+neutra sui clienti B2B e adempimenti fuori dal confronto.
+
 ## Parametri per moduli futuri (roadmap)
 
 | Tema | Valori | Fonte | Stato |
 |---|---|---|---|
-| IRPEF 2026 | 23% ≤28.000; **33%** 28.000–50.000; 43% oltre; sterilizzazione >200.000 (−440 € di detrazioni) | L. 199/2025 (Bilancio 2026) | ✅ 15/08/2026 (fonti secondarie) |
-| Previdenza complementare | plafond deducibile **5.300 €/anno** dal 2026 (era 5.164,57) | L. 199/2025 | ✅ 15/08/2026 |
+| IRPEF 2026 | implementata per il confronto: v. sezione «Regime ordinario» qui sopra (il −440 riguarda SOLO il monte oneri 19%/partiti/calamità, non tutte le detrazioni) | testi vigenti su Normattiva (primarie) | ✅ 23/08/2026 |
+| Previdenza complementare | plafond deducibile **5.300 €/anno** dal periodo d'imposta 2026 (era 5.164,57); nota di drafting: il veicolo (c. 201) decorre dall'1/7/2026 ma il testo inserito dice «dal periodo d'imposta 2026» — per un limite annuo, stesso risultato | D.Lgs. 252/2005, art. 8, c. 4, vigente (L. 199/2025, art. 1, c. 201, lett. a, n. 1) | ✅ 23/08/2026 |
 | Artigiani/commercianti | implementato: vedi la sezione dedicata «Artigiani e commercianti (gestioni IVS)» | circ. INPS 38/2025 e 14/2026 | ✅ 23/08/2026 |
 | CCNL Commercio / Fon.Te | 14 mensilità; lavoratore min 0,55% → datore 1,55% (con TFR conferito) | CCNL/Fon.Te | 🔭 riverificare all'implementazione |
 

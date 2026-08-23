@@ -2,6 +2,7 @@ import { computeAnno, computeTimeline, GRUPPI_ATECO, type Flag, type RisultatoAn
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Card } from '../components/Card'
+import { ConfrontoOrdinario } from '../components/ConfrontoOrdinario'
 import { Flusso } from '../components/Flusso'
 import { IntestazionePagina } from '../components/IntestazionePagina'
 import type { Fattura, Profilo, RiepilogoAnnuale, Spesa } from '../db'
@@ -286,6 +287,17 @@ export function Simulatore({
             </p>
             <Flusso explain={risultato.explain} anno={annoSimulato} livrea="sim" />
           </section>
+
+          {incassatoCents !== null && (
+            <ConfrontoOrdinario
+              anno={annoSimulato}
+              incassatoCents={incassatoCents}
+              copertura={copertura}
+              gestione={gestioneScenario}
+              spese={spese}
+              forfettario={risultato}
+            />
+          )}
         </>
       )}
 

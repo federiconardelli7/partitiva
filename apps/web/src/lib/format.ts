@@ -59,6 +59,16 @@ export function centsInInput(cents: number): string {
   })
 }
 
+/** «1,23» (percento all'italiana) → aliquota 0,0123, arrotondata a 2 decimali di percento
+ *  (il motore accetta aliquote con al massimo 4 decimali); null se non interpretabile. */
+export function parsePercentoIt(testo: string): number | null {
+  const pulito = testo.trim().replace(',', '.')
+  if (pulito.length === 0) return null
+  const valore = Number(pulito)
+  if (!Number.isFinite(valore) || valore < 0) return null
+  return Math.round(valore * 100) / 10_000
+}
+
 /** Countdown umano: mai «tra 0 giorni». */
 export function descriviGiorni(giorni: number): string {
   if (giorni <= 0) return 'oggi'
