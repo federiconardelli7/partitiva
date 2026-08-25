@@ -3,6 +3,33 @@
 > Una voce per sessione: fatto, decisioni, next steps, blocchi. Le ultime 2 voci si leggono
 > all'inizio di ogni sessione (vedi CLAUDE.md).
 
+## 2026-08-25 — S20 Redesign: layout del Simulatore col pannello sticky (ticket 04)
+
+**Fatto** (stessa chat di S18/S19, su «ok continue»)
+- **Ticket 04 risolto**: prototipo del layout Simulatore nella shell del 08
+  (`prototipi/04-pannello-simulatore.html`, artefatto pubblicato): desktop scuro+chiaro
+  con pannello sticky 340 (netto grande → da accantonare con composizione → pressione →
+  soglie → **verdetti in miniatura** coi numeri veri del motore S19, cliccabili:
+  scroll + apertura della sezione); colonna sinistra form → avvisi → Flusso (resta,
+  reso in schema coi valori golden) → tre sezioni richiudibili; **stati** errore
+  (pannello montato con «—», niente salti: cambio vs oggi dove le card spariscono) e
+  avviso params-fallback (banner amber, verbatim); **sheet mobile** peek (solo netto)
+  ed espansa (~¾ con scrim). Contrasti nuovi calcolati: amber-12/11 su amber-3
+  10,5 / 10,3; errore red-11 5,0 / 8,9.
+- **Scelta di Federico: sezioni impilate richiudibili** (bocciate le tab); wireframe
+  testuale e decisioni di comportamento nel ## Answer del ticket; riga in
+  Decisions-so-far della mappa.
+
+**Decisioni**: pannello = netto → accantonare → pressione → soglie → verdetti;
+click sul verdetto = scroll + apre (focus sul titolo); errore non smonta il pannello;
+avvisi non bloccanti; la casa definitiva delle chart resta al ticket 05.
+
+**Next steps**: frontiera = 05 (le tre chart nella direzione B) e 06 (Landing),
+parallelizzabili; poi il 07 consolida spec e piano build e la mappa arriva a
+destinazione.
+
+**Blocchi/aperture**: nessuno nuovo.
+
 ## 2026-08-25 — S19 Redesign: shell con menu laterale e viste dei confronti (ticket 08 + 09)
 
 **Fatto** (stessa chat della S18, su «ok continue» esplicito di Federico)
