@@ -3,6 +3,47 @@
 > Una voce per sessione: fatto, decisioni, next steps, blocchi. Le ultime 2 voci si leggono
 > all'inizio di ogni sessione (vedi CLAUDE.md).
 
+## 2026-08-25 — S19 Redesign: shell con menu laterale e viste dei confronti (ticket 08 + 09)
+
+**Fatto** (stessa chat della S18, su «ok continue» esplicito di Federico)
+- **Ticket 08 risolto**: prototipo della shell in direzione B
+  (`prototipi/08-shell-menu-laterale.html`, artefatto pubblicato): desktop con sidebar
+  sinistra 232 px (brand + nav + TemaToggle; voce attiva a pill, solo Simulatore tinto
+  violet), tre regioni dimostrate a 1280; bivio mobile M1 bottom-nav vs M2 drawer con
+  drawer aperto. **Scelte di Federico: M2 drawer** («the bottom might have the button to
+  go back»: il bordo inferiore resta TUTTO alla sheet del 04) e **larghezza delegata →
+  confermato centrato ~1100 px**. Nota footer nel contenuto, non in sidebar; a11y:
+  skip link primo focus, aria-current, drawer modale con focus trap.
+- **Ticket 09 creato, claimato e prototipato** (richiesta esplicita: «design what the
+  page would be like if I go out of forfettario… If I am an employee… they definitely
+  need more effort there»): le due viste di confronto APERTE
+  (`prototipi/09-viste-confronti.html`, artefatto pubblicato): proposta «duello» in
+  testa (i due totali a confronto, verdetto subito) + tabella verbatim sotto; etichette,
+  sotto-etichette e frasi dei verdetti riprese 1:1 dai componenti attuali.
+- **Rigore numeri**: motore fiscale VERO eseguito via tsx (`motore-run.ts` in
+  scratchpad, `src/` solo importato): validato PRIMA su 3 golden (ordinario A,
+  dipendente F, caso campione: 7 assert riprodotti), poi calcolate le viste sui default
+  app (regionale 1,23%, comunale 0): ordinario a 75.000 → totale 36.277,15
+  (+21.041,67 sul forfettario); dipendente RAL 30.000 con Fon.Te → netto 23.576,37
+  (−36.188,15 sul netto reale 59.764,52).
+- **Gotcha catturato**: i prototipi locali senza doctype vanno in quirks mode e le
+  `<table>` NON ereditano `color` (prendono quello del body): righe invisibili nei
+  frame scuri → colore esplicito sulla tabella. Sull'artefatto pubblicato il wrapper
+  aggiunge il doctype, ma il fix rende il file robusto in entrambi i modi.
+- Wiring mappa: 08 resolved con ## Answer, righe in Decisions-so-far (shell M2 +
+  larghezza; nascita del 09), 04 aggiornato (bordo inferiore alla sheet; viste → 09),
+  07 blocked-by esteso a 08 e 09.
+
+**Decisioni**: shell = sidebar 232 desktop / M2 drawer mobile / contenuto ~1100
+centrato; **viste confronti = duello + tabella** (scelta di Federico: i due totali in
+testa col vincitore in peso, verdetto subito, tabella come dettaglio); verdetto
+positivo in grass da sciogliere al 07 (sovrapposizione successo/reale).
+
+**Next steps**: frontiera = 04 (pannello Simulatore, con shell e viste ormai decise),
+05 (chart) e 06 (Landing), parallelizzabili; il 07 consolida spec e piano build.
+
+**Blocchi/aperture**: nessuno nuovo.
+
 ## 2026-08-25 — S18 Redesign: artefatto delle tre direzioni e scelta della B (ticket 03)
 
 **Fatto**
