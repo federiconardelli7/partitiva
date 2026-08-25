@@ -3,6 +3,43 @@
 > Una voce per sessione: fatto, decisioni, next steps, blocchi. Le ultime 2 voci si leggono
 > all'inizio di ogni sessione (vedi CLAUDE.md).
 
+## 2026-08-25 — S21 Redesign: le tre chart e la Landing (ticket 05 + 06)
+
+**Fatto** (stessa chat di S18-S20, su «continue»)
+- **Ticket 05 risolto**: le tre chart nella direzione B, pattern SVG a mano della
+  research 02 (`prototipi/05-chart-direzione.html`, artefatto pubblicato).
+  Composizione = «binario del prelievo» (il binario È l'incassato; il prelievo somma
+  al 20,31%, lo stesso numero della pressione); l'impilata classica a toni è stata
+  SCARTATA COI NUMERI (violet-5/7 su superficie 1,3-2,2 contro ≥3). Netti a confronto:
+  attivo in livrea, inattivi slate-9 (3,1/3,4), sotto-titolo di scenario obbligatorio
+  (netto ordinario 38.722,85 = 75.000 − 36.277,15 dal motore). Soglie: stato oltre-85k
+  col badge amber e flag VERBATIM del motore, barra sempre in livrea (oggi la
+  Panoramica la tinge amber: da armonizzare; amber-9 come fill farebbe 1,5 in chiaro).
+  Federico ha approvato tutto chiedendo un ragionamento sul colore di imposta:
+  deciso (con delega, senza rivalidare) **contributi violet-9 + imposta violet-10**
+  (stessa famiglia, toni contigui; 5,85/4,0 su superficie; in scuro v10 migliora anche
+  l'adiacenza col binario, 3,62). Nota per la Panoramica: grass-9 chiaro fa 2,88 →
+  al build grass-10 #3e9b4f (3,33).
+- **Ticket 06 risolto**: Landing nella direzione B (`prototipi/06-landing.html`,
+  artefatto pubblicato, APPROVATA): hero col copy attuale verbatim, mock del
+  Simulatore nuovo in cornice finestra, Flusso d'esempio in livrea reale coi numeri
+  del motore (30.000 primo anno → netto 23.754,93, validato sul golden anno-1), tre
+  promesse con icone SVG al posto delle emoji, chiusa con CTA; CTA primaria da
+  emerald ad accento (emerald ora è semantica del reale).
+- Wiring: entrambi i ticket resolved con ## Answer, due righe in Decisions-so-far.
+
+**Decisioni**: chart e collocazioni come da ## Answer del 05 (composizione nel
+pannello, soglie nel pannello + Panoramica, netti a confronto in coda alle sezioni);
+Landing come da ## Answer del 06.
+
+**Next steps**: resta SOLO il ticket 07 (spec finale in `.scratch/redesign-app/spec.md`
++ piano delle sessioni di build): consolida 03/04/05/06/08/09, aggiorna CONTEXT.md coi
+termini nuovi, e lì la mappa arriva a destinazione. Il build parte dopo, in sessioni
+normali fuori mappa.
+
+**Blocchi/aperture**: sovrapposizione grass = successo vs reale (verdetti) da sciogliere
+nel 07; tokenizzazione red/amber al 07.
+
 ## 2026-08-25 — S20 Redesign: layout del Simulatore col pannello sticky (ticket 04)
 
 **Fatto** (stessa chat di S18/S19, su «ok continue»)
