@@ -35,8 +35,10 @@ describe('Simulatore — confronto con l’ordinario', () => {
     fireEvent.change(within(sezione).getByLabelText(/Addizionale regionale/i), { target: { value: '1,73' } })
     fireEvent.change(within(sezione).getByLabelText(/Addizionale comunale/i), { target: { value: '0,80' } })
 
-    // due occorrenze per design B4: tile del duello + riga «Totale ordinario»
-    expect(await within(sezione).findAllByText(/23\.072,41/)).toHaveLength(2)
+    // il totale sta nella sola tabella; il duello parla in NETTO (feedback S27):
+    // netto in ordinario = 60.000 − 10.000 − 23.072,41 = 26.927,59, in tile E in tabella
+    expect(await within(sezione).findAllByText(/23\.072,41/)).toHaveLength(1)
+    expect(await within(sezione).findAllByText(/26\.927,59/)).toHaveLength(2)
     // il lato forfettario del confronto è il «da accantonare» dello scenario
     expect(within(sezione).getByText(/Totale forfettario/i)).toBeTruthy()
   })
@@ -71,7 +73,9 @@ describe('Simulatore — confronto con l’ordinario', () => {
     fireEvent.change(within(sezione).getByLabelText(/Regione o provincia autonoma/i), { target: { value: 'trento' } })
     // il campo manuale sparisce; RC 36.965 > 30.000 → 1,23% sull'intero = 454,67
     expect(within(sezione).queryByLabelText(/Addizionale regionale \(%\)/i)).toBeNull()
-    expect(await within(sezione).findAllByText(/22\.887,59/)).toHaveLength(2) // totale col dataset Trento: duello + tabella
+    // totale Trento nella sola tabella; il netto (60.000−10.000−22.887,59) in tile E in tabella
+    expect(await within(sezione).findAllByText(/22\.887,59/)).toHaveLength(1)
+    expect(await within(sezione).findAllByText(/27\.112,41/)).toHaveLength(2)
   })
 
   it('la regione salvata nel profilo pre-seleziona il confronto', async () => {

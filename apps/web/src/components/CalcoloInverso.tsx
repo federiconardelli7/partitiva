@@ -15,7 +15,7 @@ import type { Spesa } from '../db'
 import { paramsVicini, spesePerAnno } from '../lib/bilancio'
 import { formatEuro, formatEuroIntero, formatPercento, parseImportoIt, parsePercentoIt } from '../lib/format'
 
-const campo = 'mt-1 w-full rounded-md border border-bordo-campo bg-sfondo px-3 py-2'
+const campo = 'mt-1 w-full rounded-md border border-bordo-campo bg-sfondo px-3 py-2 sm:mt-0 sm:self-start'
 
 const DIMENSIONI: { valore: '' | DimensioneAzienda; etichetta: string }[] = [
   { valore: '', etichetta: 'Solo IVS 9,19% (come i calcolatori standard)' },
@@ -177,15 +177,15 @@ export function CalcoloInverso({
 
       {aperto && (
         <div className="space-y-4 border-t border-bordo-sottile p-4">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label className="text-sm">
+          <div className="grid gap-x-3 gap-y-1 sm:grid-cols-2">
+            <label className="pb-3 text-sm sm:row-span-3 sm:grid sm:grid-rows-subgrid">
               Netto desiderato (€/anno)
               <input value={netto} onChange={(e) => setNetto(e.target.value)} placeholder="es. 30.000" className={campo} />
               <span className="mt-1 block text-xs text-testo-secondario">
                 Quanto vuoi che ti resti in tasca in un anno: qui si va all'indietro, dal netto al lordo.
               </span>
             </label>
-            <label className="text-sm">
+            <label className="pb-3 text-sm sm:row-span-3 sm:grid sm:grid-rows-subgrid">
               Altri costi (€/anno)
               <input value={altriCosti} onChange={(e) => setAltriCosti(e.target.value)} placeholder="0" className={campo} />
               <span className="mt-1 block text-xs text-testo-secondario">
@@ -193,7 +193,7 @@ export function CalcoloInverso({
                 ordinario si deducono, nel forfettario escono comunque dal netto reale.
               </span>
             </label>
-            <label className="text-sm">
+            <label className="pb-3 text-sm sm:row-span-3 sm:grid sm:grid-rows-subgrid">
               Contributi in busta (per la RAL)
               <select
                 value={dimensione}
@@ -207,7 +207,7 @@ export function CalcoloInverso({
                 ))}
               </select>
             </label>
-            <label className="text-sm">
+            <label className="pb-3 text-sm sm:row-span-3 sm:grid sm:grid-rows-subgrid">
               Regione o provincia autonoma (residenza al 1º gennaio)
               <select
                 value={regione}
@@ -223,20 +223,20 @@ export function CalcoloInverso({
               </select>
             </label>
             {regione === '' && (
-              <label className="text-sm">
+              <label className="pb-3 text-sm sm:row-span-3 sm:grid sm:grid-rows-subgrid">
                 Addizionale regionale (%)
                 <input value={regionale} onChange={(e) => setRegionale(e.target.value)} className={campo} />
               </label>
             )}
-            <label className="text-sm">
+            <label className="pb-3 text-sm sm:row-span-3 sm:grid sm:grid-rows-subgrid">
               Addizionale comunale (%)
               <input value={comunale} onChange={(e) => setComunale(e.target.value)} className={campo} />
             </label>
-            <label className="text-sm">
+            <label className="pb-3 text-sm sm:row-span-3 sm:grid sm:grid-rows-subgrid">
               Soglia di esenzione comunale (€, se il comune la prevede)
               <input value={soglia} onChange={(e) => setSoglia(e.target.value)} placeholder="nessuna" className={campo} />
             </label>
-            <label className="flex items-center gap-2 text-sm sm:col-span-2">
+            <label className="flex items-center gap-2 pb-3 text-sm sm:col-span-2">
               <input type="checkbox" checked={fonTe} onChange={(e) => setFonTe(e.target.checked)} />
               Aderisco a Fon.Te (CCNL Commercio): 0,55% dedotto, 1,55% dal datore, TFR al fondo
             </label>

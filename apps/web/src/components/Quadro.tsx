@@ -52,7 +52,11 @@ export function Quadro({
         )
       : null
   const forfettarioCents = risultato ? risultato.contributiDovutiCents + risultato.impostaCents : 0
-  const deltaOrdinario = ordinario ? ordinario.totaleCents - forfettarioCents : null
+  // In chiave NETTO (feedback S27): «se passassi all'ordinario, quanto ti resterebbe?»
+  const deltaOrdinario =
+    ordinario && risultato && incassatoCents !== null
+      ? incassatoCents - spesePerAnno(spese, anno) - ordinario.totaleCents - risultato.nettoRealeCents
+      : null
 
   // Come per l'ordinario: coi default della sezione (solo IVS, Fon.Te attivo, 1,23%/0).
   const dipendente =
@@ -155,8 +159,8 @@ export function Quadro({
           voceVerdetto(
             'ordinario',
             'Ordinario',
-            deltaOrdinario >= 0 ? 'restare conviene' : 'costerebbe meno: apri il confronto',
-            `${deltaOrdinario >= 0 ? '+' : '−'}${formatEuro(Math.abs(deltaOrdinario))}`,
+            deltaOrdinario <= 0 ? 'di netto in meno se passassi' : 'di netto in più se passassi',
+            `${deltaOrdinario > 0 ? '+' : '−'}${formatEuro(Math.abs(deltaOrdinario))}`,
           )
         ) : (
           voceVerdetto('ordinario', 'Ordinario', 'in attesa di un importo valido')

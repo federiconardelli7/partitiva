@@ -3,6 +3,35 @@
 > Una voce per sessione: fatto, decisioni, next steps, blocchi. Le ultime 2 voci si leggono
 > all'inizio di ogni sessione (vedi CLAUDE.md).
 
+## 2026-08-25 — S27 Collaudo B4: duello in chiave NETTO e campi allineati
+
+**Fatto** (feedback di Federico dal deploy live)
+- **Il duello ordinario parla in NETTO** («immagina che passo all'ordinario: cosa mi
+  dice?»): tile «Netto col forfettario (oggi)» (netto reale) vs «Netto se passassi
+  all'ordinario» (incassato − costi − totale, doctrine S17); in tabella la riga nuova
+  «Netto in ordinario (incassato − costi − totale)». Il verdetto testuale resta quello
+  di sempre (parla di costo annuo: i due linguaggi insieme coprono entrambe le letture).
+  Anche il verdetto del Quadro ora è in netto: «±X € · di netto in meno/più se passassi».
+- **Campi allineati con subgrid**: nelle griglie a due colonne (form del Simulatore e
+  tre sezioni) etichette su più righe disallineavano gli input (es. «Soglia di
+  esenzione…» vs «Addizionale comunale»). Ora ogni cella è `row-span-3` +
+  `grid-rows-subgrid`: etichetta, campo e hint vivono su binari condivisi tra le
+  colonne e gli input si allineano sempre; su mobile resta il flusso semplice
+  (`sm:mt-0 sm:self-start` sui campi, `pb-3` per il respiro tra le coppie).
+- **Test rafforzati di nuovo**: il totale golden ora sta SOLO in tabella (length 1) e
+  il netto in ordinario appare in tile E in tabella (length 2, valori derivati dai
+  golden: 26.927,59 = 60.000−10.000−23.072,41; Trento 27.112,41): il test verifica che
+  l'app faccia la stessa aritmetica.
+- **Gate verde**: `pnpm verify` 271/271 + lint + tsc + privacy; build ok.
+
+**Decisioni**: netto come lingua dei duelli e dei verdetti del Quadro (i totali di
+prelievo restano in tabella); nessun cambiamento al copy dei verdetti testuali.
+
+**Next steps**: B5 «chart» (composizione nel Quadro, «I netti a confronto» in coda
+alle sezioni, soglie Panoramica), poi B6 Landing.
+
+**Blocchi/aperture**: nessuno nuovo.
+
 ## 2026-08-25 — S26 Build B4: le viste duello nei tre confronti
 
 **Fatto** (spec §5)

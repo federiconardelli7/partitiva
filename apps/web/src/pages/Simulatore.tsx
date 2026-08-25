@@ -22,7 +22,7 @@ import {
 import { centsInInput, formatEuro, oggiIso, parseImportoIt } from '../lib/format'
 import { useDesktop } from '../lib/use-desktop'
 
-const campoBase = 'mt-1 w-full rounded-md border bg-sfondo px-3 py-2'
+const campoBase = 'mt-1 w-full rounded-md border bg-sfondo px-3 py-2 sm:mt-0 sm:self-start'
 const campo = `${campoBase} border-bordo-campo`
 const campoInvalido = `${campoBase} border-errore-solido`
 
@@ -156,9 +156,9 @@ export function Simulatore({
 
   const colonna = (
     <div className="min-w-0 space-y-6">
-      <div className="grid gap-3 rounded-xl border border-sim-bordo bg-superficie p-4 sm:grid-cols-2">
+      <div className="grid gap-x-3 gap-y-1 rounded-xl border border-sim-bordo bg-superficie p-4 sm:grid-cols-2">
         {profilo && (
-          <label className="text-sm">
+          <label className="pb-3 text-sm sm:row-span-3 sm:grid sm:grid-rows-subgrid">
             Anno simulato
             <select value={annoSimulato} onChange={(e) => cambiaAnno(Number(e.target.value))} className={campo}>
               {anni.map((a) => (
@@ -170,7 +170,7 @@ export function Simulatore({
             </select>
           </label>
         )}
-        <label className="text-sm">
+        <label className="pb-3 text-sm sm:row-span-3 sm:grid sm:grid-rows-subgrid">
           Incassato nell'anno (€)
           <input
             value={incassato}
@@ -181,7 +181,7 @@ export function Simulatore({
             <span className="mt-1 block text-xs text-errore">Importo non valido: usa il formato 1.234,56</span>
           )}
         </label>
-        <label className="text-sm">
+        <label className="pb-3 text-sm sm:row-span-3 sm:grid sm:grid-rows-subgrid">
           Settore (coefficiente di redditività)
           <select value={settore} onChange={(e) => setSettore(e.target.value)} className={campo}>
             {GRUPPI_ATECO.map((g) => (
@@ -192,7 +192,7 @@ export function Simulatore({
           </select>
         </label>
         {concatenaAttiva ? (
-          <div className="text-sm">
+          <div className="pb-3 text-sm sm:row-span-3 sm:grid sm:grid-rows-subgrid">
             Contributi versati nell'anno (derivati)
             <div className={`${campo} bg-rail tabular-nums`}>
               {risultato ? formatEuro(risultato.versatiContributiCents) : '—'}
@@ -202,7 +202,7 @@ export function Simulatore({
             </span>
           </div>
         ) : (
-          <label className="text-sm">
+          <label className="pb-3 text-sm sm:row-span-3 sm:grid sm:grid-rows-subgrid">
             Contributi versati nell'anno (€, facoltativo)
             <input
               value={primoAnno ? '' : versati}
@@ -216,7 +216,7 @@ export function Simulatore({
             </span>
           </label>
         )}
-        <div className="flex flex-col justify-center gap-2 text-sm">
+        <div className="flex flex-col justify-center gap-2 pb-3 text-sm sm:row-span-3">
           {concatenabile && (
             <label className="flex items-center gap-2">
               <input type="checkbox" checked={concatena} onChange={(e) => setConcatena(e.target.checked)} />

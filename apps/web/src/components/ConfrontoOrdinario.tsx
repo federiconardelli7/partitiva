@@ -12,7 +12,7 @@ import type { Spesa } from '../db'
 import { paramsVicini, spesePerAnno } from '../lib/bilancio'
 import { formatEuro, formatPercento, parseImportoIt, parsePercentoIt } from '../lib/format'
 
-const campo = 'mt-1 w-full rounded-md border border-bordo-campo bg-sfondo px-3 py-2'
+const campo = 'mt-1 w-full rounded-md border border-bordo-campo bg-sfondo px-3 py-2 sm:mt-0 sm:self-start'
 
 const FIGLI: { valore: FigliACarico; etichetta: string }[] = [
   { valore: 'nessuno', etichetta: 'Nessuno' },
@@ -105,6 +105,11 @@ export function ConfrontoOrdinario({
 
   const forfettarioCents = forfettario.contributiDovutiCents + forfettario.impostaCents
   const delta = risultato ? risultato.totaleCents - forfettarioCents : 0
+  // Il netto che resterebbe passando: incassato − costi − totale (doctrine S17); il duello
+  // parla in NETTO (feedback S27: «se non fossi più forfettario, cosa mi resta?»).
+  const nettoOrdinarioCents = risultato
+    ? incassatoCents - (speseAnnoCents + (altriCostiCents ?? 0)) - risultato.totaleCents
+    : 0
 
   return (
     <section className="rounded-xl border border-sim-bordo bg-superficie">
@@ -120,8 +125,8 @@ export function ConfrontoOrdinario({
 
       {aperto && (
         <div className="space-y-4 border-t border-bordo-sottile p-4">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="text-sm">
+          <div className="grid gap-x-3 gap-y-1 sm:grid-cols-2">
+            <div className="pb-3 text-sm sm:row-span-3 sm:grid sm:grid-rows-subgrid">
               Costi reali dell'anno
               <div className={`${campo} bg-rail tabular-nums`}>
                 {formatEuro(speseAnnoCents)} dal registro spese
@@ -130,21 +135,21 @@ export function ConfrontoOrdinario({
                 In ordinario i costi si deducono davvero: qui partono dalle spese che registri già.
               </span>
             </div>
-            <label className="text-sm">
+            <label className="pb-3 text-sm sm:row-span-3 sm:grid sm:grid-rows-subgrid">
               Altri costi (€/anno)
               <input value={altriCosti} onChange={(e) => setAltriCosti(e.target.value)} placeholder="0" className={campo} />
               <span className="mt-1 block text-xs text-testo-secondario">
                 Quello che non registri: ammortamenti, quote, costi che oggi non tracci.
               </span>
             </label>
-            <label className="text-sm">
+            <label className="pb-3 text-sm sm:row-span-3 sm:grid sm:grid-rows-subgrid">
               Oneri detraibili al 19% (€/anno)
               <input value={oneri} onChange={(e) => setOneri(e.target.value)} placeholder="0" className={campo} />
               <span className="mt-1 block text-xs text-testo-secondario">
                 Esclusi sanitarie e interessi sui mutui: per legge restano fuori da tetto e degressione.
               </span>
             </label>
-            <label className="text-sm">
+            <label className="pb-3 text-sm sm:row-span-3 sm:grid sm:grid-rows-subgrid">
               Figli a carico (per il tetto oneri)
               <select value={figli} onChange={(e) => setFigli(e.target.value as FigliACarico)} className={campo}>
                 {FIGLI.map((f) => (
@@ -154,7 +159,7 @@ export function ConfrontoOrdinario({
                 ))}
               </select>
             </label>
-            <label className="text-sm">
+            <label className="pb-3 text-sm sm:row-span-3 sm:grid sm:grid-rows-subgrid">
               Regione o provincia autonoma (residenza al 1º gennaio)
               <select
                 value={regione}
@@ -175,17 +180,17 @@ export function ConfrontoOrdinario({
               </span>
             </label>
             {regione === '' && (
-              <label className="text-sm">
+              <label className="pb-3 text-sm sm:row-span-3 sm:grid sm:grid-rows-subgrid">
                 Addizionale regionale (%)
                 <input value={regionale} onChange={(e) => setRegionale(e.target.value)} className={campo} />
                 <span className="mt-1 block text-xs text-testo-secondario">Base di legge 1,23: verifica l'aliquota della tua regione.</span>
               </label>
             )}
-            <label className="text-sm">
+            <label className="pb-3 text-sm sm:row-span-3 sm:grid sm:grid-rows-subgrid">
               Addizionale comunale (%)
               <input value={comunale} onChange={(e) => setComunale(e.target.value)} className={campo} />
             </label>
-            <label className="text-sm">
+            <label className="pb-3 text-sm sm:row-span-3 sm:grid sm:grid-rows-subgrid">
               Soglia di esenzione comunale (€, se il comune la prevede)
               <input value={soglia} onChange={(e) => setSoglia(e.target.value)} placeholder="nessuna" className={campo} />
             </label>
@@ -208,19 +213,21 @@ export function ConfrontoOrdinario({
                   ))}
                 </ul>
               )}
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-x-3 gap-y-1 sm:grid-cols-2">
                 <div className={`rounded-xl border bg-sfondo p-3 ${delta >= 0 ? 'border-bordo' : 'border-bordo-sottile'}`}>
                   <div className="text-[10px] uppercase tracking-wide text-testo-secondario">
-                    Forfettario oggi (contributi + imposta)
+                    Netto col forfettario (oggi)
                   </div>
                   <div className={`mt-0.5 text-[19px] font-bold tracking-tight tabular-nums ${delta >= 0 ? '' : 'text-testo-secondario'}`}>
-                    {formatEuro(forfettarioCents)}
+                    {formatEuro(forfettario.nettoRealeCents)}
                   </div>
                 </div>
                 <div className={`rounded-xl border bg-sfondo p-3 ${delta < 0 ? 'border-bordo' : 'border-bordo-sottile'}`}>
-                  <div className="text-[10px] uppercase tracking-wide text-testo-secondario">Ordinario, stessi numeri</div>
+                  <div className="text-[10px] uppercase tracking-wide text-testo-secondario">
+                    Netto se passassi all'ordinario
+                  </div>
                   <div className={`mt-0.5 text-[19px] font-bold tracking-tight tabular-nums ${delta < 0 ? '' : 'text-testo-secondario'}`}>
-                    {formatEuro(risultato.totaleCents)}
+                    {formatEuro(nettoOrdinarioCents)}
                   </div>
                 </div>
               </div>
@@ -266,6 +273,10 @@ export function ConfrontoOrdinario({
                     <tr className="font-semibold">
                       <td className="py-1.5">Totale ordinario</td>
                       <td className="py-1.5 text-right tabular-nums">{formatEuro(risultato.totaleCents)}</td>
+                    </tr>
+                    <tr className="border-t border-rail">
+                      <td className="py-1.5">Netto in ordinario (incassato − costi − totale)</td>
+                      <td className="py-1.5 text-right tabular-nums">{formatEuro(nettoOrdinarioCents)}</td>
                     </tr>
                     <tr className="text-testo-secondario">
                       <td className="py-1.5">Totale forfettario (contributi + imposta dello scenario)</td>

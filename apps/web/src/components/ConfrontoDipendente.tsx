@@ -9,7 +9,7 @@ import { useState } from 'react'
 import { paramsVicini } from '../lib/bilancio'
 import { formatEuro, formatPercento, parseImportoIt, parsePercentoIt } from '../lib/format'
 
-const campo = 'mt-1 w-full rounded-md border border-bordo-campo bg-sfondo px-3 py-2'
+const campo = 'mt-1 w-full rounded-md border border-bordo-campo bg-sfondo px-3 py-2 sm:mt-0 sm:self-start'
 
 const DIMENSIONI: { valore: '' | DimensioneAzienda; etichetta: string }[] = [
   { valore: '', etichetta: 'Solo IVS 9,19% (come i calcolatori standard)' },
@@ -100,15 +100,15 @@ export function ConfrontoDipendente({
 
       {aperto && (
         <div className="space-y-4 border-t border-bordo-sottile p-4">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label className="text-sm">
+          <div className="grid gap-x-3 gap-y-1 sm:grid-cols-2">
+            <label className="pb-3 text-sm sm:row-span-3 sm:grid sm:grid-rows-subgrid">
               RAL — retribuzione annua lorda (€)
               <input value={ral} onChange={(e) => onRalChange(e.target.value)} placeholder="es. 35.000" className={campo} />
               <span className="mt-1 block text-xs text-testo-secondario">
                 Lo scenario vero: la RAL di un'offerta. Il fatturato non è una RAL.
               </span>
             </label>
-            <label className="text-sm">
+            <label className="pb-3 text-sm sm:row-span-3 sm:grid sm:grid-rows-subgrid">
               Contributi in busta
               <select
                 value={dimensione}
@@ -122,7 +122,7 @@ export function ConfrontoDipendente({
                 ))}
               </select>
             </label>
-            <label className="text-sm">
+            <label className="pb-3 text-sm sm:row-span-3 sm:grid sm:grid-rows-subgrid">
               Regione o provincia autonoma (residenza al 1º gennaio)
               <select
                 value={regione}
@@ -138,20 +138,20 @@ export function ConfrontoDipendente({
               </select>
             </label>
             {regione === '' && (
-              <label className="text-sm">
+              <label className="pb-3 text-sm sm:row-span-3 sm:grid sm:grid-rows-subgrid">
                 Addizionale regionale (%)
                 <input value={regionale} onChange={(e) => setRegionale(e.target.value)} className={campo} />
               </label>
             )}
-            <label className="text-sm">
+            <label className="pb-3 text-sm sm:row-span-3 sm:grid sm:grid-rows-subgrid">
               Addizionale comunale (%)
               <input value={comunale} onChange={(e) => setComunale(e.target.value)} className={campo} />
             </label>
-            <label className="text-sm">
+            <label className="pb-3 text-sm sm:row-span-3 sm:grid sm:grid-rows-subgrid">
               Soglia di esenzione comunale (€, se il comune la prevede)
               <input value={soglia} onChange={(e) => setSoglia(e.target.value)} placeholder="nessuna" className={campo} />
             </label>
-            <label className="flex items-center gap-2 text-sm sm:col-span-2">
+            <label className="flex items-center gap-2 pb-3 text-sm sm:col-span-2">
               <input type="checkbox" checked={fonTe} onChange={(e) => setFonTe(e.target.checked)} />
               Aderisco a Fon.Te (CCNL Commercio): 0,55% dedotto, 1,55% dal datore, TFR al fondo
             </label>
@@ -167,7 +167,7 @@ export function ConfrontoDipendente({
 
           {risultato && (
             <>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-x-3 gap-y-1 sm:grid-cols-2">
                 <div className={`rounded-xl border bg-sfondo p-3 ${delta > 0 ? 'border-bordo' : 'border-bordo-sottile'}`}>
                   <div className="text-[10px] uppercase tracking-wide text-testo-secondario">Netto annuo da dipendente</div>
                   <div className={`mt-0.5 text-[19px] font-bold tracking-tight tabular-nums ${delta > 0 ? '' : 'text-testo-secondario'}`}>
