@@ -7,8 +7,9 @@ export type Tema = 'chiaro' | 'scuro' | 'sistema'
 
 const CHIAVE = 'partitiva-tema'
 // Devono combaciare coi due <meta name="theme-color"> di index.html.
-const COLORE_CHIARO = '#ffffff'
-const COLORE_SCURO = '#1c1917'
+// Direzione «Notturna» (spec §1): slate-1 nei due temi.
+const COLORE_CHIARO = '#fcfcfd'
+const COLORE_SCURO = '#111113'
 
 /** Preferenza salvata; «sistema» per default, per chiavi assenti/corrotte o storage negato. */
 export function temaSalvato(): Tema {

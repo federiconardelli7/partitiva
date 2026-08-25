@@ -4,9 +4,118 @@
    dallo script inline di index.html, poi dal TemaToggle), non più il solo media query. */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Inter variable self-host (niente CDN a runtime: PWA offline + LG München 3 O 17493/20).
+   File: public/fonts/InterVariable.woff2 (352.240 B, rsms.me, SIL OFL 1.1, licenza accanto). */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/InterVariable.woff2') format('woff2');
+}
+
+/* Token semantici della direzione «Notturna» (spec del redesign, .scratch/redesign-app/spec.md §1):
+   hex da @radix-ui/colors@3.0.0. Un posto solo per chiaro e scuro: i componenti usano le
+   utility semantiche, mai `dark:` sui colori. */
 :root {
   color-scheme: light;
+  --sfondo: #fcfcfd; /* slate-1 */
+  --superficie: #f9f9fb; /* slate-2 */
+  --rail: #f0f0f3; /* slate-3 */
+  --bordo-sottile: #d9d9e0; /* slate-6 */
+  --bordo: #cdced6; /* slate-7 */
+  --bordo-campo: #b9bbc6; /* slate-8: mai unico indicatore, servono label + focus ring */
+  --testo-secondario: #60646c; /* slate-11 */
+  --testo: #1c2024; /* slate-12 */
+  --neutro-solido: #8b8d98; /* slate-9: barre inattive */
+  --accento: #107d98; /* cyan-11: testo e link */
+  --accento-solido: #00a2c7; /* cyan-9, identico nei due temi: MAI col bianco (3,0) */
+  --reale: #2a7e3b; /* grass-11 */
+  --reale-intenso: #203c25; /* grass-12: testo dei badge chiari */
+  --reale-fondo: #e9f6e9; /* grass-3 */
+  --reale-bordo: #b2ddb5; /* grass-6 */
+  --reale-solido: #3e9b4f; /* grass-10 in chiaro (grass-9 fa 2,88 su superficie) */
+  --esito-ok-fondo: #e9f6e9; /* verdetti positivi: stessi hex del reale, token separati */
+  --esito-ok-bordo: #b2ddb5;
+  --esito-ok-testo: #203c25;
+  --sim: #6550b9; /* violet-11 */
+  --sim-intenso: #2f265f; /* violet-12: testo di badge e banner chiari */
+  --sim-fondo: #f4f0fe; /* violet-3 */
+  --sim-bordo: #d4cafe; /* violet-6 */
+  --sim-solido: #6e56cf; /* violet-9, identico nei due temi */
+  --sim-solido-2: #654dc4; /* violet-10: il tono contiguo (es. imposta nella composizione) */
+  --errore: #ce2c31; /* red-11 */
+  --errore-solido: #e5484d; /* red-9, identico nei due temi: tacche soglia, bordi invalidi */
+  --avviso-fondo: #fff7c2; /* amber-3 */
+  --avviso-bordo: #f3d673; /* amber-6 */
+  --avviso-testo: #4f3422; /* amber-12 */
 }
 :root.dark {
   color-scheme: dark;
+  --sfondo: #111113;
+  --superficie: #18191b;
+  --rail: #212225;
+  --bordo-sottile: #363a3f;
+  --bordo: #43484e;
+  --bordo-campo: #5a6169;
+  --testo-secondario: #b0b4ba;
+  --testo: #edeef0;
+  --neutro-solido: #696e77;
+  --accento: #4ccce6;
+  --accento-solido: #00a2c7;
+  --reale: #71d083;
+  --reale-intenso: #71d083; /* nei badge scuri il testo sta allo step 11 */
+  --reale-fondo: #1b2a1e;
+  --reale-bordo: #2d5736;
+  --reale-solido: #46a758; /* grass-9 */
+  --esito-ok-fondo: #1b2a1e;
+  --esito-ok-bordo: #2d5736;
+  --esito-ok-testo: #71d083;
+  --sim: #baa7ff;
+  --sim-intenso: #baa7ff; /* violet-11 nei badge scuri */
+  --sim-fondo: #291f43;
+  --sim-bordo: #473876;
+  --sim-solido: #6e56cf;
+  --sim-solido-2: #7d66d9; /* violet-10 scuro */
+  --errore: #ff9592;
+  --errore-solido: #e5484d;
+  --avviso-fondo: #302008;
+  --avviso-bordo: #5c3d05;
+  --avviso-testo: #ffca16; /* amber-11 */
+}
+
+/* I token diventano utility (bg-sfondo, text-reale, border-sim-bordo…); `inline` fa
+   risolvere la variabile nel punto d'uso: il tema scuro arriva gratis. */
+@theme inline {
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --color-sfondo: var(--sfondo);
+  --color-superficie: var(--superficie);
+  --color-rail: var(--rail);
+  --color-bordo-sottile: var(--bordo-sottile);
+  --color-bordo: var(--bordo);
+  --color-bordo-campo: var(--bordo-campo);
+  --color-testo-secondario: var(--testo-secondario);
+  --color-testo: var(--testo);
+  --color-neutro-solido: var(--neutro-solido);
+  --color-accento: var(--accento);
+  --color-accento-solido: var(--accento-solido);
+  --color-reale: var(--reale);
+  --color-reale-intenso: var(--reale-intenso);
+  --color-reale-fondo: var(--reale-fondo);
+  --color-reale-bordo: var(--reale-bordo);
+  --color-reale-solido: var(--reale-solido);
+  --color-esito-ok-fondo: var(--esito-ok-fondo);
+  --color-esito-ok-bordo: var(--esito-ok-bordo);
+  --color-esito-ok-testo: var(--esito-ok-testo);
+  --color-sim: var(--sim);
+  --color-sim-intenso: var(--sim-intenso);
+  --color-sim-fondo: var(--sim-fondo);
+  --color-sim-bordo: var(--sim-bordo);
+  --color-sim-solido: var(--sim-solido);
+  --color-sim-solido-2: var(--sim-solido-2);
+  --color-errore: var(--errore);
+  --color-errore-solido: var(--errore-solido);
+  --color-avviso-fondo: var(--avviso-fondo);
+  --color-avviso-bordo: var(--avviso-bordo);
+  --color-avviso-testo: var(--avviso-testo);
 }

@@ -3,6 +3,38 @@
 > Una voce per sessione: fatto, decisioni, next steps, blocchi. Le ultime 2 voci si leggono
 > all'inizio di ogni sessione (vedi CLAUDE.md).
 
+## 2026-08-25 — S23 Build B1: token, tema e font (prima sessione su src/)
+
+**Fatto** (spec §1-§2, piano §9; su «continuo» esplicito di Federico)
+- **Inter variable self-host**: `apps/web/public/fonts/InterVariable.woff2` (352.240 B,
+  il file verificato al byte contro la research) + LICENSE.txt OFL accanto; `@font-face`
+  (wght 100-900, swap) in index.css; `<link rel="preload">` in index.html;
+  `--font-sans` → Inter con fallback system: TUTTA l'app ora rende in Inter.
+- **Token «Notturna» in un posto solo**: blocchi `:root` / `:root.dark` con i 30 token
+  semantici della spec (slate/cyan/grass/violet/red/amber + `--esito-ok-*` e
+  `--sim-solido-2`) e `@theme inline` che li espone come utility (`bg-sfondo`,
+  `text-reale`, `border-sim-bordo`…). I componenti NON li usano ancora: adozione da B2.
+- **Barra PWA e anti-flash**: `tema.ts` COLORE_CHIARO/SCURO → `#fcfcfd`/`#111113`
+  (slate-1 dei due temi) e i due `<meta name="theme-color">` di index.html allineati.
+- **Test aggiornato col codice** (rischio previsto in spec §10): `tema.test.tsx`
+  asseriva gli hex vecchi della barra; aggiornati i valori attesi, contratto identico.
+- **Gate verde**: `pnpm verify` = lint + typecheck + **271/271 test** (golden
+  INVARIATI) + privacy. Build di produzione ok; smoke visivo servendo `dist/`:
+  Inter ovunque, layout e colori invariati come previsto per B1.
+- Nota di realtà: la spec citava il precache del font «nel service worker», ma un SW
+  NON esiste ancora nel progetto: preload fatto, precache N/A finché il SW non nasce
+  (eventualmente al B9 col refresh PWA, decisione da prendere lì).
+
+**Decisioni**: famiglia font registrata come `'Inter'`; tutti i token (anche quelli
+identici nei due temi) vivono nei blocchi :root/.dark per uniformità di meccanismo.
+
+**Next steps**: **B2 «Shell»** (sidebar 232 + drawer a mano + contenuto ~1100), poi B3
+pilota Simulatore. Su Vercel il nuovo look si vede solo dopo commit + deploy; la B1 da
+sola cambia font e barra PWA.
+
+**Blocchi/aperture**: SW assente (v. nota); chunk-size warning di build pre-esistente
+(pdfjs), non toccato.
+
 ## 2026-08-25 — S22 Redesign: spec approvata, mappa a destinazione (ticket 07)
 
 **Fatto** (stessa chat di S18-S21, su «continue»)

@@ -5,9 +5,10 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { App } from '../src/App'
 import { applicaTema, prossimoTema, salvaTema, temaEffettivoScuro, temaSalvato } from '../src/lib/tema'
 
+// Hex della direzione «Notturna» (slate-1 nei due temi): combaciano con index.html e tema.ts.
 const METAS_INDEX_HTML =
-  '<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />' +
-  '<meta name="theme-color" content="#1c1917" media="(prefers-color-scheme: dark)" />'
+  '<meta name="theme-color" content="#fcfcfd" media="(prefers-color-scheme: light)" />' +
+  '<meta name="theme-color" content="#111113" media="(prefers-color-scheme: dark)" />'
 
 beforeEach(() => {
   localStorage.clear()
@@ -49,16 +50,16 @@ describe('tema — regole pure e persistenza', () => {
 
     applicaTema('scuro', false)
     expect(document.documentElement.classList.contains('dark')).toBe(true)
-    expect(metas()).toEqual(['#1c1917', '#1c1917'])
+    expect(metas()).toEqual(['#111113', '#111113'])
 
     applicaTema('chiaro', true)
     expect(document.documentElement.classList.contains('dark')).toBe(false)
-    expect(metas()).toEqual(['#ffffff', '#ffffff'])
+    expect(metas()).toEqual(['#fcfcfd', '#fcfcfd'])
 
     // «sistema»: si torna ai default per-media di index.html
     applicaTema('sistema', true)
     expect(document.documentElement.classList.contains('dark')).toBe(true)
-    expect(metas()).toEqual(['#ffffff', '#1c1917'])
+    expect(metas()).toEqual(['#fcfcfd', '#111113'])
   })
 })
 
