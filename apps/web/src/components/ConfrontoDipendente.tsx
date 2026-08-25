@@ -9,8 +9,7 @@ import { useState } from 'react'
 import { paramsVicini } from '../lib/bilancio'
 import { formatEuro, formatPercento, parseImportoIt, parsePercentoIt } from '../lib/format'
 
-const campo =
-  'mt-1 w-full rounded-md border border-stone-300 px-3 py-2 dark:border-stone-700 dark:bg-stone-800'
+const campo = 'mt-1 w-full rounded-md border border-bordo-campo bg-sfondo px-3 py-2'
 
 const DIMENSIONI: { valore: '' | DimensioneAzienda; etichetta: string }[] = [
   { valore: '', etichetta: 'Solo IVS 9,19% (come i calcolatori standard)' },
@@ -28,14 +27,18 @@ export function ConfrontoDipendente({
   regionePredefinita,
   aperto,
   onToggle,
+  ral,
+  onRalChange,
 }: {
   anno: number
   nettoRealeForfettarioCents: number
   regionePredefinita: EntitaRegionale | undefined
   aperto: boolean
   onToggle: () => void
+  /** La RAL vive nel Simulatore (spec §4): alimenta anche il verdetto del Quadro. */
+  ral: string
+  onRalChange: (valore: string) => void
 }) {
-  const [ral, setRal] = useState('')
   const [dimensione, setDimensione] = useState<'' | DimensioneAzienda>('')
   const [fonTe, setFonTe] = useState(true)
   const [regione, setRegione] = useState<EntitaRegionale | ''>(regionePredefinita ?? '')
@@ -84,7 +87,7 @@ export function ConfrontoDipendente({
   const delta = risultato ? risultato.nettoCents - nettoRealeForfettarioCents : 0
 
   return (
-    <section className="rounded-xl border border-indigo-200/70 bg-white shadow-sm dark:border-indigo-900/70 dark:bg-stone-900">
+    <section className="rounded-xl border border-sim-bordo bg-superficie">
       <button
         type="button"
         onClick={onToggle}
@@ -96,12 +99,12 @@ export function ConfrontoDipendente({
       </button>
 
       {aperto && (
-        <div className="space-y-4 border-t border-stone-200 p-4 dark:border-stone-800">
+        <div className="space-y-4 border-t border-bordo-sottile p-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="text-sm">
               RAL — retribuzione annua lorda (€)
-              <input value={ral} onChange={(e) => setRal(e.target.value)} placeholder="es. 35.000" className={campo} />
-              <span className="mt-1 block text-xs text-stone-500">
+              <input value={ral} onChange={(e) => onRalChange(e.target.value)} placeholder="es. 35.000" className={campo} />
+              <span className="mt-1 block text-xs text-testo-secondario">
                 Lo scenario vero: la RAL di un'offerta. Il fatturato non è una RAL.
               </span>
             </label>
@@ -155,7 +158,7 @@ export function ConfrontoDipendente({
           </div>
 
           {errori.length > 0 && (
-            <ul className="space-y-1 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
+            <ul className="space-y-1 rounded-lg border border-errore-solido p-3 text-sm text-errore">
               {errori.map((errore) => (
                 <li key={errore}>{errore}</li>
               ))}
@@ -164,69 +167,27 @@ export function ConfrontoDipendente({
 
           {risultato && (
             <>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <tbody>
-                    <tr className="border-b border-stone-100 dark:border-stone-800/50">
-                      <td className="py-1.5">Contributi INPS in busta{risultato.contributoFondoLavoratoreCents > 0 && <> + Fon.Te {formatEuro(risultato.contributoFondoLavoratoreCents)}</>}</td>
-                      <td className="py-1.5 text-right tabular-nums">
-                        {formatEuro(risultato.contributiCents + risultato.contributoFondoLavoratoreCents)}
-                      </td>
-                    </tr>
-                    <tr className="border-b border-stone-100 dark:border-stone-800/50">
-                      <td className="py-1.5">
-                        IRPEF netta
-                        <span className="block text-xs text-stone-500">
-                          lorda {formatEuro(risultato.irpefLordaCents)} − detrazione lavoro {formatEuro(risultato.detrazioneLavoroCents)}
-                          {risultato.ulterioreDetrazioneCents > 0 && <> − taglio del cuneo {formatEuro(risultato.ulterioreDetrazioneCents)}</>}
-                        </span>
-                      </td>
-                      <td className="py-1.5 text-right tabular-nums">{formatEuro(risultato.irpefNettaCents)}</td>
-                    </tr>
-                    {esenti > 0 && (
-                      <tr className="border-b border-stone-100 dark:border-stone-800/50">
-                        <td className="py-1.5">
-                          Somme esenti in busta
-                          <span className="block text-xs text-stone-500">
-                            {risultato.sommaIntegrativaCents > 0 && <>cuneo {formatEuro(risultato.sommaIntegrativaCents)}</>}
-                            {risultato.sommaIntegrativaCents > 0 && risultato.trattamentoIntegrativoCents > 0 && ' + '}
-                            {risultato.trattamentoIntegrativoCents > 0 && <>trattamento integrativo {formatEuro(risultato.trattamentoIntegrativoCents)}</>}
-                          </span>
-                        </td>
-                        <td className="py-1.5 text-right tabular-nums">+{formatEuro(esenti)}</td>
-                      </tr>
-                    )}
-                    <tr className="border-b border-stone-100 dark:border-stone-800/50">
-                      <td className="py-1.5">Addizionali regionale e comunale</td>
-                      <td className="py-1.5 text-right tabular-nums">
-                        {formatEuro(risultato.addizionaleRegionaleCents + risultato.addizionaleComunaleCents)}
-                      </td>
-                    </tr>
-                    <tr className="font-semibold">
-                      <td className="py-1.5">Netto annuo da dipendente</td>
-                      <td className="py-1.5 text-right tabular-nums">{formatEuro(risultato.nettoCents)}</td>
-                    </tr>
-                    <tr className="text-stone-500">
-                      <td className="py-1.5">
-                        Matura a parte: TFR {formatEuro(risultato.tfrCents)}
-                        {risultato.contributoFondoDatoreCents > 0 && <> {fonTe ? '(al fondo)' : ''} + Fon.Te del datore {formatEuro(risultato.contributoFondoDatoreCents)}</>}
-                      </td>
-                      <td className="py-1.5 text-right tabular-nums">
-                        +{formatEuro(risultato.tfrCents + risultato.contributoFondoDatoreCents)}
-                      </td>
-                    </tr>
-                    <tr className="text-stone-500">
-                      <td className="py-1.5">Netto reale del tuo scenario forfettario</td>
-                      <td className="py-1.5 text-right tabular-nums">{formatEuro(nettoRealeForfettarioCents)}</td>
-                    </tr>
-                  </tbody>
-                </table>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className={`rounded-xl border bg-sfondo p-3 ${delta > 0 ? 'border-bordo' : 'border-bordo-sottile'}`}>
+                  <div className="text-[10px] uppercase tracking-wide text-testo-secondario">Netto annuo da dipendente</div>
+                  <div className={`mt-0.5 text-[19px] font-bold tracking-tight tabular-nums ${delta > 0 ? '' : 'text-testo-secondario'}`}>
+                    {formatEuro(risultato.nettoCents)}
+                  </div>
+                </div>
+                <div className={`rounded-xl border bg-sfondo p-3 ${delta <= 0 ? 'border-bordo' : 'border-bordo-sottile'}`}>
+                  <div className="text-[10px] uppercase tracking-wide text-testo-secondario">
+                    Netto reale del tuo forfettario
+                  </div>
+                  <div className={`mt-0.5 text-[19px] font-bold tracking-tight tabular-nums ${delta <= 0 ? '' : 'text-testo-secondario'}`}>
+                    {formatEuro(nettoRealeForfettarioCents)}
+                  </div>
+                </div>
               </div>
               <p
-                className={`rounded-lg px-3 py-2 text-sm font-medium ${
+                className={`rounded-lg border px-3 py-2 text-sm font-medium ${
                   delta <= 0
-                    ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200'
-                    : 'bg-amber-50 text-amber-900 dark:bg-amber-950 dark:text-amber-200'
+                    ? 'border-esito-ok-bordo bg-esito-ok-fondo text-esito-ok-testo'
+                    : 'border-avviso-bordo bg-avviso-fondo text-avviso-testo'
                 }`}
               >
                 {delta < 0 && (
@@ -237,10 +198,68 @@ export function ConfrontoDipendente({
                 )}
                 {delta === 0 && <>Con questa RAL, il netto in busta pareggia il tuo forfettario — e TFR e fondo maturano a parte.</>}
               </p>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <tbody>
+                    <tr className="border-b border-rail">
+                      <td className="py-1.5">Contributi INPS in busta{risultato.contributoFondoLavoratoreCents > 0 && <> + Fon.Te {formatEuro(risultato.contributoFondoLavoratoreCents)}</>}</td>
+                      <td className="py-1.5 text-right tabular-nums">
+                        {formatEuro(risultato.contributiCents + risultato.contributoFondoLavoratoreCents)}
+                      </td>
+                    </tr>
+                    <tr className="border-b border-rail">
+                      <td className="py-1.5">
+                        IRPEF netta
+                        <span className="block text-xs text-testo-secondario">
+                          lorda {formatEuro(risultato.irpefLordaCents)} − detrazione lavoro {formatEuro(risultato.detrazioneLavoroCents)}
+                          {risultato.ulterioreDetrazioneCents > 0 && <> − taglio del cuneo {formatEuro(risultato.ulterioreDetrazioneCents)}</>}
+                        </span>
+                      </td>
+                      <td className="py-1.5 text-right tabular-nums">{formatEuro(risultato.irpefNettaCents)}</td>
+                    </tr>
+                    {esenti > 0 && (
+                      <tr className="border-b border-rail">
+                        <td className="py-1.5">
+                          Somme esenti in busta
+                          <span className="block text-xs text-testo-secondario">
+                            {risultato.sommaIntegrativaCents > 0 && <>cuneo {formatEuro(risultato.sommaIntegrativaCents)}</>}
+                            {risultato.sommaIntegrativaCents > 0 && risultato.trattamentoIntegrativoCents > 0 && ' + '}
+                            {risultato.trattamentoIntegrativoCents > 0 && <>trattamento integrativo {formatEuro(risultato.trattamentoIntegrativoCents)}</>}
+                          </span>
+                        </td>
+                        <td className="py-1.5 text-right tabular-nums">+{formatEuro(esenti)}</td>
+                      </tr>
+                    )}
+                    <tr className="border-b border-rail">
+                      <td className="py-1.5">Addizionali regionale e comunale</td>
+                      <td className="py-1.5 text-right tabular-nums">
+                        {formatEuro(risultato.addizionaleRegionaleCents + risultato.addizionaleComunaleCents)}
+                      </td>
+                    </tr>
+                    <tr className="font-semibold">
+                      <td className="py-1.5">Netto annuo da dipendente</td>
+                      <td className="py-1.5 text-right tabular-nums">{formatEuro(risultato.nettoCents)}</td>
+                    </tr>
+                    <tr className="text-testo-secondario">
+                      <td className="py-1.5">
+                        Matura a parte: TFR {formatEuro(risultato.tfrCents)}
+                        {risultato.contributoFondoDatoreCents > 0 && <> {fonTe ? '(al fondo)' : ''} + Fon.Te del datore {formatEuro(risultato.contributoFondoDatoreCents)}</>}
+                      </td>
+                      <td className="py-1.5 text-right tabular-nums">
+                        +{formatEuro(risultato.tfrCents + risultato.contributoFondoDatoreCents)}
+                      </td>
+                    </tr>
+                    <tr className="text-testo-secondario">
+                      <td className="py-1.5">Netto reale del tuo scenario forfettario</td>
+                      <td className="py-1.5 text-right tabular-nums">{formatEuro(nettoRealeForfettarioCents)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </>
           )}
 
-          <p className="text-xs text-stone-500 dark:text-stone-400">
+          <p className="text-xs text-testo-secondario">
             Ipotesi dichiarate: impiegato privato a tempo indeterminato, anno intero, nessun
             carico di famiglia; tredicesima/quattordicesima dentro la RAL (l'IRPEF è annuale);
             TFR e Fon.Te sono retribuzione differita, non in busta; le detassazioni 2026 su

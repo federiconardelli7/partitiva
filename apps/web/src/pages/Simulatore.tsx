@@ -55,6 +55,9 @@ export function Simulatore({
   const [versati, setVersati] = useState('')
   const [primoAnno, setPrimoAnno] = useState(false)
   const [aperture, setAperture] = useState({ ordinario: false, dipendente: false, inverso: false })
+  // La RAL vive qui (lift B4): la sezione la modifica, il Quadro ci calcola il verdetto.
+  const [ral, setRal] = useState('')
+  const ralCents = ral.trim() === '' ? null : parseImportoIt(ral)
 
   // Anni simulabili: da apertura a corrente+1 (il pregresso si registra, il futuro si simula).
   const anni = profilo
@@ -146,6 +149,7 @@ export function Simulatore({
       copertura={copertura}
       gestione={gestioneScenario}
       spese={spese}
+      ralCents={ralCents}
       onApriSezione={apriSezione}
     />
   )
@@ -303,6 +307,8 @@ export function Simulatore({
               regionePredefinita={profilo?.regione}
               aperto={aperture.dipendente}
               onToggle={() => commutaSezione('dipendente')}
+              ral={ral}
+              onRalChange={setRal}
             />
           </div>
 

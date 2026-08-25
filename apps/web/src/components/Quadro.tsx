@@ -1,4 +1,4 @@
-import { computeOrdinario, type GestioneInput, type RisultatoAnno } from '@partitiva/motore-fiscale'
+import { computeDipendente, computeOrdinario, type GestioneInput, type RisultatoAnno } from '@partitiva/motore-fiscale'
 import type { Spesa } from '../db'
 import { paramsVicini, spesePerAnno } from '../lib/bilancio'
 import { formatEuro, formatEuroIntero, formatPercento } from '../lib/format'
@@ -15,6 +15,7 @@ export function Quadro({
   copertura,
   gestione,
   spese,
+  ralCents,
   onApriSezione,
 }: {
   anno: number
@@ -23,6 +24,8 @@ export function Quadro({
   copertura: 'piena' | 'ridotta'
   gestione: GestioneInput | undefined
   spese: Spesa[]
+  /** RAL liftata dalla sezione dipendente (null = non impostata: la voce resta una CTA). */
+  ralCents: number | null
   onApriSezione: (sezione: SezioneConfronto) => void
 }) {
   const soglie = paramsVicini(anno).soglie
@@ -50,6 +53,23 @@ export function Quadro({
       : null
   const forfettarioCents = risultato ? risultato.contributiDovutiCents + risultato.impostaCents : 0
   const deltaOrdinario = ordinario ? ordinario.totaleCents - forfettarioCents : null
+
+  // Come per l'ordinario: coi default della sezione (solo IVS, Fon.Te attivo, 1,23%/0).
+  const dipendente =
+    risultato && ralCents !== null && ralCents > 0
+      ? computeDipendente(
+          {
+            ralCents,
+            dimensioneAzienda: null,
+            fondoPensione: true,
+            addizionaleRegionale: 0.0123,
+            addizionaleComunale: 0,
+            sogliaEsenzioneComunaleCents: null,
+          },
+          paramsVicini(anno),
+        )
+      : null
+  const deltaDipendente = dipendente && risultato ? dipendente.nettoCents - risultato.nettoRealeCents : null
 
   const pctIncassato =
     incassatoCents !== null && risultato ? Math.min((incassatoCents / soglia100) * 100, 100) : 0
@@ -141,7 +161,14 @@ export function Quadro({
         ) : (
           voceVerdetto('ordinario', 'Ordinario', 'in attesa di un importo valido')
         )}
-        {voceVerdetto('dipendente', 'Dipendente', 'dal netto di una RAL')}
+        {deltaDipendente !== null && ralCents !== null
+          ? voceVerdetto(
+              'dipendente',
+              'Dipendente',
+              `a RAL ${formatEuroIntero(ralCents)}, in busta`,
+              `${deltaDipendente >= 0 ? '+' : '−'}${formatEuro(Math.abs(deltaDipendente))}`,
+            )
+          : voceVerdetto('dipendente', 'Dipendente', 'dal netto di una RAL')}
         {voceVerdetto('inverso', 'Calcolo inverso', 'dal netto che vuoi')}
       </div>
     </aside>

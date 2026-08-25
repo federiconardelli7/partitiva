@@ -15,8 +15,7 @@ import type { Spesa } from '../db'
 import { paramsVicini, spesePerAnno } from '../lib/bilancio'
 import { formatEuro, formatEuroIntero, formatPercento, parseImportoIt, parsePercentoIt } from '../lib/format'
 
-const campo =
-  'mt-1 w-full rounded-md border border-stone-300 px-3 py-2 dark:border-stone-700 dark:bg-stone-800'
+const campo = 'mt-1 w-full rounded-md border border-bordo-campo bg-sfondo px-3 py-2'
 
 const DIMENSIONI: { valore: '' | DimensioneAzienda; etichetta: string }[] = [
   { valore: '', etichetta: 'Solo IVS 9,19% (come i calcolatori standard)' },
@@ -157,7 +156,7 @@ export function CalcoloInverso({
   const notaRicaduta = (r: { lordoCents: Cents; lordoStabileCents?: Cents; nettoStabileCents?: Cents }) =>
     r.lordoStabileCents !== undefined &&
     r.nettoStabileCents !== undefined && (
-      <span className="mt-1 block text-xs text-amber-700 dark:text-amber-300">
+      <span className="mt-1 block text-xs text-avviso-testo">
         ⚠️ Tra {formatEuro(r.lordoCents)} e {formatEuro(r.lordoStabileCents)} il netto può ricadere sotto
         l'obiettivo per gli scalini di legge (es. trattamento integrativo); da{' '}
         {formatEuro(r.lordoStabileCents)} torna stabilmente sopra ({formatEuro(r.nettoStabileCents)} verificato).
@@ -165,7 +164,7 @@ export function CalcoloInverso({
     )
 
   return (
-    <section className="rounded-xl border border-indigo-200/70 bg-white shadow-sm dark:border-indigo-900/70 dark:bg-stone-900">
+    <section className="rounded-xl border border-sim-bordo bg-superficie">
       <button
         type="button"
         onClick={onToggle}
@@ -177,19 +176,19 @@ export function CalcoloInverso({
       </button>
 
       {aperto && (
-        <div className="space-y-4 border-t border-stone-200 p-4 dark:border-stone-800">
+        <div className="space-y-4 border-t border-bordo-sottile p-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="text-sm">
               Netto desiderato (€/anno)
               <input value={netto} onChange={(e) => setNetto(e.target.value)} placeholder="es. 30.000" className={campo} />
-              <span className="mt-1 block text-xs text-stone-500">
+              <span className="mt-1 block text-xs text-testo-secondario">
                 Quanto vuoi che ti resti in tasca in un anno: qui si va all'indietro, dal netto al lordo.
               </span>
             </label>
             <label className="text-sm">
               Altri costi (€/anno)
               <input value={altriCosti} onChange={(e) => setAltriCosti(e.target.value)} placeholder="0" className={campo} />
-              <span className="mt-1 block text-xs text-stone-500">
+              <span className="mt-1 block text-xs text-testo-secondario">
                 Coi {formatEuro(speseAnnoCents)} del registro spese pesano su entrambi i regimi d'impresa: in
                 ordinario si deducono, nel forfettario escono comunque dal netto reale.
               </span>
@@ -244,7 +243,7 @@ export function CalcoloInverso({
           </div>
 
           {errori.length > 0 && (
-            <ul className="space-y-1 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
+            <ul className="space-y-1 rounded-lg border border-errore-solido p-3 text-sm text-errore">
               {errori.map((errore) => (
                 <li key={errore}>{errore}</li>
               ))}
@@ -255,15 +254,15 @@ export function CalcoloInverso({
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <tbody>
-                  <tr className="border-b border-stone-100 dark:border-stone-800/50">
+                  <tr className="border-b border-rail">
                     <td className="py-1.5">
                       Fatturato necessario nel forfettario
                       {inversi.forfettario ? (
-                        <span className="block text-xs text-stone-500">
+                        <span className="block text-xs text-testo-secondario">
                           netto reale verificato a quel fatturato: {formatEuro(inversi.forfettario.nettoCents)}
                         </span>
                       ) : (
-                        <span className="block text-xs text-stone-500">
+                        <span className="block text-xs text-testo-secondario">
                           Non raggiungibile restando nel forfettario: al tetto di permanenza (
                           {formatEuroIntero(inversi.massimoForfettarioCents)}) il netto reale è{' '}
                           {formatEuro(inversi.nettoAlTettoCents)}.
@@ -275,16 +274,16 @@ export function CalcoloInverso({
                       {inversi.forfettario ? formatEuro(inversi.forfettario.lordoCents) : '—'}
                     </td>
                   </tr>
-                  <tr className="border-b border-stone-100 dark:border-stone-800/50">
+                  <tr className="border-b border-rail">
                     <td className="py-1.5">
                       Fatturato necessario in ordinario
                       {inversi.ordinario ? (
-                        <span className="block text-xs text-stone-500">
+                        <span className="block text-xs text-testo-secondario">
                           netto verificato (incassato − costi − IRPEF, addizionali e contributi):{' '}
                           {formatEuro(inversi.ordinario.nettoCents)}
                         </span>
                       ) : (
-                        <span className="block text-xs text-stone-500">
+                        <span className="block text-xs text-testo-secondario">
                           Oltre il limite di ricerca ({formatEuroIntero(MASSIMO_RICERCA_CENTS)}).
                         </span>
                       )}
@@ -298,12 +297,12 @@ export function CalcoloInverso({
                     <td className="py-1.5">
                       RAL necessaria da dipendente
                       {inversi.dipendente ? (
-                        <span className="block text-xs text-stone-500">
+                        <span className="block text-xs text-testo-secondario">
                           netto in busta verificato a quella RAL: {formatEuro(inversi.dipendente.nettoCents)} — TFR e
                           Fon.Te maturano a parte
                         </span>
                       ) : (
-                        <span className="block text-xs text-stone-500">
+                        <span className="block text-xs text-testo-secondario">
                           Oltre il limite di ricerca ({formatEuroIntero(MASSIMO_RICERCA_CENTS)}).
                         </span>
                       )}
@@ -318,7 +317,7 @@ export function CalcoloInverso({
             </div>
           )}
 
-          <p className="text-xs text-stone-500 dark:text-stone-400">
+          <p className="text-xs text-testo-secondario">
             Il lordo è cercato all'euro intero sulle stesse catene del Simulatore (griglia da 50 €:
             ricadute più strette possono sfuggire) e il netto mostrato è sempre ricalcolato al lordo
             proposto. Ipotesi dichiarate: contributi deducibili dello scenario forfettario fissi (

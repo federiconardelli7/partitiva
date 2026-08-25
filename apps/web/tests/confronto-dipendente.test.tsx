@@ -28,14 +28,15 @@ describe('Simulatore — confronto dipendente', () => {
     const sezione = await apriDipendente()
     fireEvent.click(within(sezione).getByLabelText(/Aderisco a Fon\.Te/i)) // OFF (default ON)
     fireEvent.change(within(sezione).getByLabelText(/RAL/i), { target: { value: '30.000' } })
-    expect(await within(sezione).findByText(/24\.021,37/)).toBeTruthy()
+    // due occorrenze per design B4: tile del duello + riga della tabella
+    expect(await within(sezione).findAllByText(/24\.021,37/)).toHaveLength(2)
     expect(within(sezione).getByText(/Matura a parte/i).textContent).toContain('2.072,22')
   })
 
   it('Fon.Te acceso di default: 0,55% dedotto e 1,55% del datore in vista (golden 23.909,43)', async () => {
     const sezione = await apriDipendente()
     fireEvent.change(within(sezione).getByLabelText(/RAL/i), { target: { value: '30.000' } })
-    expect(await within(sezione).findByText(/23\.909,43/)).toBeTruthy()
+    expect(await within(sezione).findAllByText(/23\.909,43/)).toHaveLength(2) // duello + tabella
     expect(within(sezione).getByText(/Matura a parte/i).textContent).toContain('465,00')
   })
 
@@ -44,6 +45,6 @@ describe('Simulatore — confronto dipendente', () => {
     fireEvent.click(within(sezione).getByLabelText(/Aderisco a Fon\.Te/i))
     fireEvent.change(within(sezione).getByLabelText(/RAL/i), { target: { value: '30.000' } })
     fireEvent.change(within(sezione).getByLabelText(/Contributi in busta/i), { target: { value: 'oltre-15' } })
-    expect(await within(sezione).findByText(/23\.906,06/)).toBeTruthy()
+    expect(await within(sezione).findAllByText(/23\.906,06/)).toHaveLength(2) // duello + tabella
   })
 })

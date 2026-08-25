@@ -3,6 +3,41 @@
 > Una voce per sessione: fatto, decisioni, next steps, blocchi. Le ultime 2 voci si leggono
 > all'inizio di ogni sessione (vedi CLAUDE.md).
 
+## 2026-08-25 — S26 Build B4: le viste duello nei tre confronti
+
+**Fatto** (spec §5)
+- **Duello nelle sezioni aperte**: ConfrontoOrdinario e ConfrontoDipendente ora aprono
+  con le due tile dei totali a confronto («Forfettario oggi (contributi + imposta)» vs
+  «Ordinario, stessi numeri»; «Netto annuo da dipendente» vs «Netto reale del tuo
+  forfettario»), vincitore in PESO non in colore (bordo step 7 + testo pieno; il
+  perdente in tono secondario), **verdetto subito sotto** in badge (`--esito-ok-*`
+  positivo / avviso amber) e la tabella del breakdown come dettaglio. Copy delle frasi,
+  righe e sotto-etichette INVARIATO (verbatim).
+- **Token su tutte e tre le sezioni** (CalcoloInverso incluso, che tiene la sua tabella
+  dei tre lordi: il duello a due non si applica): wrapper `--sim-bordo`/superficie,
+  campi `--bordo-campo` su sfondo, hint e righe secondarie `--testo-secondario`, righe
+  tabella `--rail`, errori input in box `--errore-solido`/`--errore`, note ricaduta e
+  flags in avviso. Zero classi stone/indigo/emerald/amber/red residue nei tre file.
+- **Lift della RAL**: la RAL vive nel Simulatore e alimenta ANCHE il Quadro: il
+  verdetto «Dipendente» si accende appena digiti una RAL nella sezione («a RAL X, in
+  busta» ± differenza), calcolato coi default della sezione (solo IVS, Fon.Te on,
+  1,23%/0) come già l'ordinario; senza RAL resta la CTA. L'inverso resta CTA (la sua
+  risposta è una tabella, non un verdetto).
+- **Test aggiornati con intento rafforzato** (rischio previsto): i cinque `findByText`
+  sui totali golden trovavano ora DUE nodi (tile del duello + riga della tabella) →
+  `findAllByText(...).toHaveLength(2)`: asseriscono il design, non lo subiscono.
+- **Gate verde**: `pnpm verify` 271/271 + lint + tsc + privacy; build ok. Le sezioni
+  aperte sono coperte dai mount test (valori golden nel duello E in tabella).
+
+**Decisioni**: il verdetto del Quadro per il dipendente usa i default della sezione
+(diverge se cambi dimensione azienda o Fon.Te dentro la sezione: dichiarato nel
+commento del componente; l'alternativa era liftare 7 stati per un numero di cortesia).
+
+**Next steps**: B5 «chart» (composizione nel Quadro + card «I netti a confronto» in
+coda alle sezioni + soglie della Panoramica armonizzate), poi B6 Landing.
+
+**Blocchi/aperture**: nessuno nuovo.
+
 ## 2026-08-25 — S25 Build B3: il Quadro nel Simulatore (pagina pilota)
 
 **Fatto** (spec §4; stesso commit della B2: condividono index.css e App.tsx)
