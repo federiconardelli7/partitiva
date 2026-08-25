@@ -3,6 +3,41 @@
 > Una voce per sessione: fatto, decisioni, next steps, blocchi. Le ultime 2 voci si leggono
 > all'inizio di ogni sessione (vedi CLAUDE.md).
 
+## 2026-08-25 — S22 Redesign: spec approvata, mappa a destinazione (ticket 07)
+
+**Fatto** (stessa chat di S18-S21, su «continue»)
+- **Giro di grilling** sulle 4 decisioni rimaste aperte, tutte scelte da Federico:
+  1) il pannello sticky si chiama **«Quadro»** (bocciato «Riepilogo»: collideva col
+  «Riepilogo annuale» del glossario); 2) **verde doppio sciolto**: grass sia per il
+  reale sia per i verdetti positivi ma con TOKEN SEPARATI (`--reale` / `--esito-ok-*`);
+  3) **drawer e sheet a mano** (dialog nativo + pointer events, niente Base UI, zero
+  dipendenze nuove); 4) **Inter variable confermato** (344 KB self-host, il look
+  validato in tutti gli artefatti).
+- **Spec consolidata e APPROVATA**: `.scratch/redesign-app/spec.md` (208 righe) +
+  resa leggibile pubblicata come artefatto (ticket 07). Contiene: tabella token
+  completa chiaro/scuro (slate/cyan/grass/violet/red/amber + esito-ok e sim-solido-2),
+  regole AA calcolate (inclusi i bordi input: NESSUNO step Radix regge 3:1 in chiaro,
+  slate-8 fa 1,86 → conformità via label + focus ring), tipografia e self-host,
+  shell, Quadro con wireframe, viste duello, le tre chart, Landing, criteri per
+  Panoramica/Dati/Wizard, **piano B1-B9** con verifiche per sessione, rischi.
+- **CONTEXT.md aggiornato** (termini cristallizzati): voci nuove «Quadro» e «Duello»,
+  «Reale vs simulazione» riscritta coi colori nuovi (grass/violet dal B1) e la nota
+  sui token dei verdetti; «Simulatore» ora dice livrea sim (non più «indaco»).
+- Nessun ADR (criterio triplo: tutto reversibile, zero dipendenze, niente formati).
+- **La mappa redesign-app è A DESTINAZIONE**: 9 ticket, tutti resolved (01-02 research,
+  03 direzione B, 04 Quadro, 05 chart, 06 Landing, 07 spec, 08 shell, 09 duello).
+
+**Decisioni**: v. sopra + spec come vincolo unico del build.
+
+**Next steps**: **B1 «Token + tema + font»**, la prima sessione che tocca `src/`
+(fuori mappa, in sessioni normali): @theme inline coi token della spec, tema.ts e
+anti-flash, Inter self-host con preload e precache. Poi B2 shell, B3 pilota, B4-B6
+parallelizzabili, B7-B9 a chiudere. Gate di ogni sessione: `pnpm verify` verde con
+golden INVARIATI.
+
+**Blocchi/aperture**: nessuno. Le aperture pre-esistenti (tnum su Segoe/Roboto) sono
+irrilevanti con Inter self-host.
+
 ## 2026-08-25 — S21 Redesign: le tre chart e la Landing (ticket 05 + 06)
 
 **Fatto** (stessa chat di S18-S20, su «continue»)
