@@ -3,6 +3,42 @@
 > Una voce per sessione: fatto, decisioni, next steps, blocchi. Le ultime 2 voci si leggono
 > all'inizio di ogni sessione (vedi CLAUDE.md).
 
+## 2026-08-25 — S18 Redesign: artefatto delle tre direzioni e scelta della B (ticket 03)
+
+**Fatto**
+- Mappa wayfinder `.scratch/redesign-app/`: ticket 03 claimato, lavorato e risolto.
+  Costruito l'artefatto con le TRE direzioni affiancate (palette coi ruoli, tipografia
+  con numeri tabulari, mockup statici di testata Simulatore + card risultato + mini-chart
+  soglie, in chiaro E scuro): `prototipi/03-tre-direzioni.html` (596 KB, font Plex e
+  Inter INCORPORATI in data URI: zero richieste di rete, LG München rispettata),
+  pubblicato come artefatto per la scelta. `src/` non toccato (plan-don't-do).
+- Rigore: hex letti da `@radix-ui/colors@3.0.0` (npm pack); font scaricati e verificati
+  al byte contro la research (352.240 / 20.984 / 21.960 / 22.260 B); contrasti WCAG
+  ricalcolati con formula validata sui valori della research (9/9 riprodotti); dati
+  campione = caso golden «Mario Rossi» 2026 (75.000 → 13.100,18 + 2.135,30 → netto
+  59.764,52, pressione 20,31%). Trovate e rimediate 4 coppie sotto soglia: reale-11
+  small su step 2 in A/C → step 12; chart scura B violet-9 su binario 2,95 → gap 2 px
+  di superficie (3,26) o violet-10 `#7d66d9` (3,62, decisione al 05).
+- **Scelta di Federico: direzione B «Notturna»** (slate/cyan dark-first, reale=grass,
+  sim=violet, Inter variable self-host). Il plum/rosa di A bocciato; pivot economico
+  violet→purple (C) annotato nel ticket. Ticket 03 → resolved con token definitivi
+  (chiaro+scuro) e regole AA; riga in Decisions-so-far della mappa.
+- Emerso e incardinato (create-then-wire): Federico vuole il redesign dell'INTERO
+  display («probably on the left-side menu… not just the color palette»): nuovo ticket
+  08 (shell con menu laterale), 07 aggiornato (Panoramica/Dati/Wizard: layout completo,
+  non più solo-token; blocked-by +08), nota di convivenza nel 04, fog aggiornato.
+
+**Decisioni**: direzione B coi token del ## Answer del ticket 03; «un colore, un
+significato» preservata (reale=grass, sim=violet); step 9 unici nei due temi; build
+sempre fuori mappa (parte dalla spec del 07).
+
+**Next steps**: frontiera = 08 (shell) e 04 (pannello Simulatore), parallelizzabili in
+chat separate; poi 05 (chart) e 06 (Landing); il 07 consolida spec e piano delle
+sessioni di build.
+
+**Blocchi/aperture**: nessuno nuovo. Il tnum su Segoe/Roboto resta non verificato ma è
+irrilevante con Inter self-host (tornava in gioco solo col system stack della C).
+
 ## 2026-08-23 — S17 Calcolo inverso «che fatturato per X € netti» (post-MVP §4, prima metà)
 
 **Fatto**
