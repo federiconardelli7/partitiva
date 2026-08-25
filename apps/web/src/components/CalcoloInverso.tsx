@@ -42,6 +42,8 @@ export function CalcoloInverso({
   versatiCents,
   spese,
   regionePredefinita,
+  aperto,
+  onToggle,
 }: {
   anno: number
   coefficiente: number
@@ -51,8 +53,9 @@ export function CalcoloInverso({
   versatiCents: number
   spese: Spesa[]
   regionePredefinita: EntitaRegionale | undefined
+  aperto: boolean
+  onToggle: () => void
 }) {
-  const [aperto, setAperto] = useState(false)
   const [netto, setNetto] = useState('')
   const [altriCosti, setAltriCosti] = useState('')
   const [dimensione, setDimensione] = useState<'' | DimensioneAzienda>('')
@@ -165,7 +168,7 @@ export function CalcoloInverso({
     <section className="rounded-xl border border-indigo-200/70 bg-white shadow-sm dark:border-indigo-900/70 dark:bg-stone-900">
       <button
         type="button"
-        onClick={() => setAperto((a) => !a)}
+        onClick={onToggle}
         className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-semibold"
         aria-expanded={aperto}
       >

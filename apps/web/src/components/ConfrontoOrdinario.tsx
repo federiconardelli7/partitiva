@@ -32,6 +32,8 @@ export function ConfrontoOrdinario({
   spese,
   forfettario,
   regionePredefinita,
+  aperto,
+  onToggle,
 }: {
   anno: number
   incassatoCents: number
@@ -40,8 +42,9 @@ export function ConfrontoOrdinario({
   spese: Spesa[]
   forfettario: RisultatoAnno
   regionePredefinita: EntitaRegionale | undefined
+  aperto: boolean
+  onToggle: () => void
 }) {
-  const [aperto, setAperto] = useState(false)
   const [altriCosti, setAltriCosti] = useState('')
   const [oneri, setOneri] = useState('')
   const [figli, setFigli] = useState<FigliACarico>('nessuno')
@@ -108,7 +111,7 @@ export function ConfrontoOrdinario({
     <section className="rounded-xl border border-indigo-200/70 bg-white shadow-sm dark:border-indigo-900/70 dark:bg-stone-900">
       <button
         type="button"
-        onClick={() => setAperto((a) => !a)}
+        onClick={onToggle}
         className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-semibold"
         aria-expanded={aperto}
       >

@@ -3,6 +3,83 @@
 > Una voce per sessione: fatto, decisioni, next steps, blocchi. Le ultime 2 voci si leggono
 > all'inizio di ogni sessione (vedi CLAUDE.md).
 
+## 2026-08-25 — S25 Build B3: il Quadro nel Simulatore (pagina pilota)
+
+**Fatto** (spec §4; stesso commit della B2: condividono index.css e App.tsx)
+- **Quadro.tsx** (nome dal glossario): il pannello dei risultati, sticky a destra su
+  desktop (colonna 340 in grid `minmax(0,1fr)_340px`), coi token della direzione:
+  netto reale grande → da accantonare con composizione → pressione → **chart delle
+  soglie** (SVG a mano del pattern research 02: binario `--rail`, riempimento
+  `--sim-solido`, gap di superficie, tacche `--errore-solido` a piena altezza,
+  etichette 85k/100k in HTML, frase sr-only) → **verdetti in miniatura** cliccabili.
+  Con importo non valido resta MONTATO coi valori a «—» (oggi le card sparivano).
+- **Verdetto ordinario live**: calcolato nel Quadro con gli stessi default della
+  sezione (costi dal registro, regionale 1,23%, comunale 0): stesso numero che si
+  vede aprendola; dipendente e inverso sono CTA finché le sezioni non hanno input
+  (il lift completo degli input arriva col B4). Click su un verdetto = apre la
+  sezione e scrolla (scroll-mt, smooth solo senza reduced-motion).
+- **SheetRisultati.tsx** (mobile): il bordo inferiore è suo (nav nel drawer del B2):
+  peek con grip + solo netto sempre visibile; espansa a tap (bottone accessibile,
+  aria-expanded) mostra il Quadro intero fino a ¾ con scrim; scroll-lock via classe.
+  Il drag verrà come miglioria dichiarata.
+- **Sezioni liftate**: ConfrontoOrdinario/ConfrontoDipendente/CalcoloInverso ora
+  prendono `aperto`/`onToggle` (stato in Simulatore, aperture multiple consentite):
+  serve al click-dei-verdetti; il loro look interno resta per il B4.
+- **Token sul pilota**: banner e pill sim (`--sim-fondo/-bordo/-intenso`), card del
+  form in superficie con bordo sim, campi `--bordo-campo` su `--sfondo` con focus
+  ring in accento (index.css), bottone `--accento-solido` + `--testo-su-accento`
+  (token nuovo: mai bianco su cyan-9), errore `--errore` col bordo campo
+  `--errore-solido`, avvisi amber, testi secondari tokenizzati (anche
+  IntestazionePagina). Card.tsx resta nel repo ma non è più usato dal Simulatore
+  (rimozione al B9 se nessuno lo riusa).
+- **Test aggiornato con precisione** (rischio previsto): confronto-inverso apriva la
+  sezione con `findByText(/Calcolo inverso/i)` che ora matcha anche la voce del
+  Quadro → `findByRole('button', { name: /Che fatturato serve…/ })`, più stretto.
+- **Gate verde**: `pnpm verify` 271/271 (golden invariati) + lint + tsc + privacy;
+  build ok; smoke visivo desktop/mobile del /simulatore.
+
+**Decisioni**: verdetto ordinario coi default della sezione (coerenza aperto/chiuso);
+useDesktop estratto in `lib/use-desktop.ts` (condiviso da shell e Simulatore).
+
+**Next steps**: B4 «viste duello» (restyling interno delle tre sezioni + lift degli
+input per completare i verdetti), poi B5 chart e B6 Landing.
+
+**Blocchi/aperture**: drag della sheet (tap-only per ora, dichiarato).
+
+## 2026-08-25 — S24 Build B2: la shell con menu laterale
+
+**Fatto** (spec §3)
+- **Shell nuova in App.tsx**: su desktop (≥1024, via matchMedia con guardia jsdom →
+  default desktop, il ramo coperto dai test) sidebar sinistra 232 px sticky
+  (superficie, bordo step 6) con brand (suffisso `text-reale`), nav verticale e
+  TemaToggle in fondo; contenuto e footer centrati a max 1100 px. Su mobile: topbar
+  compatta (burger + brand + tema) e **drawer `<dialog>` nativo a mano** (focus trap,
+  Esc e ritorno focus dal browser; chiusura su backdrop, su navigazione e su cambio
+  rotta; scroll-lock via `body:has(dialog[open])`).
+- **Componenti nuovi**: `ShellNav.tsx` (brand+nav+tema, riusato da sidebar e drawer,
+  voce attiva = pill `bg-nav-attiva` con solo Simulatore tinto `text-sim`) e
+  `Drawer.tsx`. Token aggiunto: `--nav-attiva` (slate-1 chiaro / slate-6 scuro,
+  spec §3) + backdrop e scroll-lock in index.css. Skip link ora ink su sfondo
+  (`focus:bg-testo focus:text-sfondo`). La shell adotta i token (bg-sfondo,
+  text-testo, superficie, bordi): PRIME utility semantiche in produzione.
+- **Gate verde**: `pnpm verify` 271/271 (un solo landmark nav preservato, NavLink
+  testuali intatti: le query dei test reggono senza modifiche). Build ok; smoke
+  visivo: sidebar e contenuto centrato come nel prototipo del ticket 08; le pagine
+  interne restano coi colori vecchi (adozione da B3 in poi, previsto).
+- Gotcha strumenti annotato: lo smoke headless con profilo Chrome riusato ha smesso
+  di aprire IndexedDB (root vuota, pagina bianca); un A/B con la App di HEAD ha
+  scagionato il codice: serve `--user-data-dir` fresco per ogni run di smoke.
+
+**Decisioni**: breakpoint shell a 1024 px via JS (matchMedia) così i due rami
+restano un albero solo per i test; il toggle tema vive nella sidebar su desktop e
+nella topbar su mobile (mai due istanze visibili insieme).
+
+**Next steps**: B3 «Pilota Simulatore» (Quadro sticky + sheet mobile + verdetti +
+stati); i verdetti in miniatura di B3 partono con l'ordinario calcolato sui default
+e CTA per dipendente/inverso: il lift degli input delle sezioni arriva con B4.
+
+**Blocchi/aperture**: nessuno nuovo.
+
 ## 2026-08-25 — S23 Build B1: token, tema e font (prima sessione su src/)
 
 **Fatto** (spec §1-§2, piano §9; su «continuo» esplicito di Federico)

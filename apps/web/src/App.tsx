@@ -1,8 +1,11 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useEffect } from 'react'
-import { BrowserRouter, Link, Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { Drawer } from './components/Drawer'
+import { ShellNav, type VoceNav } from './components/ShellNav'
 import { TemaToggle } from './components/TemaToggle'
 import { db, type Profilo } from './db'
+import { useDesktop } from './lib/use-desktop'
 import { Dati } from './pages/Dati'
 import { Landing } from './pages/Landing'
 import { Panoramica } from './pages/Panoramica'
@@ -30,6 +33,8 @@ function Shell() {
   const riepiloghi = useLiveQuery(() => db.riepiloghi.orderBy('anno').toArray(), [], CARICAMENTO)
   const spese = useLiveQuery(() => db.spese.orderBy('data').reverse().toArray(), [], CARICAMENTO)
   const location = useLocation()
+  const desktop = useDesktop()
+  const [menuAperto, setMenuAperto] = useState(false)
 
   // Orientamento: il titolo del documento segue la pagina (prima dell'early return: regola hooks).
   useEffect(() => {
@@ -38,12 +43,15 @@ function Shell() {
     document.title = nome ? `${nome} · Partitiva` : 'Partitiva — la tua P.IVA forfettaria, spiegata'
   }, [location.pathname, profiloQuery])
 
+  // Cambio pagina = drawer chiuso (anche da back/forward del browser).
+  useEffect(() => setMenuAperto(false), [location.pathname])
+
   if (profiloQuery === CARICAMENTO || fatture === CARICAMENTO || riepiloghi === CARICAMENTO || spese === CARICAMENTO)
     return null
   const profilo: Profilo | null = profiloQuery ?? null
 
   // Nav profile-aware: senza profilo l'app invita (Simulatore / Inizia), col profilo orienta.
-  const voci = profilo
+  const voci: VoceNav[] = profilo
     ? [
         { to: '/', label: 'Panoramica', end: true, sim: false },
         { to: '/simulatore', label: 'Simulatore', end: false, sim: true },
@@ -54,47 +62,9 @@ function Shell() {
         { to: '/dati', label: 'Inizia a tracciare', end: false, sim: false },
       ]
 
-  const stileLink = (attivo: boolean, sim: boolean) =>
-    `rounded-md px-3 py-1 text-sm font-medium transition ${
-      attivo
-        ? `bg-white shadow dark:bg-stone-700 ${sim ? 'text-indigo-700 dark:text-indigo-300' : ''}`
-        : 'text-stone-500 hover:text-stone-800 dark:hover:text-stone-200'
-    }`
-
-  return (
-    <div className="min-h-dvh bg-stone-50 text-stone-900 dark:bg-stone-950 dark:text-stone-100">
-      <a
-        href="#contenuto"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-emerald-700 focus:px-3 focus:py-2 focus:text-white"
-      >
-        Salta al contenuto
-      </a>
-      <header className="border-b border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900">
-        <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-2 px-4 py-3">
-          <h1 className="text-xl font-bold tracking-tight">
-            <Link to="/">
-              Partitiva <span className="font-normal text-emerald-700 dark:text-emerald-400">· forfettario</span>
-            </Link>
-          </h1>
-          <div className="flex items-center gap-2">
-            <nav className="flex gap-1 rounded-lg bg-stone-100 p-1 dark:bg-stone-800">
-              {voci.map((voce) => (
-                <NavLink
-                  key={voce.to}
-                  to={voce.to}
-                  end={voce.end}
-                  className={({ isActive }) => stileLink(isActive, voce.sim)}
-                >
-                  {voce.label}
-                </NavLink>
-              ))}
-            </nav>
-            <TemaToggle />
-          </div>
-        </div>
-      </header>
-
-      <main id="contenuto" tabIndex={-1} className="mx-auto max-w-4xl px-4 py-6 focus:outline-none">
+  const contenuto = (
+    <>
+      <main id="contenuto" tabIndex={-1} className="mx-auto w-full max-w-[1100px] px-4 py-6 focus:outline-none lg:px-8">
         <Routes>
           <Route
             path="/"
@@ -121,12 +91,55 @@ function Shell() {
         </Routes>
       </main>
 
-      <footer className="mx-auto max-w-4xl px-4 pb-8 pt-4 text-xs text-stone-500">
+      <footer className="mx-auto w-full max-w-[1100px] px-4 pb-8 pt-4 text-xs text-testo-secondario lg:px-8">
         I dati restano solo in questo browser (IndexedDB): usa <strong>Esporta</strong> in I miei
         dati per i backup. Partitiva è uno strumento di tracciamento e comprensione, non consulenza
         fiscale: per le decisioni c'è il commercialista.{' '}
         <a className="underline" href="https://github.com/federiconardelli7/partitiva">Open source (MIT)</a>.
       </footer>
+    </>
+  )
+
+  return (
+    <div className="min-h-dvh bg-sfondo text-testo">
+      <a
+        href="#contenuto"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-testo focus:px-3 focus:py-2 focus:text-sfondo"
+      >
+        Salta al contenuto
+      </a>
+
+      {desktop ? (
+        <div className="flex">
+          <aside className="sticky top-0 h-dvh w-[232px] flex-none border-r border-bordo-sottile bg-superficie">
+            <ShellNav voci={voci} />
+          </aside>
+          <div className="min-w-0 flex-1">{contenuto}</div>
+        </div>
+      ) : (
+        <>
+          <header className="sticky top-0 z-40 flex items-center gap-3 border-b border-bordo-sottile bg-superficie px-4 py-3">
+            <button
+              type="button"
+              onClick={() => setMenuAperto(true)}
+              aria-label="Apri il menu"
+              className="rounded-lg p-1.5 text-testo-secondario hover:text-testo"
+            >
+              <svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
+            </button>
+            <h1 className="flex-1 text-[15px] font-bold tracking-tight">
+              Partitiva <span className="font-medium text-reale">· forfettario</span>
+            </h1>
+            <TemaToggle />
+          </header>
+          <Drawer aperto={menuAperto} onChiudi={() => setMenuAperto(false)} etichetta="Menu principale">
+            <ShellNav voci={voci} conTema={false} onNaviga={() => setMenuAperto(false)} />
+          </Drawer>
+          {contenuto}
+        </>
+      )}
     </div>
   )
 }

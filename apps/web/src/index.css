@@ -49,6 +49,8 @@
   --avviso-fondo: #fff7c2; /* amber-3 */
   --avviso-bordo: #f3d673; /* amber-6 */
   --avviso-testo: #4f3422; /* amber-12 */
+  --nav-attiva: #fcfcfd; /* pill della voce attiva (spec §3): slate-1 in chiaro */
+  --testo-su-accento: #1c2024; /* testo sui bottoni accento-solido: MAI bianco su cyan-9 */
 }
 :root.dark {
   color-scheme: dark;
@@ -82,6 +84,26 @@
   --avviso-fondo: #302008;
   --avviso-bordo: #5c3d05;
   --avviso-testo: #ffca16; /* amber-11 */
+  --nav-attiva: #363a3f; /* slate-6 in scuro */
+  --testo-su-accento: #111113; /* slate-1 scuro: 6,28 su cyan-9 */
+}
+
+/* Drawer mobile: dialog nativo. Backdrop scuro e scroll della pagina bloccato da aperto. */
+dialog::backdrop {
+  background: rgb(0 0 0 / 0.5);
+}
+body:has(dialog[open]),
+body.sheet-aperta {
+  overflow: hidden;
+}
+
+/* Campi: il bordo (slate-8) non arriva a 3:1 in chiaro; la conformità la danno le label
+   sempre visibili e questo focus ring in accento (spec §1, bordi input). */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accento);
+  outline-offset: 1px;
 }
 
 /* I token diventano utility (bg-sfondo, text-reale, border-sim-bordo…); `inline` fa
@@ -118,4 +140,6 @@
   --color-avviso-fondo: var(--avviso-fondo);
   --color-avviso-bordo: var(--avviso-bordo);
   --color-avviso-testo: var(--avviso-testo);
+  --color-nav-attiva: var(--nav-attiva);
+  --color-testo-su-accento: var(--testo-su-accento);
 }

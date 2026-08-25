@@ -15,7 +15,7 @@ export function IntestazionePagina({
     <div className="flex flex-wrap items-start justify-between gap-3">
       <div className="max-w-2xl">
         <h2 className="text-xl font-semibold tracking-tight">{titolo}</h2>
-        <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">{children}</p>
+        <p className="mt-1 text-sm text-testo-secondario">{children}</p>
       </div>
       {extra}
     </div>

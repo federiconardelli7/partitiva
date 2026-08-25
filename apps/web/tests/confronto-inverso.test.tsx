@@ -11,7 +11,8 @@ async function apriInverso() {
   window.history.pushState({}, '', '/simulatore')
   render(<App />)
   await screen.findByText(/Simulatore forfettario/i)
-  fireEvent.click(await screen.findByText(/Calcolo inverso/i))
+  // Titolo completo + role: dal B3 anche il Quadro ha una voce «Calcolo inverso».
+  fireEvent.click(await screen.findByRole('button', { name: /Che fatturato serve per il netto che vuoi/i }))
   const sezione = screen.getByText(/Netto desiderato/i).closest('section')!
   // i golden assumono addizionali a zero: si azzera il default 1,23
   fireEvent.change(within(sezione).getByLabelText(/Addizionale regionale/i), { target: { value: '0' } })

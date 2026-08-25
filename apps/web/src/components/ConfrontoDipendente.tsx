@@ -26,12 +26,15 @@ export function ConfrontoDipendente({
   anno,
   nettoRealeForfettarioCents,
   regionePredefinita,
+  aperto,
+  onToggle,
 }: {
   anno: number
   nettoRealeForfettarioCents: number
   regionePredefinita: EntitaRegionale | undefined
+  aperto: boolean
+  onToggle: () => void
 }) {
-  const [aperto, setAperto] = useState(false)
   const [ral, setRal] = useState('')
   const [dimensione, setDimensione] = useState<'' | DimensioneAzienda>('')
   const [fonTe, setFonTe] = useState(true)
@@ -84,7 +87,7 @@ export function ConfrontoDipendente({
     <section className="rounded-xl border border-indigo-200/70 bg-white shadow-sm dark:border-indigo-900/70 dark:bg-stone-900">
       <button
         type="button"
-        onClick={() => setAperto((a) => !a)}
+        onClick={onToggle}
         className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-semibold"
         aria-expanded={aperto}
       >
