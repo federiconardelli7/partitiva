@@ -15,7 +15,7 @@
     "@partitiva/parser-fatture": "workspace:*",
     "dexie": "^4.4.5",
     "dexie-react-hooks": "^4.4.0",
-    "pdfjs-dist": "^6.2.108",
+    "pdfjs-dist": "^6.3.289",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-hook-form": "^7.85.0",
